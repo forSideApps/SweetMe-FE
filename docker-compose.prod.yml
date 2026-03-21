@@ -1,7 +1,7 @@
 services:
   app:
-    image: ghcr.io/forsideapps/withstudy-backend:latest
-    container_name: withstudy-app
+    image: ghcr.io/forsideapps/sweetme-backend:latest
+    container_name: sweetme-app
     environment:
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
@@ -13,11 +13,11 @@ services:
     mem_limit: 400m
     restart: unless-stopped
     networks:
-      - withstudy
+      - sweetme
 
   nginx:
-    image: ghcr.io/forsideapps/withstudy-nginx:latest
-    container_name: withstudy-nginx
+    image: ghcr.io/forsideapps/sweetme-nginx:latest
+    container_name: sweetme-nginx
     ports:
       - "8880:80"
     mem_limit: 64m
@@ -25,9 +25,9 @@ services:
       - app
     restart: unless-stopped
     networks:
-      - withstudy
+      - sweetme
 
 
 networks:
-  withstudy:
+  sweetme:
     driver: bridge

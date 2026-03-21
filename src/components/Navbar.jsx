@@ -11,7 +11,7 @@ export default function Navbar() {
       <div className="container">
         <Link to="/" className="navbar-brand">
           <span className="brand-dot"></span>
-          위드스터디
+          스윗미
         </Link>
         <div className="navbar-links">
           <Link to="/" className="nav-link">홈</Link>

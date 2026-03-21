@@ -75,12 +75,12 @@ export default function Home() {
     <>
       <section className="hero">
         <div className="container">
-          <div className="hero-label">온라인 스터디 매칭 플랫폼</div>
+          <div className="hero-label">스윗미 · sweetme.kro.kr</div>
           <h1 className="hero-title">
-            함께 성장하는<br /><em>스터디 매칭</em>
+            공부가 달콤해지는<br /><em>스터디 매칭</em>
           </h1>
           <p className="hero-sub">
-            관심 있는 분야의 스터디를 찾고, 함께 공부할 동료를 만나보세요.
+            관심 분야의 스터디를 찾고, 함께 성장할 동료를 만나보세요.
           </p>
         </div>
       </section>

@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 env:
-  NGINX_IMAGE: ghcr.io/forsideapps/withstudy-nginx
+  NGINX_IMAGE: ghcr.io/forsideapps/sweetme-nginx
 
 jobs:
   build-and-deploy:
@@ -58,7 +58,7 @@ jobs:
           envs: GHCR_TOKEN,GHCR_USER
           script: |
             set -e
-            APP_DIR=/home/ubuntu/withstudy
+            APP_DIR=/home/ubuntu/sweetme
 
             cd "$APP_DIR"
             git remote set-url origin https://github.com/forSideApps/WithStudy-FE.git
