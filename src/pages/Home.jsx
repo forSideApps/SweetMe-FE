@@ -82,10 +82,6 @@ export default function Home() {
           <p className="hero-sub">
             관심 있는 분야의 스터디를 찾고, 함께 공부할 동료를 만나보세요.
           </p>
-          <div className="hero-actions">
-            <Link to="/rooms/new" className="btn btn-accent btn-lg">스터디 개설하기</Link>
-            <Link to="/community" className="btn btn-outline btn-lg">커뮤니티 보기</Link>
-          </div>
         </div>
       </section>
 

@@ -19,6 +19,7 @@ export default function RoomCreate() {
   const JOB_ROLES = [
     { value: 'FRONTEND', label: '프론트엔드' },
     { value: 'BACKEND', label: '백엔드' },
+    { value: 'MOBILE', label: '모바일' },
     { value: 'OTHER', label: '기타' },
   ]
 
