@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { getThemes } from '../api/themes'
 import { getReviews, deleteReview, markReviewDone, markReviewPending, addReviewComment } from '../api/review'
+import { getPosts, createNotice, deletePost as deleteCommunityPost } from '../api/community'
 import client from '../api/client'
 import ThemeLogo from '../components/ThemeLogo'
 
@@ -9,6 +10,7 @@ const TABS = [
   { key: 'visitors', path: '/admin/visitors', label: '방문자 통계' },
   { key: 'company', path: '/admin/company', label: '회사 관리' },
   { key: 'review', path: '/admin/review', label: '포폴 · 이력서 검토' },
+  { key: 'notice', path: '/admin/notice', label: '공지사항 관리' },
 ]
 
 export default function Admin() {
@@ -70,6 +72,7 @@ export default function Admin() {
 {activeTab === 'visitors' && <VisitorTab adminKey={adminKey} onUnauthorized={() => { sessionStorage.removeItem('adminKey'); setAdminKey('') }} />}
       {activeTab === 'company'  && <CompanyTab setMsg={setMsg} adminKey={adminKey} />}
       {activeTab === 'review'   && <ReviewTab setMsg={setMsg} adminKey={adminKey} />}
+      {activeTab === 'notice'   && <NoticeTab setMsg={setMsg} adminKey={adminKey} />}
     </div>
   )
 }
@@ -124,6 +127,7 @@ function CompanyTab({ setMsg, adminKey }) {
   const [editForm, setEditForm] = useState({})
   const [savingId, setSavingId] = useState(null)
   const [savingOrder, setSavingOrder] = useState(false)
+  const [editModal, setEditModal] = useState(null) // company object being edited in popup
   const fileInputs = useRef({})
   const createFileRef = useRef(null)
   const dragItem = useRef(null)
@@ -180,11 +184,13 @@ function CompanyTab({ setMsg, adminKey }) {
   function startEdit(c) {
     setEditingId(c.id)
     setEditForm({ name: c.name, slug: c.slug, accentColor: c.accentColor || '#6366f1' })
+    setEditModal(c)
   }
 
   function cancelEdit() {
     setEditingId(null)
     setEditForm({})
+    setEditModal(null)
   }
 
   async function handleUpdate(company) {
@@ -197,6 +203,7 @@ function CompanyTab({ setMsg, adminKey }) {
         accentColor: editForm.accentColor,
       }, { headers: { 'X-Admin-Key': adminKey } })
       setMsg({ type: 'success', text: '수정되었습니다.' })
+      setEditModal(null)
       setEditingId(null)
       load()
     } catch (err) {
@@ -309,39 +316,46 @@ function CompanyTab({ setMsg, adminKey }) {
         등록된 회사 ({companies.length}개)
         {savingOrder && <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>순서 저장 중...</span>}
       </div>
-      {loading ? (
-        <p className="text-muted">로딩 중...</p>
-      ) : companies.length === 0 ? (
-        <p className="text-muted">등록된 회사가 없습니다.</p>
-      ) : editingId ? (
-        /* 수정 폼: 전체 너비 */
-        <div style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', padding: '18px' }}>
-          <div className="form-row">
-            <div className="form-group">
+      {/* 수정 팝업 모달 */}
+      {editModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={cancelEdit}
+        >
+          <div
+            style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', padding: '28px 24px', width: '100%', maxWidth: 480, margin: '0 16px' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 20 }}>회사 수정 — {editModal.name}</div>
+            <div className="form-group" style={{ marginBottom: 14 }}>
               <label className="form-label req">회사명</label>
               <input className="form-input" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} />
             </div>
-            <div className="form-group">
+            <div className="form-group" style={{ marginBottom: 14 }}>
               <label className="form-label req">Slug</label>
               <input className="form-input" value={editForm.slug} onChange={e => setEditForm(f => ({ ...f, slug: e.target.value.toLowerCase() }))} />
             </div>
-          </div>
-          <div className="form-row" style={{ marginTop: 10 }}>
-            <div className="form-group">
+            <div className="form-group" style={{ marginBottom: 20 }}>
               <label className="form-label">포인트 색상</label>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <input type="color" value={editForm.accentColor} onChange={e => setEditForm(f => ({ ...f, accentColor: e.target.value }))} style={{ width: 44, height: 40, border: '1.5px solid var(--border)', borderRadius: 6, cursor: 'pointer', padding: 2, background: 'var(--bg)' }} />
                 <input className="form-input" value={editForm.accentColor} onChange={e => setEditForm(f => ({ ...f, accentColor: e.target.value }))} />
               </div>
             </div>
-          </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-            <button className="btn btn-accent btn-sm" disabled={savingId === editingId} onClick={() => handleUpdate(companies.find(c => c.id === editingId))}>
-              {savingId === editingId ? '저장 중...' : '저장'}
-            </button>
-            <button className="btn btn-ghost btn-sm" onClick={cancelEdit}>취소</button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-accent" style={{ flex: 1 }} disabled={savingId === editModal.id} onClick={() => handleUpdate(editModal)}>
+                {savingId === editModal.id ? '저장 중...' : '저장'}
+              </button>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={cancelEdit}>취소</button>
+            </div>
           </div>
         </div>
+      )}
+
+      {loading ? (
+        <p className="text-muted">로딩 중...</p>
+      ) : companies.length === 0 ? (
+        <p className="text-muted">등록된 회사가 없습니다.</p>
       ) : (
         <div className="room-grid">
           {companies.map((c, index) => (
@@ -353,18 +367,18 @@ function CompanyTab({ setMsg, adminKey }) {
               onDragEnter={() => handleDragEnter(index)}
               onDragEnd={handleDragEnd}
               onDragOver={e => e.preventDefault()}
-              style={{ cursor: 'grab', userSelect: 'none', textAlign: 'left' }}
+              onClick={() => startEdit(c)}
+              style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'left' }}
             >
               <div style={{ marginBottom: 8 }}>
                 <ThemeLogo logoUrl={c.logoUrl} slug={c.slug} size={32} />
               </div>
               <div className="room-title">{c.name}</div>
 
-              {/* 어드민 컨트롤 */}
-              <div style={{ marginTop: 12, display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
-                <button className="btn btn-outline btn-sm" style={{ flex: 1 }} onClick={() => startEdit(c)}>수정</button>
-                <label className="btn btn-outline btn-sm" style={{ flex: 1, textAlign: 'center', cursor: 'pointer', marginBottom: 0 }}>
-                  {uploadingId === c.id ? '...' : '로고'}
+              {/* 로고 업로드 버튼만 하단에 */}
+              <div style={{ marginTop: 12 }} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
+                <label className="btn btn-outline btn-sm" style={{ width: '100%', textAlign: 'center', cursor: 'pointer', marginBottom: 0, display: 'block' }}>
+                  {uploadingId === c.id ? '업로드 중...' : '로고 변경'}
                   <input type="file" accept="image/*" ref={el => fileInputs.current[c.id] = el} style={{ display: 'none' }} onChange={() => handleLogoUpload(c)} />
                 </label>
               </div>
@@ -519,6 +533,117 @@ function ReviewTab({ setMsg, adminKey }) {
                   </div>
                 </div>
               )}
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  )
+}
+
+/* ─── 공지사항 관리 탭 ─── */
+function NoticeTab({ setMsg, adminKey }) {
+  const [notices, setNotices] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [form, setForm] = useState({ title: '', content: '' })
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => { load() }, [])
+
+  function load() {
+    setLoading(true)
+    getPosts('NOTICE', '', 0)
+      .then(data => setNotices(data.content || data))
+      .catch(() => setNotices([]))
+      .finally(() => setLoading(false))
+  }
+
+  async function handleCreate(e) {
+    e.preventDefault()
+    if (!form.title.trim() || !form.content.trim()) {
+      setMsg({ type: 'error', text: '제목과 내용을 입력해주세요.' })
+      return
+    }
+    setSubmitting(true)
+    try {
+      await createNotice({ title: form.title.trim(), content: form.content.trim(), authorName: '방장' }, adminKey)
+      setForm({ title: '', content: '' })
+      setMsg({ type: 'success', text: '공지사항이 등록되었습니다.' })
+      load()
+    } catch {
+      setMsg({ type: 'error', text: '등록 실패' })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleDelete(id) {
+    if (!window.confirm('공지사항을 삭제하시겠습니까?')) return
+    try {
+      await deleteCommunityPost(id, adminKey)
+      setNotices(prev => prev.filter(n => n.id !== id))
+      setMsg({ type: 'success', text: '삭제되었습니다.' })
+    } catch {
+      setMsg({ type: 'error', text: '삭제 실패' })
+    }
+  }
+
+  return (
+    <>
+      <div className="form-card" style={{ marginBottom: 32 }}>
+        <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 20 }}>공지사항 등록</div>
+        <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="form-group">
+            <label className="form-label req">제목</label>
+            <input
+              className="form-input"
+              placeholder="공지사항 제목"
+              value={form.title}
+              onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label req">내용</label>
+            <textarea
+              className="form-textarea"
+              placeholder="공지 내용을 입력해주세요"
+              value={form.content}
+              onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
+              rows={5}
+            />
+          </div>
+          <div className="form-actions">
+            <button type="submit" className="btn btn-accent" disabled={submitting}>
+              {submitting ? '등록 중...' : '+ 공지 등록'}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>
+        등록된 공지사항 ({notices.length}건)
+      </div>
+      {loading ? (
+        <p className="text-muted">로딩 중...</p>
+      ) : notices.length === 0 ? (
+        <p className="text-muted">등록된 공지사항이 없습니다.</p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {notices.map(n => (
+            <div key={n.id} style={{
+              background: 'var(--bg)', border: '1.5px solid var(--border)',
+              borderRadius: 'var(--radius)', padding: '14px 18px',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12
+            }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.title}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>{n.createdAt?.slice(0, 10)}</div>
+              </div>
+              <button
+                className="btn btn-sm"
+                style={{ fontSize: 12, padding: '3px 10px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 6, cursor: 'pointer', flexShrink: 0 }}
+                onClick={() => handleDelete(n.id)}
+              >삭제</button>
             </div>
           ))}
         </div>

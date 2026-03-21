@@ -4,6 +4,7 @@ import { getPosts } from '../api/community'
 
 const CATEGORIES = [
   { value: '', label: '전체' },
+  { value: 'NOTICE', label: '공지사항' },
   { value: 'FREE', label: '자유게시판' },
   { value: 'SUGGESTION', label: '건의 기능 요청' },
 ]
@@ -56,7 +57,9 @@ export default function Community() {
           <h1 className="community-title">커뮤니티</h1>
           <p className="community-desc">스터디원들과 정보를 나눠보세요.</p>
         </div>
-        <Link to="/community/new" className="btn btn-accent">글쓰기</Link>
+        {category !== 'NOTICE' && (
+          <Link to="/community/new" className="btn btn-accent">글쓰기</Link>
+        )}
       </div>
 
       <div className="review-search-wrap">

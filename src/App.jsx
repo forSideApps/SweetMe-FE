@@ -41,6 +41,7 @@ function AppInner() {
           <Route path="/admin/visitors" element={<Admin />} />
           <Route path="/admin/company" element={<Admin />} />
           <Route path="/admin/review" element={<Admin />} />
+          <Route path="/admin/notice" element={<Admin />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
