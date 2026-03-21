@@ -94,7 +94,9 @@ export default function Community() {
             <div className="empty-icon">✍️</div>
             <h3>게시글이 없습니다</h3>
             <p>첫 번째 글을 작성해보세요!</p>
-            <Link to="/community/new" className="btn btn-accent">글쓰기</Link>
+            {category !== 'NOTICE' && (
+              <Link to="/community/new" className="btn btn-accent">글쓰기</Link>
+            )}
           </div>
         ) : (
           <div className="post-list">

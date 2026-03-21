@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { getThemes } from '../api/themes'
-import { getReviews, deleteReview, markReviewDone, markReviewPending, addReviewComment } from '../api/review'
+import { getReviews, deleteReview, markReviewDone, markReviewPending } from '../api/review'
 import { getPosts, createNotice, deletePost as deleteCommunityPost } from '../api/community'
 import client from '../api/client'
 import ThemeLogo from '../components/ThemeLogo'
@@ -60,8 +60,10 @@ export default function Admin() {
     )
   }
 
+  const containerClass = activeTab === 'company' ? 'container' : 'container-sm'
+
   return (
-    <div className="container-sm" style={{ padding: '40px 24px' }}>
+    <div className={containerClass} style={{ padding: '40px 24px' }}>
 {msg && (
         <div className={`alert ${msg.type === 'success' ? 'alert-success' : 'alert-error'}`} style={{ marginBottom: 20 }}>
           {msg.text}
@@ -115,6 +117,9 @@ function VisitorTab({ adminKey, onUnauthorized }) {
   )
 }
 
+const MODAL_STYLE = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }
+const MODAL_BOX = { background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', padding: '28px 24px', width: '100%', maxWidth: 480, margin: '0 16px' }
+
 /* ─── 회사 관리 탭 ─── */
 function CompanyTab({ setMsg, adminKey }) {
   const [companies, setCompanies] = useState([])
@@ -123,11 +128,11 @@ function CompanyTab({ setMsg, adminKey }) {
   const [formErr, setFormErr] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [uploadingId, setUploadingId] = useState(null)
-  const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({})
   const [savingId, setSavingId] = useState(null)
   const [savingOrder, setSavingOrder] = useState(false)
-  const [editModal, setEditModal] = useState(null) // company object being edited in popup
+  const [editModal, setEditModal] = useState(null)
+  const [createModal, setCreateModal] = useState(false)
   const fileInputs = useRef({})
   const createFileRef = useRef(null)
   const dragItem = useRef(null)
@@ -171,6 +176,7 @@ function CompanyTab({ setMsg, adminKey }) {
       setForm({ name: '', slug: '', accentColor: '#6366f1' })
       if (createFileRef.current) createFileRef.current.value = ''
       setFormErr({})
+      setCreateModal(false)
       setMsg({ type: 'success', text: '회사가 등록되었습니다.' })
       load()
     } catch (err) {
@@ -182,13 +188,11 @@ function CompanyTab({ setMsg, adminKey }) {
   }
 
   function startEdit(c) {
-    setEditingId(c.id)
     setEditForm({ name: c.name, slug: c.slug, accentColor: c.accentColor || '#6366f1' })
     setEditModal(c)
   }
 
   function cancelEdit() {
-    setEditingId(null)
     setEditForm({})
     setEditModal(null)
   }
@@ -204,7 +208,6 @@ function CompanyTab({ setMsg, adminKey }) {
       }, { headers: { 'X-Admin-Key': adminKey } })
       setMsg({ type: 'success', text: '수정되었습니다.' })
       setEditModal(null)
-      setEditingId(null)
       load()
     } catch (err) {
       const m = err.response?.data?.message || err.response?.data || '수정 실패'
@@ -253,79 +256,82 @@ function CompanyTab({ setMsg, adminKey }) {
     }
   }
 
+  async function handleDeleteCompany(company) {
+    if (!window.confirm(`'${company.name}' 회사를 삭제하시겠습니까?`)) return
+    try {
+      await client.delete(`/admin/companies/${company.id}`, { headers: { 'X-Admin-Key': adminKey } })
+      setMsg({ type: 'success', text: '삭제되었습니다.' })
+      setEditModal(null)
+      load()
+    } catch {
+      setMsg({ type: 'error', text: '삭제 실패' })
+    }
+  }
+
   return (
     <>
-      <div className="form-card" style={{ marginBottom: 32 }}>
-        <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 20 }}>회사 등록</div>
-        <form onSubmit={handleCreate}>
-          <div className="form-row" style={{ marginBottom: 14 }}>
-            <div className="form-group">
-              <label className="form-label req">회사명</label>
-              <input
-                className={`form-input${formErr.name ? ' is-error' : ''}`}
-                placeholder="예: 카카오"
-                value={form.name}
-                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-              />
-              {formErr.name && <span className="form-err">{formErr.name}</span>}
-            </div>
-            <div className="form-group">
-              <label className="form-label req">Slug</label>
-              <input
-                className={`form-input${formErr.slug ? ' is-error' : ''}`}
-                placeholder="예: kakao"
-                value={form.slug}
-                onChange={e => setForm(f => ({ ...f, slug: e.target.value.toLowerCase() }))}
-              />
-              {formErr.slug && <span className="form-err">{formErr.slug}</span>}
-              <span className="form-hint">로고 파일명으로 사용됩니다 ({form.slug || 'slug'}.png)</span>
-            </div>
-          </div>
-          <div className="form-row" style={{ marginBottom: 20 }}>
-            <div className="form-group">
-              <label className="form-label">포인트 색상</label>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <input
-                  type="color"
-                  value={form.accentColor}
-                  onChange={e => setForm(f => ({ ...f, accentColor: e.target.value }))}
-                  style={{ width: 44, height: 40, border: '1.5px solid var(--border)', borderRadius: 6, cursor: 'pointer', padding: 2, background: 'var(--bg)' }}
-                />
-                <input
-                  className="form-input"
-                  value={form.accentColor}
-                  onChange={e => setForm(f => ({ ...f, accentColor: e.target.value }))}
-                  placeholder="#6366f1"
-                />
-              </div>
-            </div>
-            <div className="form-group">
-              <label className="form-label">로고 이미지</label>
-              <input type="file" accept="image/*" ref={createFileRef} style={{ fontSize: 13, color: 'var(--text-2)' }} />
-            </div>
-          </div>
-          <div className="form-actions">
-            <button type="submit" className="btn btn-accent" disabled={submitting}>
-              {submitting ? '등록 중...' : '+ 회사 등록'}
-            </button>
-          </div>
-        </form>
+      {/* 헤더 */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <div style={{ fontSize: 15, fontWeight: 700 }}>
+          회사 ({companies.length}개)
+          {savingOrder && <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400, marginLeft: 8 }}>순서 저장 중...</span>}
+        </div>
+        <button className="btn btn-accent btn-sm" onClick={() => setCreateModal(true)}>+ 회사 등록</button>
       </div>
 
-      <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
-        등록된 회사 ({companies.length}개)
-        {savingOrder && <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>순서 저장 중...</span>}
-      </div>
-      {/* 수정 팝업 모달 */}
+      {/* 회사 등록 모달 */}
+      {createModal && (
+        <div style={MODAL_STYLE} onClick={() => setCreateModal(false)}>
+          <div style={MODAL_BOX} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 20 }}>회사 등록</div>
+            <form onSubmit={handleCreate}>
+              <div className="form-group" style={{ marginBottom: 14 }}>
+                <label className="form-label req">회사명</label>
+                <input
+                  className={`form-input${formErr.name ? ' is-error' : ''}`}
+                  placeholder="예: 카카오"
+                  value={form.name}
+                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                />
+                {formErr.name && <span className="form-err">{formErr.name}</span>}
+              </div>
+              <div className="form-group" style={{ marginBottom: 14 }}>
+                <label className="form-label req">Slug</label>
+                <input
+                  className={`form-input${formErr.slug ? ' is-error' : ''}`}
+                  placeholder="예: kakao"
+                  value={form.slug}
+                  onChange={e => setForm(f => ({ ...f, slug: e.target.value.toLowerCase() }))}
+                />
+                {formErr.slug && <span className="form-err">{formErr.slug}</span>}
+                <span className="form-hint">로고 파일명으로 사용됩니다 ({form.slug || 'slug'}.png)</span>
+              </div>
+              <div className="form-group" style={{ marginBottom: 14 }}>
+                <label className="form-label">포인트 색상</label>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <input type="color" value={form.accentColor} onChange={e => setForm(f => ({ ...f, accentColor: e.target.value }))} style={{ width: 44, height: 40, border: '1.5px solid var(--border)', borderRadius: 6, cursor: 'pointer', padding: 2, background: 'var(--bg)' }} />
+                  <input className="form-input" value={form.accentColor} onChange={e => setForm(f => ({ ...f, accentColor: e.target.value }))} placeholder="#6366f1" />
+                </div>
+              </div>
+              <div className="form-group" style={{ marginBottom: 20 }}>
+                <label className="form-label">로고 이미지</label>
+                <input type="file" accept="image/*" ref={createFileRef} style={{ fontSize: 13, color: 'var(--text-2)' }} />
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button type="submit" className="btn btn-accent" style={{ flex: 1 }} disabled={submitting}>
+                  {submitting ? '등록 중...' : '등록'}
+                </button>
+                <button type="button" className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setCreateModal(false)}>취소</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 수정 모달 */}
       {editModal && (
-        <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          onClick={cancelEdit}
-        >
-          <div
-            style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', padding: '28px 24px', width: '100%', maxWidth: 480, margin: '0 16px' }}
-            onClick={e => e.stopPropagation()}
-          >
+        <div style={MODAL_STYLE} onClick={cancelEdit}>
+          <div style={MODAL_BOX} onClick={e => e.stopPropagation()}>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 20 }}>회사 수정 — {editModal.name}</div>
             <div className="form-group" style={{ marginBottom: 14 }}>
               <label className="form-label req">회사명</label>
@@ -335,12 +341,19 @@ function CompanyTab({ setMsg, adminKey }) {
               <label className="form-label req">Slug</label>
               <input className="form-input" value={editForm.slug} onChange={e => setEditForm(f => ({ ...f, slug: e.target.value.toLowerCase() }))} />
             </div>
-            <div className="form-group" style={{ marginBottom: 20 }}>
+            <div className="form-group" style={{ marginBottom: 14 }}>
               <label className="form-label">포인트 색상</label>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <input type="color" value={editForm.accentColor} onChange={e => setEditForm(f => ({ ...f, accentColor: e.target.value }))} style={{ width: 44, height: 40, border: '1.5px solid var(--border)', borderRadius: 6, cursor: 'pointer', padding: 2, background: 'var(--bg)' }} />
                 <input className="form-input" value={editForm.accentColor} onChange={e => setEditForm(f => ({ ...f, accentColor: e.target.value }))} />
               </div>
+            </div>
+            <div className="form-group" style={{ marginBottom: 20 }}>
+              <label className="form-label">로고 변경</label>
+              <label style={{ display: 'inline-block', cursor: 'pointer' }}>
+                <span className="btn btn-outline btn-sm">{uploadingId === editModal.id ? '업로드 중...' : '파일 선택'}</span>
+                <input type="file" accept="image/*" style={{ display: 'none' }} ref={el => fileInputs.current[editModal.id] = el} onChange={() => handleLogoUpload(editModal)} />
+              </label>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="btn btn-accent" style={{ flex: 1 }} disabled={savingId === editModal.id} onClick={() => handleUpdate(editModal)}>
@@ -348,10 +361,18 @@ function CompanyTab({ setMsg, adminKey }) {
               </button>
               <button className="btn btn-ghost" style={{ flex: 1 }} onClick={cancelEdit}>취소</button>
             </div>
+            <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+              <button
+                className="btn"
+                style={{ width: '100%', background: 'transparent', color: '#dc2626', border: '1.5px solid #fca5a5', borderRadius: 'var(--radius)', fontWeight: 600, cursor: 'pointer' }}
+                onClick={() => handleDeleteCompany(editModal)}
+              >회사 삭제</button>
+            </div>
           </div>
         </div>
       )}
 
+      {/* 카드 그리드 */}
       {loading ? (
         <p className="text-muted">로딩 중...</p>
       ) : companies.length === 0 ? (
@@ -359,7 +380,7 @@ function CompanyTab({ setMsg, adminKey }) {
       ) : (
         <div className="room-grid">
           {companies.map((c, index) => (
-            <div
+            <button
               key={c.id}
               className="room-card"
               draggable
@@ -368,21 +389,13 @@ function CompanyTab({ setMsg, adminKey }) {
               onDragEnd={handleDragEnd}
               onDragOver={e => e.preventDefault()}
               onClick={() => startEdit(c)}
-              style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'left' }}
+              style={{ textAlign: 'left', border: '1.5px solid var(--border)', cursor: 'pointer', background: 'var(--bg)' }}
             >
               <div style={{ marginBottom: 8 }}>
                 <ThemeLogo logoUrl={c.logoUrl} slug={c.slug} size={32} />
               </div>
               <div className="room-title">{c.name}</div>
-
-              {/* 로고 업로드 버튼만 하단에 */}
-              <div style={{ marginTop: 12 }} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
-                <label className="btn btn-outline btn-sm" style={{ width: '100%', textAlign: 'center', cursor: 'pointer', marginBottom: 0, display: 'block' }}>
-                  {uploadingId === c.id ? '업로드 중...' : '로고 변경'}
-                  <input type="file" accept="image/*" ref={el => fileInputs.current[c.id] = el} style={{ display: 'none' }} onChange={() => handleLogoUpload(c)} />
-                </label>
-              </div>
-            </div>
+            </button>
           ))}
         </div>
       )}
@@ -395,9 +408,6 @@ function ReviewTab({ setMsg, adminKey }) {
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('')
-  const [commentingId, setCommentingId] = useState(null)
-  const [commentText, setCommentText] = useState('')
-  const [commentSubmitting, setCommentSubmitting] = useState(false)
 
   useEffect(() => { load() }, [])
 
@@ -407,21 +417,6 @@ function ReviewTab({ setMsg, adminKey }) {
       .then(data => setReviews(data.content || data))
       .catch(() => setReviews([]))
       .finally(() => setLoading(false))
-  }
-
-  async function handleAdminComment(reviewId) {
-    if (!commentText.trim()) return
-    setCommentSubmitting(true)
-    try {
-      await addReviewComment(reviewId, { authorName: '방장', content: commentText, adminKey })
-      setCommentText('')
-      setCommentingId(null)
-      setMsg({ type: 'success', text: '방장 댓글이 작성되었습니다.' })
-    } catch {
-      setMsg({ type: 'error', text: '댓글 작성에 실패했습니다.' })
-    } finally {
-      setCommentSubmitting(false)
-    }
   }
 
   async function handleDelete(id) {
@@ -504,35 +499,12 @@ function ReviewTab({ setMsg, adminKey }) {
                     {r.status === 'PENDING' ? '완료 처리' : '검토전으로'}
                   </button>
                   <button
-                    className="btn btn-outline btn-sm"
-                    style={{ fontSize: 12 }}
-                    onClick={() => { setCommentingId(commentingId === r.id ? null : r.id); setCommentText('') }}
-                  >👑 댓글</button>
-                  <button
                     className="btn btn-sm"
                     style={{ fontSize: 12, padding: '3px 10px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 6, cursor: 'pointer' }}
                     onClick={() => handleDelete(r.id)}
                   >삭제</button>
                 </div>
               </div>
-              {commentingId === r.id && (
-                <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                  <textarea
-                    className="form-textarea"
-                    value={commentText}
-                    onChange={e => setCommentText(e.target.value)}
-                    placeholder="방장으로 댓글을 남겨보세요"
-                    rows={2}
-                    style={{ flex: 1, minHeight: 60, fontSize: 13 }}
-                  />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <button className="btn btn-accent btn-sm" disabled={commentSubmitting} onClick={() => handleAdminComment(r.id)}>
-                      {commentSubmitting ? '...' : '작성'}
-                    </button>
-                    <button className="btn btn-ghost btn-sm" onClick={() => setCommentingId(null)}>취소</button>
-                  </div>
-                </div>
-              )}
             </div>
           ))}
         </div>
