@@ -5,17 +5,8 @@ const Marquee = _Marquee.default ?? _Marquee
 import { getThemes } from '../api/themes'
 import { getRecentRooms, getRoomsByTheme } from '../api/rooms'
 import ThemeLogo from '../components/ThemeLogo'
-
-function statusBadge(status) {
-  if (status === 'OPEN') return <span className="badge badge-green">모집중</span>
-  if (status === 'CLOSED') return <span className="badge badge-gray">마감</span>
-  return <span className="badge badge-amber">{status}</span>
-}
-
-function formatDate(str) {
-  if (!str) return ''
-  return str.slice(0, 10)
-}
+import StatusBadge from '../components/StatusBadge'
+import { formatDate } from '../utils/date'
 
 function RoomCard({ room }) {
   return (
@@ -27,7 +18,7 @@ function RoomCard({ room }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {room.jobRoleDisplay && <span className="tag tag-role">{room.jobRoleDisplay}</span>}
-          {statusBadge(room.status)}
+          <StatusBadge status={room.status} />
         </div>
       </div>
       <div className="room-title">{room.title}</div>

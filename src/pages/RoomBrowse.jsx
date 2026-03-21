@@ -1,20 +1,13 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { getAllRooms, getRoomsByTheme } from '../api/rooms'
 import { getThemes } from '../api/themes'
 import { JOB_ROLE_FILTER } from '../constants/jobRoles'
 import ThemeLogo from '../components/ThemeLogo'
-
-function statusBadge(status) {
-  if (status === 'OPEN') return <span className="badge badge-green">모집중</span>
-  if (status === 'CLOSED') return <span className="badge badge-gray">마감</span>
-  return <span className="badge badge-amber">{status}</span>
-}
-
-function formatDate(str) {
-  if (!str) return ''
-  return str.slice(0, 10)
-}
+import StatusBadge from '../components/StatusBadge'
+import Pagination from '../components/Pagination'
+import EmptyState from '../components/EmptyState'
+import { formatDate } from '../utils/date'
 
 export default function RoomBrowse() {
   const [rooms, setRooms] = useState([])
@@ -27,6 +20,9 @@ export default function RoomBrowse() {
   const [page, setPage] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
+
+  const debounceRef = useRef(null)
+  useEffect(() => () => clearTimeout(debounceRef.current), [])
 
   useEffect(() => {
     getThemes().then(setThemes).catch(() => {})
@@ -115,12 +111,7 @@ export default function RoomBrowse() {
       {loading ? (
         <p className="text-muted">로딩 중...</p>
       ) : rooms.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-icon">📭</div>
-          <h3>스터디가 없습니다</h3>
-          <p>첫 번째 스터디를 개설해보세요!</p>
-          <Link to="/study/new" className="btn btn-accent">스터디 개설하기</Link>
-        </div>
+        <EmptyState icon="📭" title="아직 스터디가 없습니다" description="조건을 바꿔보거나 새 스터디를 개설해보세요" />
       ) : (
           <div className="room-grid">
             {rooms.map(room => (
@@ -134,7 +125,7 @@ export default function RoomBrowse() {
                     {room.jobRoleDisplay && (
                       <span className="tag tag-role">{room.jobRoleDisplay}</span>
                     )}
-                    {statusBadge(room.status)}
+                    <StatusBadge status={room.status} />
                   </div>
                 </div>
                 <div className="room-title">{room.title}</div>
@@ -153,13 +144,7 @@ export default function RoomBrowse() {
           </div>
         )}
 
-      {totalPages > 1 && (
-        <div className="pagination">
-          <button className="page-btn" disabled={page === 0} onClick={() => setPage(p => p - 1)}>이전</button>
-          <span className="page-info">{page + 1} / {totalPages}</span>
-          <button className="page-btn" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>다음</button>
-        </div>
-      )}
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
     </div>
   )
 }

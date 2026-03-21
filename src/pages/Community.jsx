@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { getPosts } from '../api/community'
+import { formatDate } from '../utils/date'
+import Pagination from '../components/Pagination'
+import EmptyState from '../components/EmptyState'
 
 const CATEGORIES = [
   { value: '', label: '전체' },
@@ -8,11 +11,6 @@ const CATEGORIES = [
   { value: 'FREE', label: '자유게시판' },
   { value: 'SUGGESTION', label: '건의 기능 요청' },
 ]
-
-function formatDate(str) {
-  if (!str) return ''
-  return str.slice(0, 10)
-}
 
 export default function Community() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -36,6 +34,8 @@ export default function Community() {
       .catch(() => setPosts([]))
       .finally(() => setLoading(false))
   }, [category, keyword, page])
+
+  useEffect(() => () => clearTimeout(debounceRef.current), [])
 
   function handleCategoryChange(c) {
     setSearchParams(prev => {
@@ -111,14 +111,7 @@ export default function Community() {
         {loading ? (
           <p className="text-muted">로딩 중...</p>
         ) : posts.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">✍️</div>
-            <h3>게시글이 없습니다</h3>
-            <p>첫 번째 글을 작성해보세요!</p>
-            {category !== 'NOTICE' && (
-              <Link to="/community/new" className="btn btn-accent">글쓰기</Link>
-            )}
-          </div>
+          <EmptyState icon="✍️" title="게시글이 없습니다" description="첫 번째 글을 작성해보세요!" actionLabel={category !== 'NOTICE' ? '글쓰기' : undefined} actionTo={category !== 'NOTICE' ? '/community/new' : undefined} />
         ) : (
           <div className="post-list">
             {posts.map(post => (
@@ -142,21 +135,7 @@ export default function Community() {
           </div>
         )}
 
-        {totalPages > 1 && (
-          <div className="pagination">
-            <button
-              className="page-btn"
-              disabled={page === 0}
-              onClick={() => handlePageChange(page - 1)}
-            >이전</button>
-            <span className="page-info">{page + 1} / {totalPages}</span>
-            <button
-              className="page-btn"
-              disabled={page >= totalPages - 1}
-              onClick={() => handlePageChange(page + 1)}
-            >다음</button>
-          </div>
-        )}
+        <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
       </div>
     </div>
   )

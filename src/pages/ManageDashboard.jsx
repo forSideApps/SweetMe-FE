@@ -3,17 +3,13 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import { getManageApplications, approveApplication, rejectApplication, closeRoom, updateRoom, reopenRoom } from '../api/rooms'
 import Alert from '../components/Alert'
 import { JOB_ROLES } from '../constants/jobRoles'
+import { formatDate } from '../utils/date'
 
 const JOB_ROLE_LABELS = Object.fromEntries(JOB_ROLES.map(r => [r.value, r.label]))
 
 const ALGO_GRADE_LABELS = {
   UNRATED: '언레이팅', BRONZE: '브론즈', SILVER: '실버', GOLD: '골드',
   PLATINUM: '플래티넘', DIAMOND: '다이아몬드', RUBY: '루비', MASTER: '마스터',
-}
-
-function formatDate(str) {
-  if (!str) return ''
-  return str.slice(0, 10)
 }
 
 export default function ManageDashboard() {

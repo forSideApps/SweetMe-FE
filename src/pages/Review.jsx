@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { getReviews } from '../api/review'
 import { JOB_ROLES } from '../constants/jobRoles'
+import { formatDate } from '../utils/date'
+import Pagination from '../components/Pagination'
+import EmptyState from '../components/EmptyState'
 
 const TYPES = [
   { value: '', label: '전체' },
@@ -18,11 +21,6 @@ const CAREER_LEVELS = [
   { value: 'JUNIOR', label: '신입' },
   { value: 'EXPERIENCED', label: '경력' },
 ]
-
-function formatDate(str) {
-  if (!str) return ''
-  return str.slice(0, 10)
-}
 
 export default function Review() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -51,6 +49,8 @@ export default function Review() {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [filterOpen])
+
+  useEffect(() => () => clearTimeout(debounceRef.current), [])
 
   const load = useCallback((params) => {
     setLoading(true)
@@ -184,12 +184,7 @@ export default function Review() {
         {loading ? (
           <p className="text-muted">로딩 중...</p>
         ) : reviews.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">📄</div>
-            <h3>게시글이 없습니다</h3>
-            <p>첫 번째 검토 요청을 작성해보세요!</p>
-            <Link to="/reviews/new" className="btn btn-accent">검토 요청하기</Link>
-          </div>
+          <EmptyState icon="📄" title="게시글이 없습니다" description="첫 번째 검토 요청을 작성해보세요!" actionLabel="검토 요청하기" actionTo="/reviews/new" />
         ) : (
           <div className="post-list">
             {reviews.map(r => (
@@ -217,13 +212,7 @@ export default function Review() {
           </div>
         )}
 
-        {totalPages > 1 && (
-          <div className="pagination">
-            <button className="page-btn" disabled={page === 0} onClick={() => handlePageChange(page - 1)}>이전</button>
-            <span className="page-info">{page + 1} / {totalPages}</span>
-            <button className="page-btn" disabled={page >= totalPages - 1} onClick={() => handlePageChange(page + 1)}>다음</button>
-          </div>
-        )}
+        <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
       </div>
     </div>
   )

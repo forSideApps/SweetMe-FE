@@ -3,19 +3,9 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import { getRoomDetail, applyToRoom, deleteRoom } from '../api/rooms'
 import Alert from '../components/Alert'
 import ThemeLogo from '../components/ThemeLogo'
-
-const JOB_ROLES = [
-  { value: 'BACKEND', label: '백엔드' },
-  { value: 'FRONTEND', label: '프론트엔드' },
-  { value: 'FULLSTACK', label: '풀스택' },
-  { value: 'MOBILE', label: '모바일' },
-  { value: 'AI_ML', label: 'AI·ML' },
-  { value: 'DATA', label: '데이터' },
-  { value: 'DEVOPS', label: 'DevOps' },
-  { value: 'SECURITY', label: '보안' },
-  { value: 'EMBEDDED', label: '임베디드' },
-  { value: 'OTHER', label: '기타' },
-]
+import StatusBadge from '../components/StatusBadge'
+import { JOB_ROLES } from '../constants/jobRoles'
+import { formatDate } from '../utils/date'
 
 const ALGO_GRADES = [
   { value: '', label: '선택 안 함' },
@@ -28,17 +18,6 @@ const ALGO_GRADES = [
   { value: 'RUBY', label: '루비' },
   { value: 'MASTER', label: '마스터' },
 ]
-
-function statusBadge(status) {
-  if (status === 'OPEN') return <span className="badge badge-green badge-lg">모집중</span>
-  if (status === 'CLOSED') return <span className="badge badge-gray badge-lg">마감</span>
-  return <span className="badge badge-amber badge-lg">{status}</span>
-}
-
-function formatDate(str) {
-  if (!str) return ''
-  return str.slice(0, 10)
-}
 
 export default function RoomDetail() {
   const { roomId } = useParams()
@@ -129,7 +108,7 @@ export default function RoomDetail() {
           <ThemeLogo logoUrl={room.themeLogoUrl} slug={room.themeSlug} size={48} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
-          {statusBadge(room.status)}
+          <StatusBadge status={room.status} />
         </div>
         <h1>{room.title}</h1>
         <p>방장: {room.creatorNickname}</p>

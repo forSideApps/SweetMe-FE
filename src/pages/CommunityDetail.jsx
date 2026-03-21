@@ -2,16 +2,12 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { getPost, addComment, incrementPostView, deletePost } from '../api/community'
 import Alert from '../components/Alert'
+import { formatDateTime } from '../utils/date'
 
 const CATEGORY_LABELS = {
   REGIONAL: '지역 정보',
   SUGGESTION: '건의 기능 요청',
   FREE: '자유게시판',
-}
-
-function formatDate(str) {
-  if (!str) return ''
-  return str.slice(0, 16).replace('T', ' ')
 }
 
 export default function CommunityDetail() {
@@ -104,7 +100,7 @@ export default function CommunityDetail() {
                 <div className="post-detail-meta">
                   <span>{post.authorName}</span>
                   {post.viewCount != null && <span>조회 {post.viewCount}</span>}
-                  <span>{formatDate(post.createdAt)}</span>
+                  <span>{formatDateTime(post.createdAt)}</span>
                 </div>
               </div>
               {adminKey && (
@@ -137,7 +133,7 @@ export default function CommunityDetail() {
                 <div key={c.id} className="comment-item">
                   <div className="comment-header">
                     <span className="comment-author">{c.authorName}</span>
-                    <span className="comment-date">{formatDate(c.createdAt)}</span>
+                    <span className="comment-date">{formatDateTime(c.createdAt)}</span>
                   </div>
                   <div className="comment-body">{c.content}</div>
                 </div>
