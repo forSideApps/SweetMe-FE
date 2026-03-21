@@ -53,6 +53,7 @@ export default function Home() {
   const [selectedTheme, setSelectedTheme] = useState(null)
   const [themeRooms, setThemeRooms] = useState([])
   const [themeLoading, setThemeLoading] = useState(false)
+  const [showRecent, setShowRecent] = useState(false)
 
   useEffect(() => {
     Promise.all([getThemes(), getRecentRooms(6)])
@@ -65,7 +66,12 @@ export default function Home() {
   }, [])
 
   function handleThemeClick(theme) {
-    if (selectedTheme?.id === theme.id) return
+    if (selectedTheme?.id === theme.id) {
+      setSelectedTheme(null)
+      setShowRecent(true)
+      return
+    }
+    setShowRecent(false)
     setSelectedTheme(theme)
     setThemeLoading(true)
     getRoomsByTheme(theme.id, '', 0)
@@ -87,16 +93,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 전체 슬라이드 (최근 스터디 포함) */}
       <div className="company-carousel-border">
         <Marquee pauseOnHover speed={40} gradient={false}>
-          <button
-            className={`company-pill${selectedTheme === null ? ' active' : ''}`}
-            onClick={() => setSelectedTheme(null)}
-          >
-            <span style={{ fontSize: 36, lineHeight: 1 }}>🕐</span>
-            최근 스터디
-          </button>
           {themes.map(t => (
             <button
               key={t.id}
@@ -138,7 +136,7 @@ export default function Home() {
                 </div>
               )}
             </>
-          ) : (
+          ) : showRecent ? (
             <>
               <div className="section-title">최근 스터디</div>
               <div className="section-sub">최근에 개설된 스터디 목록입니다.</div>
@@ -159,7 +157,7 @@ export default function Home() {
                 </div>
               )}
             </>
-          )}
+          ) : null}
         </div>
       </section>
     </>
