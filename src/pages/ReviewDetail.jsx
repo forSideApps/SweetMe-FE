@@ -197,7 +197,20 @@ export default function ReviewDetail() {
                   <span>{formatDate(review.createdAt)}</span>
                 </div>
               </div>
-              <Link to={`/reviews/${review.id}/edit`} className="btn btn-outline btn-sm" style={{ flexShrink: 0 }}>수정하기</Link>
+              <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                <Link to={`/reviews/${review.id}/edit`} className="btn btn-outline btn-sm">수정하기</Link>
+                {adminKey && (
+                  <button
+                    className="btn btn-sm"
+                    style={{ background: '#ef4444', color: '#fff' }}
+                    onClick={async () => {
+                      if (!confirm('이 게시글을 삭제하시겠습니까?')) return
+                      await deleteReview(review.id, adminKey)
+                      navigate('/reviews', { replace: true })
+                    }}
+                  >삭제</button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -258,17 +271,6 @@ export default function ReviewDetail() {
 
           <div className="post-detail-actions">
             <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm">← 목록으로</button>
-            {adminKey && (
-              <button
-                className="btn btn-sm"
-                style={{ background: '#ef4444', color: '#fff' }}
-                onClick={async () => {
-                  if (!confirm('이 게시글을 삭제하시겠습니까?')) return
-                  await deleteReview(review.id, adminKey)
-                  navigate('/reviews', { replace: true })
-                }}
-              >삭제</button>
-            )}
           </div>
         </div>
 
