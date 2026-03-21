@@ -42,8 +42,8 @@ export const updateReviewComment = (reviewId, commentId, data) =>
 export const deleteReviewComment = (reviewId, commentId, password) =>
   client.delete(`/reviews/${reviewId}/comments/${commentId}`, { data: { password } })
 
-export const deleteReview = (id) =>
-  client.delete(`/reviews/${id}`)
+export const deleteReview = (id, adminKey) =>
+  client.delete(`/reviews/${id}`, { headers: { 'X-Admin-Key': adminKey } })
 
 export const getReviewLink = (id, password, adminKey) =>
   client.post(`/reviews/${id}/link`, { password, adminKey }).then(r => r.data)

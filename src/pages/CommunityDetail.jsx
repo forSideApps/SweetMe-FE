@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { getPost, addComment, incrementPostView } from '../api/community'
+import { getPost, addComment, incrementPostView, deletePost } from '../api/community'
 import Alert from '../components/Alert'
 
 const CATEGORY_LABELS = {
@@ -17,6 +17,7 @@ function formatDate(str) {
 export default function CommunityDetail() {
   const { postId } = useParams()
   const navigate = useNavigate()
+  const adminKey = sessionStorage.getItem('adminKey') || ''
   const [post, setPost] = useState(null)
   const [loading, setLoading] = useState(true)
   const [alert, setAlert] = useState(null)
@@ -107,6 +108,17 @@ export default function CommunityDetail() {
           <div className="post-detail-body">{post.content}</div>
           <div className="post-detail-actions">
             <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm">← 목록으로</button>
+            {adminKey && (
+              <button
+                className="btn btn-sm"
+                style={{ background: '#ef4444', color: '#fff' }}
+                onClick={async () => {
+                  if (!confirm('이 게시글을 삭제하시겠습니까?')) return
+                  await deletePost(postId, adminKey)
+                  navigate('/community', { replace: true })
+                }}
+              >삭제</button>
+            )}
           </div>
         </div>
 

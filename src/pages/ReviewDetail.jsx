@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { getReview, incrementReviewView, addReviewComment, updateReviewComment, deleteReviewComment, getReviewLink } from '../api/review'
+import { getReview, incrementReviewView, addReviewComment, updateReviewComment, deleteReviewComment, getReviewLink, deleteReview } from '../api/review'
 import Alert from '../components/Alert'
 
 const STATUS_STYLE = {
@@ -258,6 +258,17 @@ export default function ReviewDetail() {
 
           <div className="post-detail-actions">
             <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm">← 목록으로</button>
+            {adminKey && (
+              <button
+                className="btn btn-sm"
+                style={{ background: '#ef4444', color: '#fff' }}
+                onClick={async () => {
+                  if (!confirm('이 게시글을 삭제하시겠습니까?')) return
+                  await deleteReview(review.id, adminKey)
+                  navigate('/reviews', { replace: true })
+                }}
+              >삭제</button>
+            )}
           </div>
         </div>
 

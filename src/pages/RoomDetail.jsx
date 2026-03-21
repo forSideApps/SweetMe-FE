@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { getRoomDetail, applyToRoom } from '../api/rooms'
+import { Link, useParams, useNavigate } from 'react-router-dom'
+import { getRoomDetail, applyToRoom, deleteRoom } from '../api/rooms'
 import Alert from '../components/Alert'
 import ThemeLogo from '../components/ThemeLogo'
 
@@ -42,6 +42,8 @@ function formatDate(str) {
 
 export default function RoomDetail() {
   const { roomId } = useParams()
+  const navigate = useNavigate()
+  const adminKey = sessionStorage.getItem('adminKey') || ''
   const [room, setRoom] = useState(null)
   const [loading, setLoading] = useState(true)
   const [alert, setAlert] = useState(null)
@@ -103,12 +105,25 @@ export default function RoomDetail() {
   return (
     <div className="container">
       <div className="page-header">
-        <div className="breadcrumb">
-          <Link to="/">홈</Link>
-          <span>/</span>
-          {room.themeId && <Link to={`/study/theme/${room.themeId}`}>{room.themeName}</Link>}
-          {room.themeId && <span>/</span>}
-          <span>상세</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="breadcrumb">
+            <Link to="/">홈</Link>
+            <span>/</span>
+            {room.themeId && <Link to={`/study/theme/${room.themeId}`}>{room.themeName}</Link>}
+            {room.themeId && <span>/</span>}
+            <span>상세</span>
+          </div>
+          {adminKey && (
+            <button
+              className="btn btn-sm"
+              style={{ background: '#ef4444', color: '#fff' }}
+              onClick={async () => {
+                if (!confirm('이 스터디를 삭제하시겠습니까?')) return
+                await deleteRoom(roomId, adminKey)
+                navigate(-1)
+              }}
+            >삭제</button>
+          )}
         </div>
         <div className="page-company">
           <ThemeLogo logoUrl={room.themeLogoUrl} slug={room.themeSlug} size={48} />
