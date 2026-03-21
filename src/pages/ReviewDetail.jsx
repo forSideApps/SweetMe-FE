@@ -47,6 +47,11 @@ export default function ReviewDetail() {
       viewedRef.current = true
       incrementReviewView(id).catch(() => {})
     }
+    if (adminKey) {
+      getReviewLink(id, undefined, adminKey)
+        .then(data => setRevealedLink(data.link))
+        .catch(() => {})
+    }
   }, [id])
 
   function validateComment() {
@@ -249,17 +254,6 @@ export default function ReviewDetail() {
             </div>
           )}
 
-          {review.contactInfo && (
-            <div style={{
-              margin: '0 24px 20px',
-              padding: '12px 16px',
-              background: 'var(--bg-2)', borderRadius: 'var(--radius)',
-              border: '1px solid var(--border)', fontSize: 14
-            }}>
-              <span style={{ fontWeight: 600, marginRight: 8 }}>연락처</span>
-              <span style={{ color: 'var(--text-2)' }}>{review.contactInfo}</span>
-            </div>
-          )}
 
           <div className="post-detail-actions">
             <Link to="/reviews" className="btn btn-ghost btn-sm">← 목록으로</Link>

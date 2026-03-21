@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { getAllRooms } from '../api/rooms'
+import { getAllRooms, getRoomsByTheme } from '../api/rooms'
+import { getThemes } from '../api/themes'
 import { JOB_ROLE_FILTER } from '../constants/jobRoles'
 import ThemeLogo from '../components/ThemeLogo'
 
@@ -17,6 +18,8 @@ function formatDate(str) {
 
 export default function RoomBrowse() {
   const [rooms, setRooms] = useState([])
+  const [themes, setThemes] = useState([])
+  const [themeId, setThemeId] = useState('')
   const [status, setStatus] = useState('')
   const [jobRole, setJobRole] = useState('')
   const [searchInput, setSearchInput] = useState('')
@@ -25,21 +28,29 @@ export default function RoomBrowse() {
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
 
+  useEffect(() => {
+    getThemes().then(setThemes).catch(() => {})
+  }, [])
+
   const fetchRooms = useCallback(() => {
     setLoading(true)
-    getAllRooms(status, jobRole, keyword, page)
+    const promise = themeId
+      ? getRoomsByTheme(themeId, status, page, jobRole, keyword)
+      : getAllRooms(status, jobRole, keyword, page)
+    promise
       .then(data => {
         setRooms(data.content || data)
         setTotalPages(data.totalPages || 1)
       })
       .catch(() => setRooms([]))
       .finally(() => setLoading(false))
-  }, [status, jobRole, keyword, page])
+  }, [status, jobRole, keyword, page, themeId])
 
   useEffect(() => { fetchRooms() }, [fetchRooms])
 
   function handleStatus(s) { setStatus(s); setPage(0) }
   function handleJobRole(r) { setJobRole(r); setPage(0) }
+  function handleTheme(id) { setThemeId(id); setPage(0) }
   function handleSearch(e) { e.preventDefault(); setKeyword(searchInput.trim()); setPage(0) }
 
   return (
@@ -49,7 +60,7 @@ export default function RoomBrowse() {
           <h1 className="community-title">스터디</h1>
           <p className="community-desc">관심 분야의 스터디를 찾고 함께 성장할 동료를 만나보세요.</p>
         </div>
-        <Link to="/rooms/new" className="btn btn-accent">스터디 개설하기</Link>
+        <Link to="/study/new" className="btn btn-accent">스터디 개설하기</Link>
       </div>
 
       {/* 검색 */}
@@ -68,14 +79,24 @@ export default function RoomBrowse() {
         )}
       </form>
 
-      {/* 필터 바 */}
-      <div className="list-bar">
+      {/* 상태 필터 + 회사 선택 */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <div className="filter-tabs">
           <button className={`filter-tab${status === '' ? ' active' : ''}`} onClick={() => handleStatus('')}>전체</button>
           <button className={`filter-tab${status === 'OPEN' ? ' active' : ''}`} onClick={() => handleStatus('OPEN')}>모집중</button>
           <button className={`filter-tab${status === 'CLOSED' ? ' active' : ''}`} onClick={() => handleStatus('CLOSED')}>마감</button>
         </div>
-        <Link to="/rooms/new" className="btn btn-accent">스터디 개설</Link>
+        <select
+          className="form-input"
+          value={themeId}
+          onChange={e => handleTheme(e.target.value)}
+          style={{ minWidth: 120, maxWidth: 160 }}
+        >
+          <option value="">전체 회사</option>
+          {themes.map(t => (
+            <option key={t.id} value={t.id}>{t.name}</option>
+          ))}
+        </select>
       </div>
 
       {/* 직군 필터 */}
@@ -98,12 +119,12 @@ export default function RoomBrowse() {
           <div className="empty-icon">📭</div>
           <h3>스터디가 없습니다</h3>
           <p>첫 번째 스터디를 개설해보세요!</p>
-          <Link to="/rooms/new" className="btn btn-accent">스터디 개설하기</Link>
+          <Link to="/study/new" className="btn btn-accent">스터디 개설하기</Link>
         </div>
       ) : (
           <div className="room-grid">
             {rooms.map(room => (
-              <Link key={room.id} to={`/rooms/${room.id}`} className="room-card">
+              <Link key={room.id} to={`/study/${room.id}`} className="room-card">
                 <div className="room-card-top">
                   <div className="room-company">
                     <ThemeLogo logoUrl={room.themeLogoUrl} slug={room.themeSlug} size={28} />

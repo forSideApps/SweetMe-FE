@@ -15,7 +15,7 @@ export default function Navbar() {
         </Link>
         <div className="navbar-links">
           <Link to="/" className="nav-link">홈</Link>
-          <Link to="/rooms" className="nav-link">스터디</Link>
+          <Link to="/study" className="nav-link">스터디</Link>
           <Link to="/reviews" className="nav-link">포폴 · 이력서</Link>
           <Link to="/community" className="nav-link">커뮤니티</Link>
         </div>
@@ -39,7 +39,7 @@ export default function Navbar() {
       </div>
       <div className={`mobile-menu${mobileOpen ? ' open' : ''}`}>
         <Link to="/" className="nav-link" onClick={() => setMobileOpen(false)}>홈</Link>
-        <Link to="/rooms" className="nav-link" onClick={() => setMobileOpen(false)}>스터디</Link>
+        <Link to="/study" className="nav-link" onClick={() => setMobileOpen(false)}>스터디</Link>
         <Link to="/reviews" className="nav-link" onClick={() => setMobileOpen(false)}>포폴 · 이력서</Link>
         <Link to="/community" className="nav-link" onClick={() => setMobileOpen(false)}>커뮤니티</Link>
       </div>

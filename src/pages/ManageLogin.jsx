@@ -17,7 +17,7 @@ export default function ManageLogin() {
     try {
       await verifyManagePassword(roomId, password)
       sessionStorage.setItem(`room_${roomId}_password`, password)
-      navigate(`/rooms/${roomId}/manage/dashboard`)
+      navigate(`/study/${roomId}/manage/dashboard`)
     } catch (err) {
       if (err?.response?.status === 401) {
         setError('비밀번호가 올바르지 않습니다')
@@ -56,7 +56,7 @@ export default function ManageLogin() {
           </button>
         </form>
 
-        <Link to={`/rooms/${roomId}`} className="auth-back">← 스터디로 돌아가기</Link>
+        <Link to={`/study/${roomId}`} className="auth-back">← 스터디로 돌아가기</Link>
       </div>
     </div>
   )

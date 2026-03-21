@@ -19,13 +19,16 @@ function formatDate(str) {
 
 function RoomCard({ room }) {
   return (
-    <Link to={`/rooms/${room.id}`} className="room-card">
+    <Link to={`/study/${room.id}`} className="room-card">
       <div className="room-card-top">
         <div className="room-company">
           <ThemeLogo logoUrl={room.themeLogoUrl} slug={room.themeSlug} size={28} />
           <span>{room.themeName}</span>
         </div>
-        {statusBadge(room.status)}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {room.jobRoleDisplay && <span className="tag tag-role">{room.jobRoleDisplay}</span>}
+          {statusBadge(room.status)}
+        </div>
       </div>
       <div className="room-title">{room.title}</div>
       {room.description && (
@@ -116,7 +119,7 @@ export default function Home() {
                   <ThemeLogo logoUrl={selectedTheme.logoUrl} slug={selectedTheme.slug} size={24} />
                   {selectedTheme.name}
                 </div>
-                <Link to={`/rooms/theme/${selectedTheme.id}`} className="btn btn-ghost btn-sm">
+                <Link to={`/study/theme/${selectedTheme.id}`} className="btn btn-ghost btn-sm">
                   더보기 →
                 </Link>
               </div>
@@ -125,7 +128,7 @@ export default function Home() {
               ) : themeRooms.length === 0 ? (
                 <div className="theme-preview-empty">
                   아직 개설된 스터디가 없습니다.
-                  <Link to={`/rooms/new?themeId=${selectedTheme.id}`} className="btn btn-accent btn-sm" style={{ marginLeft: 12 }}>개설하기</Link>
+                  <Link to={`/study/new?themeId=${selectedTheme.id}`} className="btn btn-accent btn-sm" style={{ marginLeft: 12 }}>개설하기</Link>
                 </div>
               ) : (
                 <div className="room-grid">
@@ -146,7 +149,7 @@ export default function Home() {
                   <div className="empty-icon">📭</div>
                   <h3>아직 스터디가 없습니다</h3>
                   <p>첫 번째 스터디를 개설해보세요!</p>
-                  <Link to="/rooms/new" className="btn btn-accent">스터디 개설하기</Link>
+                  <Link to="/study/new" className="btn btn-accent">스터디 개설하기</Link>
                 </div>
               ) : (
                 <div className="room-grid">

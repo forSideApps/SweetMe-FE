@@ -69,7 +69,7 @@ export default function RoomCreate() {
         requirements: form.requirements || null,
       }
       const result = await createRoom(selectedTheme.id, body)
-      navigate(`/rooms/${result.id}`)
+      navigate(`/study/${result.id}`)
     } catch (err) {
       const msg = err?.response?.data?.message || '스터디 개설에 실패했습니다.'
       setAlert({ type: 'error', message: msg })

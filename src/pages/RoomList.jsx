@@ -104,7 +104,7 @@ export default function RoomList() {
             <button className={`filter-tab${status === '' ? ' active' : ''}`} onClick={() => handleStatusChange('')}>전체</button>
             <button className={`filter-tab${status === 'OPEN' ? ' active' : ''}`} onClick={() => handleStatusChange('OPEN')}>모집중</button>
           </div>
-          <Link to={`/rooms/new?themeId=${themeId}`} className="btn btn-accent">
+          <Link to={`/study/new?themeId=${themeId}`} className="btn btn-accent">
             스터디 개설
           </Link>
         </div>
@@ -129,12 +129,12 @@ export default function RoomList() {
             <div className="empty-icon">📭</div>
             <h3>스터디가 없습니다</h3>
             <p>첫 번째 스터디를 개설해보세요!</p>
-            <Link to={`/rooms/new?themeId=${themeId}`} className="btn btn-accent">스터디 개설하기</Link>
+            <Link to={`/study/new?themeId=${themeId}`} className="btn btn-accent">스터디 개설하기</Link>
           </div>
         ) : (
           <div className="room-grid">
             {rooms.map(room => (
-              <Link key={room.id} to={`/rooms/${room.id}`} className="room-card">
+              <Link key={room.id} to={`/study/${room.id}`} className="room-card">
                 <div className="room-card-top">
                   <div className="room-company">
                     <ThemeLogo logoUrl={room.themeLogoUrl} slug={room.themeSlug} size={28} />

@@ -106,7 +106,7 @@ export default function RoomDetail() {
         <div className="breadcrumb">
           <Link to="/">홈</Link>
           <span>/</span>
-          {room.themeId && <Link to={`/rooms/theme/${room.themeId}`}>{room.themeName}</Link>}
+          {room.themeId && <Link to={`/study/theme/${room.themeId}`}>{room.themeName}</Link>}
           {room.themeId && <span>/</span>}
           <span>상세</span>
         </div>
@@ -278,7 +278,7 @@ export default function RoomDetail() {
             <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 12 }}>
               신청자 관리 및 스터디 운영을 위해 로그인하세요.
             </p>
-            <Link to={`/rooms/${roomId}/manage`} className="btn btn-outline w-full">
+            <Link to={`/study/${roomId}/manage`} className="btn btn-outline w-full">
               방장 로그인
             </Link>
           </div>

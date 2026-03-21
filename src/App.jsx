@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Home from './pages/Home'
@@ -24,12 +24,12 @@ function AppInner() {
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/rooms" element={<RoomBrowse />} />
-          <Route path="/rooms/theme/:themeId" element={<RoomList />} />
-          <Route path="/rooms/new" element={<RoomCreate />} />
-          <Route path="/rooms/:roomId/manage/dashboard" element={<ManageDashboard />} />
-          <Route path="/rooms/:roomId/manage" element={<ManageLogin />} />
-          <Route path="/rooms/:roomId" element={<RoomDetail />} />
+          <Route path="/study" element={<RoomBrowse />} />
+          <Route path="/study/theme/:themeId" element={<RoomList />} />
+          <Route path="/study/new" element={<RoomCreate />} />
+          <Route path="/study/:roomId/manage/dashboard" element={<ManageDashboard />} />
+          <Route path="/study/:roomId/manage" element={<ManageLogin />} />
+          <Route path="/study/:roomId" element={<RoomDetail />} />
           <Route path="/community" element={<Community />} />
           <Route path="/community/new" element={<CommunityCreate />} />
           <Route path="/community/:postId" element={<CommunityDetail />} />
@@ -38,6 +38,7 @@ function AppInner() {
           <Route path="/reviews/:id" element={<ReviewDetail />} />
           <Route path="/reviews/:id/edit" element={<ReviewEdit />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
       <Footer />

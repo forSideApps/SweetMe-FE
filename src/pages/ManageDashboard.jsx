@@ -30,7 +30,7 @@ export default function ManageDashboard() {
 
   useEffect(() => {
     if (!password) {
-      navigate(`/rooms/${roomId}/manage`)
+      navigate(`/study/${roomId}/manage`)
       return
     }
     fetchData()
@@ -134,7 +134,7 @@ export default function ManageDashboard() {
         <div className="breadcrumb">
           <Link to="/">홈</Link>
           <span>/</span>
-          <Link to={`/rooms/${roomId}`}>{room.title || '스터디'}</Link>
+          <Link to={`/study/${roomId}`}>{room.title || '스터디'}</Link>
           <span>/</span>
           <span>관리</span>
         </div>
@@ -168,7 +168,7 @@ export default function ManageDashboard() {
           </div>
 
           <div className="manage-back">
-            <Link to={`/rooms/${roomId}`} className="btn btn-ghost">← 방으로 돌아가기</Link>
+            <Link to={`/study/${roomId}`} className="btn btn-ghost">← 방으로 돌아가기</Link>
           </div>
           <div className="manage-right-actions">
             <button className="btn btn-outline" onClick={() => openEdit(room)}>방 정보 수정</button>

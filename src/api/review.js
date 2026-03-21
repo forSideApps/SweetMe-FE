@@ -45,5 +45,5 @@ export const deleteReviewComment = (reviewId, commentId, password) =>
 export const deleteReview = (id) =>
   client.delete(`/reviews/${id}`)
 
-export const getReviewLink = (id, password) =>
-  client.post(`/reviews/${id}/link`, { password }).then(r => r.data)
+export const getReviewLink = (id, password, adminKey) =>
+  client.post(`/reviews/${id}/link`, { password, adminKey }).then(r => r.data)
