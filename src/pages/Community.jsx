@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { getPosts } from '../api/community'
 
 const CATEGORIES = [
@@ -15,14 +15,16 @@ function formatDate(str) {
 }
 
 export default function Community() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [posts, setPosts] = useState([])
-  const [category, setCategory] = useState('')
-  const [keyword, setKeyword] = useState('')
-  const [inputValue, setInputValue] = useState('')
-  const [page, setPage] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
   const debounceRef = useRef(null)
+
+  const category = searchParams.get('category') || ''
+  const keyword = searchParams.get('keyword') || ''
+  const page = parseInt(searchParams.get('page') || '0', 10)
+  const [inputValue, setInputValue] = useState(keyword)
 
   useEffect(() => {
     setLoading(true)
@@ -36,8 +38,13 @@ export default function Community() {
   }, [category, keyword, page])
 
   function handleCategoryChange(c) {
-    setCategory(c)
-    setPage(0)
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      if (c) next.set('category', c)
+      else next.delete('category')
+      next.delete('page')
+      return next
+    }, { replace: true })
   }
 
   function handleInputChange(e) {
@@ -45,9 +52,23 @@ export default function Community() {
     setInputValue(val)
     clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      setKeyword(val)
-      setPage(0)
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev)
+        if (val) next.set('keyword', val)
+        else next.delete('keyword')
+        next.delete('page')
+        return next
+      }, { replace: true })
     }, 400)
+  }
+
+  function handlePageChange(newPage) {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      if (newPage > 0) next.set('page', String(newPage))
+      else next.delete('page')
+      return next
+    }, { replace: true })
   }
 
   return (
@@ -126,13 +147,13 @@ export default function Community() {
             <button
               className="page-btn"
               disabled={page === 0}
-              onClick={() => setPage(p => p - 1)}
+              onClick={() => handlePageChange(page - 1)}
             >이전</button>
             <span className="page-info">{page + 1} / {totalPages}</span>
             <button
               className="page-btn"
               disabled={page >= totalPages - 1}
-              onClick={() => setPage(p => p + 1)}
+              onClick={() => handlePageChange(page + 1)}
             >다음</button>
           </div>
         )}

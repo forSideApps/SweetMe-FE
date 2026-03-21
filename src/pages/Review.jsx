@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { getReviews } from '../api/review'
 import { JOB_ROLES } from '../constants/jobRoles'
 
@@ -25,20 +25,21 @@ function formatDate(str) {
 }
 
 export default function Review() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [reviews, setReviews] = useState([])
-  const [page, setPage] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
-
-  const [type, setType] = useState('')
-  const [status, setStatus] = useState('')
-  const [jobCategory, setJobCategory] = useState('')
-  const [careerLevel, setCareerLevel] = useState('')
-  const [keyword, setKeyword] = useState('')
-  const [inputValue, setInputValue] = useState('')
   const [filterOpen, setFilterOpen] = useState(false)
   const debounceRef = useRef(null)
   const filterRef = useRef(null)
+
+  const type = searchParams.get('type') || ''
+  const status = searchParams.get('status') || ''
+  const jobCategory = searchParams.get('jobCategory') || ''
+  const careerLevel = searchParams.get('careerLevel') || ''
+  const keyword = searchParams.get('keyword') || ''
+  const page = parseInt(searchParams.get('page') || '0', 10)
+  const [inputValue, setInputValue] = useState(keyword)
 
   useEffect(() => {
     if (!filterOpen) return
@@ -66,9 +67,23 @@ export default function Review() {
     load({ type, status, jobCategory, careerLevel, keyword, page })
   }, [type, status, jobCategory, careerLevel, keyword, page, load])
 
-  function handleFilterChange(setter, value) {
-    setter(value)
-    setPage(0)
+  function updateParam(key, value) {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      if (value) next.set(key, value)
+      else next.delete(key)
+      next.delete('page')
+      return next
+    }, { replace: true })
+  }
+
+  function handlePageChange(newPage) {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      if (newPage > 0) next.set('page', String(newPage))
+      else next.delete('page')
+      return next
+    }, { replace: true })
   }
 
   function handleInputChange(e) {
@@ -76,8 +91,7 @@ export default function Review() {
     setInputValue(val)
     clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      setKeyword(val)
-      setPage(0)
+      updateParam('keyword', val)
     }, 400)
   }
 
@@ -140,26 +154,26 @@ export default function Review() {
             {/* 상태 */}
             <div className="filter-tabs" style={{ marginBottom: 8 }}>
               {STATUSES.map(s => (
-                <button key={s.value} className={`filter-tab${status === s.value ? ' active' : ''}`} onClick={() => handleFilterChange(setStatus, s.value)}>{s.label}</button>
+                <button key={s.value} className={`filter-tab${status === s.value ? ' active' : ''}`} onClick={() => updateParam('status', s.value)}>{s.label}</button>
               ))}
             </div>
             {/* 종류 */}
             <div className="filter-tabs" style={{ marginBottom: 8 }}>
               {TYPES.map(t => (
-                <button key={t.value} className={`filter-tab${type === t.value ? ' active' : ''}`} onClick={() => handleFilterChange(setType, t.value)}>{t.label}</button>
+                <button key={t.value} className={`filter-tab${type === t.value ? ' active' : ''}`} onClick={() => updateParam('type', t.value)}>{t.label}</button>
               ))}
             </div>
             {/* 경력 */}
             <div className="filter-tabs" style={{ marginBottom: 8 }}>
               {CAREER_LEVELS.map(c => (
-                <button key={c.value} className={`filter-tab${careerLevel === c.value ? ' active' : ''}`} onClick={() => handleFilterChange(setCareerLevel, c.value)}>{c.label}</button>
+                <button key={c.value} className={`filter-tab${careerLevel === c.value ? ' active' : ''}`} onClick={() => updateParam('careerLevel', c.value)}>{c.label}</button>
               ))}
             </div>
             {/* 직군 */}
             <div className="filter-tabs" style={{ flexWrap: 'wrap', gap: 6 }}>
-              <button className={`filter-tab${jobCategory === '' ? ' active' : ''}`} onClick={() => handleFilterChange(setJobCategory, '')}>전체</button>
+              <button className={`filter-tab${jobCategory === '' ? ' active' : ''}`} onClick={() => updateParam('jobCategory', '')}>전체</button>
               {JOB_ROLES.map(j => (
-                <button key={j.value} className={`filter-tab${jobCategory === j.value ? ' active' : ''}`} onClick={() => handleFilterChange(setJobCategory, j.value)}>{j.label}</button>
+                <button key={j.value} className={`filter-tab${jobCategory === j.value ? ' active' : ''}`} onClick={() => updateParam('jobCategory', j.value)}>{j.label}</button>
               ))}
             </div>
           </div>
@@ -205,9 +219,9 @@ export default function Review() {
 
         {totalPages > 1 && (
           <div className="pagination">
-            <button className="page-btn" disabled={page === 0} onClick={() => setPage(p => p - 1)}>이전</button>
+            <button className="page-btn" disabled={page === 0} onClick={() => handlePageChange(page - 1)}>이전</button>
             <span className="page-info">{page + 1} / {totalPages}</span>
-            <button className="page-btn" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>다음</button>
+            <button className="page-btn" disabled={page >= totalPages - 1} onClick={() => handlePageChange(page + 1)}>다음</button>
           </div>
         )}
       </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { getReview, incrementReviewView, addReviewComment, updateReviewComment, deleteReviewComment, getReviewLink } from '../api/review'
 import Alert from '../components/Alert'
 
@@ -15,6 +15,7 @@ function formatDate(str) {
 
 export default function ReviewDetail() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [review, setReview] = useState(null)
   const [loading, setLoading] = useState(true)
   const [alert, setAlert] = useState(null)
@@ -256,7 +257,7 @@ export default function ReviewDetail() {
 
 
           <div className="post-detail-actions">
-            <Link to="/reviews" className="btn btn-ghost btn-sm">← 목록으로</Link>
+            <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm">← 목록으로</button>
           </div>
         </div>
 

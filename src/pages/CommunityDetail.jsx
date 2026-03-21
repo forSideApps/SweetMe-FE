@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { getPost, addComment, incrementPostView } from '../api/community'
 import Alert from '../components/Alert'
 
@@ -16,6 +16,7 @@ function formatDate(str) {
 
 export default function CommunityDetail() {
   const { postId } = useParams()
+  const navigate = useNavigate()
   const [post, setPost] = useState(null)
   const [loading, setLoading] = useState(true)
   const [alert, setAlert] = useState(null)
@@ -105,7 +106,7 @@ export default function CommunityDetail() {
           </div>
           <div className="post-detail-body">{post.content}</div>
           <div className="post-detail-actions">
-            <Link to="/community" className="btn btn-ghost btn-sm">← 목록으로</Link>
+            <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm">← 목록으로</button>
           </div>
         </div>
 
