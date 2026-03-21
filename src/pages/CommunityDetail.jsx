@@ -95,30 +95,34 @@ export default function CommunityDetail() {
       <div className="section-sm">
         <div className="post-detail-card">
           <div className="post-detail-header">
-            <span className={`post-cat-badge ${post.category}`}>
-              {CATEGORY_LABELS[post.category] || post.category}
-            </span>
-            <div className="post-detail-title">{post.title}</div>
-            <div className="post-detail-meta">
-              <span>{post.authorName}</span>
-              {post.viewCount != null && <span>조회 {post.viewCount}</span>}
-              <span>{formatDate(post.createdAt)}</span>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <span className={`post-cat-badge ${post.category}`}>
+                  {CATEGORY_LABELS[post.category] || post.category}
+                </span>
+                <div className="post-detail-title">{post.title}</div>
+                <div className="post-detail-meta">
+                  <span>{post.authorName}</span>
+                  {post.viewCount != null && <span>조회 {post.viewCount}</span>}
+                  <span>{formatDate(post.createdAt)}</span>
+                </div>
+              </div>
+              {adminKey && (
+                <button
+                  className="btn btn-sm"
+                  style={{ background: '#ef4444', color: '#fff', flexShrink: 0 }}
+                  onClick={async () => {
+                    if (!confirm('이 게시글을 삭제하시겠습니까?')) return
+                    await deletePost(postId, adminKey)
+                    navigate('/community', { replace: true })
+                  }}
+                >삭제</button>
+              )}
             </div>
           </div>
           <div className="post-detail-body">{post.content}</div>
           <div className="post-detail-actions">
             <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm">← 목록으로</button>
-            {adminKey && (
-              <button
-                className="btn btn-sm"
-                style={{ background: '#ef4444', color: '#fff' }}
-                onClick={async () => {
-                  if (!confirm('이 게시글을 삭제하시겠습니까?')) return
-                  await deletePost(postId, adminKey)
-                  navigate('/community', { replace: true })
-                }}
-              >삭제</button>
-            )}
           </div>
         </div>
 
