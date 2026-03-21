@@ -99,18 +99,8 @@ export default function Review() {
         />
       </div>
 
-      {/* 필터 바: 타입 탭 + 상태 탭 + 경력/직군 */}
-      <div className="review-filter-bar">
-        {TYPES.map(t => (
-          <button
-            key={t.value}
-            className={`comm-tab${type === t.value ? ' active' : ''}`}
-            onClick={() => handleFilterChange(setType, t.value)}
-          >
-            {t.label}
-          </button>
-        ))}
-        <div style={{ width: 1, height: 18, background: 'var(--border)', margin: '0 6px', alignSelf: 'center' }} />
+      {/* 필터 바 1행: 상태 (검토전/완료) */}
+      <div className="review-filter-bar" style={{ marginBottom: 8 }}>
         {STATUSES.map(s => (
           <button
             key={s.value}
@@ -144,6 +134,19 @@ export default function Review() {
             <span className="filter-pill-chevron">▾</span>
           </div>
         </div>
+      </div>
+
+      {/* 필터 바 2행: 타입 (포폴/이력서) */}
+      <div className="review-filter-bar" style={{ marginBottom: 20 }}>
+        {TYPES.map(t => (
+          <button
+            key={t.value}
+            className={`comm-tab${type === t.value ? ' active' : ''}`}
+            onClick={() => handleFilterChange(setType, t.value)}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       <div className="section-sm" style={{ paddingTop: 8 }}>
