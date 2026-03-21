@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { getReview, incrementReviewView, addReviewComment, getReviewLink } from '../api/review'
+import { getReview, incrementReviewView, addReviewComment, updateReviewComment, deleteReviewComment, getReviewLink } from '../api/review'
 import Alert from '../components/Alert'
 
 const STATUS_STYLE = {
@@ -18,7 +18,7 @@ export default function ReviewDetail() {
   const [review, setReview] = useState(null)
   const [loading, setLoading] = useState(true)
   const [alert, setAlert] = useState(null)
-  const [comment, setComment] = useState({ authorName: '', content: '' })
+  const [comment, setComment] = useState({ authorName: '', content: '', password: '' })
   const [commentErrors, setCommentErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const viewedRef = useRef(false)
@@ -30,6 +30,12 @@ export default function ReviewDetail() {
   const [revealedLink, setRevealedLink] = useState(null)
   const [linkLoading, setLinkLoading] = useState(false)
   const [showLinkPwForm, setShowLinkPwForm] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const [editForm, setEditForm] = useState({ content: '', password: '' })
+  const [editError, setEditError] = useState('')
+  const [deleteId, setDeleteId] = useState(null)
+  const [deletePw, setDeletePw] = useState('')
+  const [deleteError, setDeleteError] = useState('')
 
   const fetchReview = useCallback(() => {
     getReview(id).then(setReview).finally(() => setLoading(false))
@@ -47,6 +53,7 @@ export default function ReviewDetail() {
     const errs = {}
     if (!comment.authorName.trim()) errs.authorName = '작성자명을 입력해주세요.'
     if (!comment.content.trim()) errs.content = '내용을 입력해주세요.'
+    if (!comment.password.trim()) errs.password = '비밀번호를 입력해주세요.'
     return errs
   }
 
@@ -63,6 +70,42 @@ export default function ReviewDetail() {
       setAlert({ type: 'error', message: '댓글 작성에 실패했습니다.' })
     } finally {
       setAdminSubmitting(false)
+    }
+  }
+
+  function startEdit(c) {
+    setEditingId(c.id)
+    setEditForm({ content: c.content, password: '' })
+    setEditError('')
+  }
+
+  async function handleEditSubmit(e) {
+    e.preventDefault()
+    if (!editForm.password.trim()) { setEditError('비밀번호를 입력해주세요.'); return }
+    try {
+      await updateReviewComment(id, editingId, editForm)
+      setEditingId(null)
+      fetchReview()
+    } catch (err) {
+      setEditError(err?.response?.status === 401 ? '비밀번호가 올바르지 않습니다.' : '수정에 실패했습니다.')
+    }
+  }
+
+  function startDelete(commentId) {
+    setDeleteId(commentId)
+    setDeletePw('')
+    setDeleteError('')
+  }
+
+  async function handleDeleteSubmit(e) {
+    e.preventDefault()
+    if (!deletePw.trim()) { setDeleteError('비밀번호를 입력해주세요.'); return }
+    try {
+      await deleteReviewComment(id, deleteId, deletePw)
+      setDeleteId(null)
+      fetchReview()
+    } catch (err) {
+      setDeleteError(err?.response?.status === 401 ? '비밀번호가 올바르지 않습니다.' : '삭제에 실패했습니다.')
     }
   }
 
@@ -90,7 +133,7 @@ export default function ReviewDetail() {
     setSubmitting(true)
     try {
       await addReviewComment(id, comment)
-      setComment({ authorName: '', content: '' })
+      setComment({ authorName: '', content: '', password: '' })
       setAlert({ type: 'success', message: '댓글이 작성되었습니다.' })
       fetchReview()
     } catch {
@@ -237,9 +280,60 @@ export default function ReviewDetail() {
                       {c.admin && <span style={{ marginRight: 3 }}>👑</span>}
                       {c.authorName}
                     </span>
-                    <span className="comment-date">{formatDate(c.createdAt)}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span className="comment-date">{formatDate(c.createdAt)}</span>
+                      {!c.admin && (
+                        <>
+                          <button className="btn btn-ghost btn-sm" style={{ padding: '1px 6px', fontSize: 12 }} onClick={() => startEdit(c)}>수정</button>
+                          <button className="btn btn-ghost btn-sm" style={{ padding: '1px 6px', fontSize: 12, color: 'var(--danger, #ef4444)' }} onClick={() => startDelete(c.id)}>삭제</button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div className="comment-body">{c.content}</div>
+                  {editingId === c.id ? (
+                    <form onSubmit={handleEditSubmit} style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <textarea
+                        className="form-textarea"
+                        value={editForm.content}
+                        onChange={e => setEditForm(f => ({ ...f, content: e.target.value }))}
+                        rows={3}
+                        style={{ minHeight: 70 }}
+                      />
+                      <input
+                        type="password"
+                        className={`form-input${editError ? ' is-error' : ''}`}
+                        value={editForm.password}
+                        onChange={e => setEditForm(f => ({ ...f, password: e.target.value }))}
+                        placeholder="작성 시 입력한 비밀번호"
+                        style={{ fontSize: 13 }}
+                      />
+                      {editError && <span className="form-err">{editError}</span>}
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button type="submit" className="btn btn-accent btn-sm">저장</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditingId(null)}>취소</button>
+                      </div>
+                    </form>
+                  ) : deleteId === c.id ? (
+                    <form onSubmit={handleDeleteSubmit} style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <div style={{ fontSize: 13, color: 'var(--text-2)' }}>비밀번호를 입력하면 댓글이 삭제됩니다.</div>
+                      <input
+                        type="password"
+                        className={`form-input${deleteError ? ' is-error' : ''}`}
+                        value={deletePw}
+                        onChange={e => setDeletePw(e.target.value)}
+                        placeholder="작성 시 입력한 비밀번호"
+                        autoFocus
+                        style={{ fontSize: 13 }}
+                      />
+                      {deleteError && <span className="form-err">{deleteError}</span>}
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button type="submit" className="btn btn-sm" style={{ background: '#ef4444', color: '#fff' }}>삭제</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => setDeleteId(null)}>취소</button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="comment-body">{c.content}</div>
+                  )}
                 </div>
               ))}
             </div>
@@ -275,6 +369,16 @@ export default function ReviewDetail() {
                     placeholder="작성자명"
                   />
                   {commentErrors.authorName && <span className="form-err">{commentErrors.authorName}</span>}
+                </div>
+                <div className="form-group">
+                  <input
+                    type="password"
+                    className={`form-input${commentErrors.password ? ' is-error' : ''}`}
+                    value={comment.password}
+                    onChange={e => setComment(c => ({ ...c, password: e.target.value }))}
+                    placeholder="비밀번호 (수정/삭제 시 필요)"
+                  />
+                  {commentErrors.password && <span className="form-err">{commentErrors.password}</span>}
                 </div>
                 <div className="form-group">
                   <textarea

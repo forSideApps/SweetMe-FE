@@ -8,6 +8,11 @@ const TYPES = [
   { value: 'PORTFOLIO', label: '포트폴리오' },
   { value: 'RESUME', label: '이력서' },
 ]
+const STATUSES = [
+  { value: '', label: '전체' },
+  { value: 'PENDING', label: '검토전' },
+  { value: 'DONE', label: '완료' },
+]
 const CAREER_LEVELS = [
   { value: '', label: '전체 경력' },
   { value: 'JUNIOR', label: '신입' },
@@ -26,6 +31,7 @@ export default function Review() {
   const [loading, setLoading] = useState(true)
 
   const [type, setType] = useState('')
+  const [status, setStatus] = useState('')
   const [jobCategory, setJobCategory] = useState('')
   const [careerLevel, setCareerLevel] = useState('')
   const [keyword, setKeyword] = useState('')
@@ -44,8 +50,8 @@ export default function Review() {
   }, [])
 
   useEffect(() => {
-    load({ type, jobCategory, careerLevel, keyword, page })
-  }, [type, jobCategory, careerLevel, keyword, page, load])
+    load({ type, status, jobCategory, careerLevel, keyword, page })
+  }, [type, status, jobCategory, careerLevel, keyword, page, load])
 
   function handleFilterChange(setter, value) {
     setter(value)
@@ -93,7 +99,7 @@ export default function Review() {
         />
       </div>
 
-      {/* 필터 바: 타입 탭 + 경력/직군 */}
+      {/* 필터 바: 타입 탭 + 상태 탭 + 경력/직군 */}
       <div className="review-filter-bar">
         {TYPES.map(t => (
           <button
@@ -102,6 +108,16 @@ export default function Review() {
             onClick={() => handleFilterChange(setType, t.value)}
           >
             {t.label}
+          </button>
+        ))}
+        <div style={{ width: 1, height: 18, background: 'var(--border)', margin: '0 6px', alignSelf: 'center' }} />
+        {STATUSES.map(s => (
+          <button
+            key={s.value}
+            className={`comm-tab${status === s.value ? ' active' : ''}`}
+            onClick={() => handleFilterChange(setStatus, s.value)}
+          >
+            {s.label}
           </button>
         ))}
         <div className="review-filter-spacer" />

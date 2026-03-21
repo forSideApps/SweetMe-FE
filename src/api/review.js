@@ -1,9 +1,10 @@
 import client from './client'
 
-export const getReviews = ({ type, jobCategory, careerLevel, keyword, page } = {}) =>
+export const getReviews = ({ type, status, jobCategory, careerLevel, keyword, page } = {}) =>
   client.get('/reviews', {
     params: {
       type: type || undefined,
+      status: status || undefined,
       jobCategory: jobCategory || undefined,
       careerLevel: careerLevel || undefined,
       keyword: keyword || undefined,
@@ -34,6 +35,12 @@ export const markReviewPending = (id) =>
 
 export const addReviewComment = (id, data) =>
   client.post(`/reviews/${id}/comments`, data)
+
+export const updateReviewComment = (reviewId, commentId, data) =>
+  client.put(`/reviews/${reviewId}/comments/${commentId}`, data)
+
+export const deleteReviewComment = (reviewId, commentId, password) =>
+  client.delete(`/reviews/${reviewId}/comments/${commentId}`, { data: { password } })
 
 export const deleteReview = (id) =>
   client.delete(`/reviews/${id}`)
