@@ -53,7 +53,7 @@ export default function Home() {
   const [selectedTheme, setSelectedTheme] = useState(null)
   const [themeRooms, setThemeRooms] = useState([])
   const [themeLoading, setThemeLoading] = useState(false)
-  const [showRecent, setShowRecent] = useState(false)
+  const [showRecent, setShowRecent] = useState(true)
 
   useEffect(() => {
     Promise.all([getThemes(), getRecentRooms(6)])
