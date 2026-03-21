@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { getThemes } from '../api/themes'
-import { getReviews, deleteReview, markReviewDone, markReviewPending } from '../api/review'
+import { getReviews, deleteReview, markReviewDone, markReviewPending, addReviewComment } from '../api/review'
 import client from '../api/client'
 import ThemeLogo from '../components/ThemeLogo'
 
@@ -14,11 +14,52 @@ const TABS = [
 export default function Admin() {
   const [activeTab, setActiveTab] = useState('visitor')
   const [msg, setMsg] = useState(null)
+  const [adminKey, setAdminKey] = useState(() => sessionStorage.getItem('adminKey') || '')
+  const [keyInput, setKeyInput] = useState('')
+  const [keyError, setKeyError] = useState('')
+
+  function handleLogin(e) {
+    e.preventDefault()
+    if (!keyInput) { setKeyError('비밀번호를 입력해주세요.'); return }
+    client.get('/admin/visitors', { headers: { 'X-Admin-Key': keyInput } })
+      .then(() => {
+        sessionStorage.setItem('adminKey', keyInput)
+        setAdminKey(keyInput)
+        setKeyError('')
+      })
+      .catch(() => setKeyError('비밀번호가 올바르지 않습니다.'))
+  }
+
+  if (!adminKey) {
+    return (
+      <div className="auth-wrap">
+        <div className="auth-card">
+          <div className="auth-icon">🔐</div>
+          <div className="auth-title">어드민 인증</div>
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="form-group">
+              <input
+                type="password"
+                className={`form-input${keyError ? ' is-error' : ''}`}
+                value={keyInput}
+                onChange={e => setKeyInput(e.target.value)}
+                placeholder="어드민 비밀번호"
+                autoFocus
+              />
+              {keyError && <span className="form-err">{keyError}</span>}
+            </div>
+            <button type="submit" className="btn btn-accent w-full">확인</button>
+          </form>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="container-sm" style={{ padding: '40px 24px' }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 6 }}>어드민</h1>
+      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <h1 style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 0 }}>어드민</h1>
+        <button className="btn btn-ghost btn-sm" onClick={() => { sessionStorage.removeItem('adminKey'); setAdminKey('') }}>로그아웃</button>
       </div>
 
       {msg && (
@@ -40,24 +81,37 @@ export default function Admin() {
         ))}
       </div>
 
-      {activeTab === 'visitor' && <VisitorTab />}
-      {activeTab === 'company' && <CompanyTab setMsg={setMsg} />}
-      {activeTab === 'review'  && <ReviewTab setMsg={setMsg} />}
+      {activeTab === 'visitor' && <VisitorTab adminKey={adminKey} onUnauthorized={() => { sessionStorage.removeItem('adminKey'); setAdminKey('') }} />}
+      {activeTab === 'company' && <CompanyTab setMsg={setMsg} adminKey={adminKey} />}
+      {activeTab === 'review'  && <ReviewTab setMsg={setMsg} adminKey={adminKey} />}
     </div>
   )
 }
 
 /* ─── 방문자 통계 탭 ─── */
-function VisitorTab() {
+function VisitorTab({ adminKey, onUnauthorized }) {
   const [stats, setStats] = useState({ today: null, total: null })
+  const [error, setError] = useState(null)
 
-  useEffect(() => {
-    client.get('/admin/visitors').then(r => setStats(r.data)).catch(() => {})
-  }, [])
+  function load() {
+    setError(null)
+    client.get('/admin/visitors', { headers: { 'X-Admin-Key': adminKey } })
+      .then(r => setStats(r.data))
+      .catch(err => {
+        if (err?.response?.status === 401) { onUnauthorized(); return }
+        setError('통계를 불러오지 못했습니다.')
+      })
+  }
+
+  useEffect(() => { load() }, [adminKey])
 
   return (
     <>
-      <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16 }}>방문자 통계</div>
+      <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+        방문자 통계
+        <button className="btn btn-ghost btn-sm" onClick={load} style={{ fontSize: 12 }}>새로고침</button>
+      </div>
+      {error && <p className="text-muted" style={{ marginBottom: 12 }}>{error}</p>}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <div style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', padding: '28px 24px', textAlign: 'center', flex: 1 }}>
           <div style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 12 }}>오늘 방문자</div>
@@ -73,7 +127,7 @@ function VisitorTab() {
 }
 
 /* ─── 회사 관리 탭 ─── */
-function CompanyTab({ setMsg }) {
+function CompanyTab({ setMsg, adminKey }) {
   const [companies, setCompanies] = useState([])
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState({ name: '', slug: '', accentColor: '#6366f1', displayOrder: '' })
@@ -111,7 +165,7 @@ function CompanyTab({ setMsg }) {
         slug: form.slug.trim(),
         accentColor: form.accentColor,
         displayOrder: form.displayOrder ? parseInt(form.displayOrder) : undefined,
-      })
+      }, { headers: { 'X-Admin-Key': adminKey } })
       setForm({ name: '', slug: '', accentColor: '#6366f1', displayOrder: '' })
       setFormErr({})
       setMsg({ type: 'success', text: '회사가 등록되었습니다.' })
@@ -143,7 +197,7 @@ function CompanyTab({ setMsg }) {
         slug: editForm.slug.trim(),
         accentColor: editForm.accentColor,
         displayOrder: editForm.displayOrder !== '' ? parseInt(editForm.displayOrder) : null,
-      })
+      }, { headers: { 'X-Admin-Key': adminKey } })
       setMsg({ type: 'success', text: '수정되었습니다.' })
       setEditingId(null)
       load()
@@ -163,7 +217,7 @@ function CompanyTab({ setMsg }) {
     formData.append('file', file)
     try {
       await client.post(`/admin/companies/${company.id}/logo`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data', 'X-Admin-Key': adminKey }
       })
       setMsg({ type: 'success', text: `${company.name} 로고가 저장되었습니다. (새로고침 필요)` })
       if (fileInputs.current[company.id]) fileInputs.current[company.id].value = ''
@@ -318,10 +372,13 @@ function CompanyTab({ setMsg }) {
 }
 
 /* ─── 포폴·이력서 검토 탭 ─── */
-function ReviewTab({ setMsg }) {
+function ReviewTab({ setMsg, adminKey }) {
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('')
+  const [commentingId, setCommentingId] = useState(null)
+  const [commentText, setCommentText] = useState('')
+  const [commentSubmitting, setCommentSubmitting] = useState(false)
 
   useEffect(() => { load() }, [])
 
@@ -331,6 +388,21 @@ function ReviewTab({ setMsg }) {
       .then(data => setReviews(data.content || data))
       .catch(() => setReviews([]))
       .finally(() => setLoading(false))
+  }
+
+  async function handleAdminComment(reviewId) {
+    if (!commentText.trim()) return
+    setCommentSubmitting(true)
+    try {
+      await addReviewComment(reviewId, { authorName: '방장', content: commentText, adminKey })
+      setCommentText('')
+      setCommentingId(null)
+      setMsg({ type: 'success', text: '방장 댓글이 작성되었습니다.' })
+    } catch {
+      setMsg({ type: 'error', text: '댓글 작성에 실패했습니다.' })
+    } finally {
+      setCommentSubmitting(false)
+    }
   }
 
   async function handleDelete(id) {
@@ -388,36 +460,60 @@ function ReviewTab({ setMsg }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(r => (
             <div key={r.id} style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               background: 'var(--bg)', border: '1.5px solid var(--border)',
-              borderRadius: 'var(--radius)', padding: '14px 18px', gap: 12
+              borderRadius: 'var(--radius)', padding: '14px 18px'
             }}>
-              <Link to={`/reviews/${r.id}`} style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1, textDecoration: 'none', color: 'inherit' }}>
-                <span className={`post-cat-badge ${r.type}`}>{r.typeDisplayName}</span>
-                <span className={`post-cat-badge ${r.status}`}>{r.statusDisplayName}</span>
-                <span style={{ fontSize: 13, color: 'var(--text-3)', whiteSpace: 'nowrap' }}>
-                  [{r.careerLevelDisplayName}·{r.jobCategoryDisplayName}]
-                </span>
-                <span style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {r.title}
-                </span>
-              </Link>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{r.authorName}</span>
-                <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{r.createdAt?.slice(0, 10)}</span>
-                <button
-                  className="btn btn-outline btn-sm"
-                  style={{ fontSize: 12 }}
-                  onClick={() => handleToggleStatus(r)}
-                >
-                  {r.status === 'PENDING' ? '완료 처리' : '검토전으로'}
-                </button>
-                <button
-                  className="btn btn-sm"
-                  style={{ fontSize: 12, padding: '3px 10px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 6, cursor: 'pointer' }}
-                  onClick={() => handleDelete(r.id)}
-                >삭제</button>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                <Link to={`/reviews/${r.id}`} style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1, textDecoration: 'none', color: 'inherit' }}>
+                  <span className={`post-cat-badge ${r.type}`}>{r.typeDisplayName}</span>
+                  <span className={`post-cat-badge ${r.status}`}>{r.statusDisplayName}</span>
+                  <span style={{ fontSize: 13, color: 'var(--text-3)', whiteSpace: 'nowrap' }}>
+                    [{r.careerLevelDisplayName}·{r.jobCategoryDisplayName}]
+                  </span>
+                  <span style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {r.title}
+                  </span>
+                </Link>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{r.authorName}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{r.createdAt?.slice(0, 10)}</span>
+                  <button
+                    className="btn btn-outline btn-sm"
+                    style={{ fontSize: 12 }}
+                    onClick={() => handleToggleStatus(r)}
+                  >
+                    {r.status === 'PENDING' ? '완료 처리' : '검토전으로'}
+                  </button>
+                  <button
+                    className="btn btn-outline btn-sm"
+                    style={{ fontSize: 12 }}
+                    onClick={() => { setCommentingId(commentingId === r.id ? null : r.id); setCommentText('') }}
+                  >👑 댓글</button>
+                  <button
+                    className="btn btn-sm"
+                    style={{ fontSize: 12, padding: '3px 10px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+                    onClick={() => handleDelete(r.id)}
+                  >삭제</button>
+                </div>
               </div>
+              {commentingId === r.id && (
+                <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                  <textarea
+                    className="form-textarea"
+                    value={commentText}
+                    onChange={e => setCommentText(e.target.value)}
+                    placeholder="방장으로 댓글을 남겨보세요"
+                    rows={2}
+                    style={{ flex: 1, minHeight: 60, fontSize: 13 }}
+                  />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <button className="btn btn-accent btn-sm" disabled={commentSubmitting} onClick={() => handleAdminComment(r.id)}>
+                      {commentSubmitting ? '...' : '작성'}
+                    </button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => setCommentingId(null)}>취소</button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>

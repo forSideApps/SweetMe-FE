@@ -1,13 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { getManageApplications, approveApplication, rejectApplication, closeRoom, updateRoom } from '../api/rooms'
+import { getManageApplications, approveApplication, rejectApplication, closeRoom, updateRoom, reopenRoom } from '../api/rooms'
 import Alert from '../components/Alert'
+import { JOB_ROLES } from '../constants/jobRoles'
 
-const JOB_ROLE_LABELS = {
-  BACKEND: '백엔드', FRONTEND: '프론트엔드', FULLSTACK: '풀스택',
-  MOBILE: '모바일', AI_ML: 'AI·ML', DATA: '데이터',
-  DEVOPS: 'DevOps', SECURITY: '보안', EMBEDDED: '임베디드', OTHER: '기타',
-}
+const JOB_ROLE_LABELS = Object.fromEntries(JOB_ROLES.map(r => [r.value, r.label]))
 
 const ALGO_GRADE_LABELS = {
   UNRATED: '언레이팅', BRONZE: '브론즈', SILVER: '실버', GOLD: '골드',
@@ -48,19 +45,6 @@ export default function ManageDashboard() {
       })
       .finally(() => setLoading(false))
   }, [roomId, password])
-
-  const JOB_ROLES = [
-    { value: 'BACKEND', label: '백엔드' },
-    { value: 'FRONTEND', label: '프론트엔드' },
-    { value: 'FULLSTACK', label: '풀스택' },
-    { value: 'MOBILE', label: '모바일' },
-    { value: 'AI_ML', label: 'AI/ML' },
-    { value: 'DATA', label: '데이터' },
-    { value: 'DEVOPS', label: 'DevOps/인프라' },
-    { value: 'SECURITY', label: '보안' },
-    { value: 'EMBEDDED', label: '임베디드' },
-    { value: 'OTHER', label: '기타' },
-  ]
 
   function openEdit(room) {
     setEditForm({
@@ -116,13 +100,24 @@ export default function ManageDashboard() {
   }
 
   async function handleClose() {
-    if (!window.confirm('스터디 모집을 마감하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return
+    if (!window.confirm('스터디 모집을 마감하시겠습니까?')) return
     try {
       await closeRoom(roomId, password)
       setAlert({ type: 'success', message: '모집이 마감되었습니다.' })
       fetchData()
     } catch {
       setAlert({ type: 'error', message: '마감에 실패했습니다.' })
+    }
+  }
+
+  async function handleReopen() {
+    if (!window.confirm('스터디 모집을 재개하시겠습니까?')) return
+    try {
+      await reopenRoom(roomId, password)
+      setAlert({ type: 'success', message: '모집이 재개되었습니다.' })
+      fetchData()
+    } catch {
+      setAlert({ type: 'error', message: '재개에 실패했습니다.' })
     }
   }
 
@@ -177,9 +172,12 @@ export default function ManageDashboard() {
           </div>
           <div className="manage-right-actions">
             <button className="btn btn-outline" onClick={() => openEdit(room)}>방 정보 수정</button>
-            {room.status === 'OPEN' && (
-              <button className="btn btn-danger" onClick={handleClose}>모집 마감하기</button>
-            )}
+            <button
+              className={`btn ${room.status === 'OPEN' ? 'btn-danger' : 'btn-accent'}`}
+              onClick={room.status === 'OPEN' ? handleClose : handleReopen}
+            >
+              {room.status === 'OPEN' ? '모집 마감하기' : '모집 재개하기'}
+            </button>
           </div>
         </div>
 

@@ -44,6 +44,10 @@ export function closeRoom(id, password) {
   return client.post(`/rooms/${id}/close`, null, { params: { password } }).then(r => r.data)
 }
 
+export function reopenRoom(id, password) {
+  return client.post(`/rooms/${id}/reopen`, null, { params: { password } }).then(r => r.data)
+}
+
 export function updateRoom(id, password, data) {
   return client.patch(`/rooms/${id}`, data, { params: { password } }).then(r => r.data)
 }

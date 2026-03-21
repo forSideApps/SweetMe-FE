@@ -129,7 +129,7 @@ export default function ReviewCreate() {
                 className={`form-textarea${errors.content ? ' is-error' : ''}`}
                 value={form.content}
                 onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
-                placeholder={`포트폴리오/이력서 링크나 내용을 자유롭게 작성해주세요.\n\n예:\n- 노션 링크: https://...\n- 피드백 원하는 부분: 프로젝트 설명 방식, 기술 스택 표현 등`}
+                placeholder={`포트폴리오/이력서에서 피드백을 받고 싶은 내용을 작성해주세요.\n\n- 피드백 원하는 부분: 프로젝트 설명 방식, 기술 스택 표현 등`}
                 rows={10}
                 style={{ minHeight: 240 }}
               />

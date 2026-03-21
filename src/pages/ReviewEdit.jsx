@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { getReview, verifyReviewPassword, updateReview } from '../api/review'
+import { getReview, verifyReviewPassword, updateReview, getReviewLink } from '../api/review'
 import Alert from '../components/Alert'
 import { JOB_ROLES } from '../constants/jobRoles'
 
@@ -41,7 +41,9 @@ export default function ReviewEdit() {
   }, [id])
 
   function loadReview() {
-    getReview(id).then(data => {
+    const pw = sessionStorage.getItem(SESSION_KEY(id))
+    const linkPromise = pw ? getReviewLink(id, pw).catch(() => null) : Promise.resolve(null)
+    Promise.all([getReview(id), linkPromise]).then(([data, linkData]) => {
       setReview(data)
       setForm({
         type: data.type,
@@ -49,7 +51,7 @@ export default function ReviewEdit() {
         careerLevel: data.careerLevel,
         title: data.title,
         content: data.content,
-        portfolioLink: data.portfolioLink || '',
+        portfolioLink: linkData?.link || '',
         contactInfo: data.contactInfo || '',
       })
     })

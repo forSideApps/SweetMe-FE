@@ -75,16 +75,17 @@ export default function RoomBrowse() {
           <div className="filter-tabs">
             <button className={`filter-tab${status === '' ? ' active' : ''}`} onClick={() => handleStatus('')}>전체</button>
             <button className={`filter-tab${status === 'OPEN' ? ' active' : ''}`} onClick={() => handleStatus('OPEN')}>모집중</button>
+            <button className={`filter-tab${status === 'CLOSED' ? ' active' : ''}`} onClick={() => handleStatus('CLOSED')}>마감</button>
           </div>
           <Link to="/rooms/new" className="btn btn-accent">스터디 개설</Link>
         </div>
 
         {/* 직군 필터 */}
-        <div className="job-role-tabs">
+        <div className="filter-tabs" style={{ flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
           {JOB_ROLE_FILTER.map(r => (
             <button
               key={r.value}
-              className={`job-role-tab${jobRole === r.value ? ' active' : ''}`}
+              className={`filter-tab${jobRole === r.value ? ' active' : ''}`}
               onClick={() => handleJobRole(r.value)}
             >
               {r.label}
@@ -110,12 +111,14 @@ export default function RoomBrowse() {
                     <ThemeLogo logoUrl={room.themeLogoUrl} slug={room.themeSlug} size={28} />
                     <span>{room.themeName}</span>
                   </div>
-                  {statusBadge(room.status)}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {room.jobRoleDisplay && (
+                      <span className="tag tag-role">{room.jobRoleDisplay}</span>
+                    )}
+                    {statusBadge(room.status)}
+                  </div>
                 </div>
                 <div className="room-title">{room.title}</div>
-                {room.jobRoleDisplay && (
-                  <span className="tag tag-role" style={{ marginBottom: 6 }}>{room.jobRoleDisplay}</span>
-                )}
                 {room.description && (
                   <div className="room-desc">{room.description.slice(0, 80)}{room.description.length > 80 ? '...' : ''}</div>
                 )}

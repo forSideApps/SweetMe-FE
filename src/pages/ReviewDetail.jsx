@@ -22,6 +22,9 @@ export default function ReviewDetail() {
   const [commentErrors, setCommentErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const viewedRef = useRef(false)
+  const adminKey = sessionStorage.getItem('adminKey') || ''
+  const [adminComment, setAdminComment] = useState('')
+  const [adminSubmitting, setAdminSubmitting] = useState(false)
   const [linkPw, setLinkPw] = useState('')
   const [linkPwError, setLinkPwError] = useState('')
   const [revealedLink, setRevealedLink] = useState(null)
@@ -45,6 +48,22 @@ export default function ReviewDetail() {
     if (!comment.authorName.trim()) errs.authorName = '작성자명을 입력해주세요.'
     if (!comment.content.trim()) errs.content = '내용을 입력해주세요.'
     return errs
+  }
+
+  async function handleAdminCommentSubmit(e) {
+    e.preventDefault()
+    if (!adminComment.trim()) return
+    setAdminSubmitting(true)
+    try {
+      await addReviewComment(id, { authorName: '방장', content: adminComment, adminKey })
+      setAdminComment('')
+      setAlert({ type: 'success', message: '방장 댓글이 작성되었습니다.' })
+      fetchReview()
+    } catch {
+      setAlert({ type: 'error', message: '댓글 작성에 실패했습니다.' })
+    } finally {
+      setAdminSubmitting(false)
+    }
   }
 
   async function handleRevealLink(e) {
@@ -214,12 +233,34 @@ export default function ReviewDetail() {
               {comments.map(c => (
                 <div key={c.id} className="comment-item">
                   <div className="comment-header">
-                    <span className="comment-author">{c.authorName}</span>
+                    <span className="comment-author">
+                      {c.admin && <span style={{ marginRight: 3 }}>👑</span>}
+                      {c.authorName}
+                    </span>
                     <span className="comment-date">{formatDate(c.createdAt)}</span>
                   </div>
                   <div className="comment-body">{c.content}</div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {adminKey && (
+            <div style={{ marginBottom: 20, padding: '16px', background: 'var(--bg-2)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>👑 방장 댓글 남기기</div>
+              <form onSubmit={handleAdminCommentSubmit}>
+                <textarea
+                  className="form-textarea"
+                  value={adminComment}
+                  onChange={e => setAdminComment(e.target.value)}
+                  placeholder="방장으로 댓글을 남겨보세요"
+                  rows={3}
+                  style={{ minHeight: 80, marginBottom: 8 }}
+                />
+                <button type="submit" className="btn btn-accent btn-sm" disabled={adminSubmitting}>
+                  {adminSubmitting ? '작성 중...' : '방장 댓글 작성'}
+                </button>
+              </form>
             </div>
           )}
 
