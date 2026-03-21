@@ -1,7 +1,7 @@
 import client from './client'
 
-export function getPosts(category = '', page = 0) {
-  return client.get('/community', { params: { category, page } }).then(r => r.data)
+export function getPosts(category = '', keyword = '', page = 0) {
+  return client.get('/community', { params: { category, keyword, page } }).then(r => r.data)
 }
 
 export function getPost(id) {

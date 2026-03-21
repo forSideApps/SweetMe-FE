@@ -75,7 +75,6 @@ export default function Home() {
     <>
       <section className="hero">
         <div className="container">
-          <div className="hero-label">sweetme.kro.kr</div>
           <h1 className="hero-title">
             <span className="brand-highlight">스</span>터디<span className="brand-highlight">위</span>드<span className="brand-highlight">미</span>
           </h1>

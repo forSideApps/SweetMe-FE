@@ -3,7 +3,7 @@ export default function Footer() {
     <footer>
       <div className="container">
         <div className="footer-inner">
-          <p className="footer-copy">© 2026 스윗미</p>
+          <p className="footer-copy">© 2026 STUDY WITH ME</p>
         </div>
       </div>
     </footer>

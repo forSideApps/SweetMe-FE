@@ -44,65 +44,63 @@ export default function RoomBrowse() {
 
   return (
     <div className="container">
-      <div className="page-header">
-        <div className="breadcrumb">
-          <Link to="/">홈</Link>
-          <span>/</span>
-          <span>스터디</span>
+      <div className="community-header">
+        <div>
+          <h1 className="community-title">스터디</h1>
+          <p className="community-desc">관심 분야의 스터디를 찾고 함께 성장할 동료를 만나보세요.</p>
         </div>
-        <h1>스터디 목록</h1>
+        <Link to="/rooms/new" className="btn btn-accent">스터디 개설하기</Link>
       </div>
 
-      <div className="section-sm">
-        {/* 검색 */}
-        <form className="room-search-form" onSubmit={handleSearch}>
-          <input
-            className="form-input room-search-input"
-            value={searchInput}
-            onChange={e => setSearchInput(e.target.value)}
-            placeholder="스터디 제목 검색..."
-          />
-          <button type="submit" className="btn btn-outline">검색</button>
-          {keyword && (
-            <button type="button" className="btn btn-ghost" onClick={() => { setKeyword(''); setSearchInput(''); setPage(0) }}>
-              초기화
-            </button>
-          )}
-        </form>
+      {/* 검색 */}
+      <form className="room-search-form" onSubmit={handleSearch}>
+        <input
+          className="form-input room-search-input"
+          value={searchInput}
+          onChange={e => setSearchInput(e.target.value)}
+          placeholder="스터디 제목 검색..."
+        />
+        <button type="submit" className="btn btn-outline">검색</button>
+        {keyword && (
+          <button type="button" className="btn btn-ghost" onClick={() => { setKeyword(''); setSearchInput(''); setPage(0) }}>
+            초기화
+          </button>
+        )}
+      </form>
 
-        {/* 필터 바 */}
-        <div className="list-bar">
-          <div className="filter-tabs">
-            <button className={`filter-tab${status === '' ? ' active' : ''}`} onClick={() => handleStatus('')}>전체</button>
-            <button className={`filter-tab${status === 'OPEN' ? ' active' : ''}`} onClick={() => handleStatus('OPEN')}>모집중</button>
-            <button className={`filter-tab${status === 'CLOSED' ? ' active' : ''}`} onClick={() => handleStatus('CLOSED')}>마감</button>
-          </div>
-          <Link to="/rooms/new" className="btn btn-accent">스터디 개설</Link>
+      {/* 필터 바 */}
+      <div className="list-bar">
+        <div className="filter-tabs">
+          <button className={`filter-tab${status === '' ? ' active' : ''}`} onClick={() => handleStatus('')}>전체</button>
+          <button className={`filter-tab${status === 'OPEN' ? ' active' : ''}`} onClick={() => handleStatus('OPEN')}>모집중</button>
+          <button className={`filter-tab${status === 'CLOSED' ? ' active' : ''}`} onClick={() => handleStatus('CLOSED')}>마감</button>
         </div>
+        <Link to="/rooms/new" className="btn btn-accent">스터디 개설</Link>
+      </div>
 
-        {/* 직군 필터 */}
-        <div className="filter-tabs" style={{ flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
-          {JOB_ROLE_FILTER.map(r => (
-            <button
-              key={r.value}
-              className={`filter-tab${jobRole === r.value ? ' active' : ''}`}
-              onClick={() => handleJobRole(r.value)}
-            >
-              {r.label}
-            </button>
-          ))}
+      {/* 직군 필터 */}
+      <div className="filter-tabs" style={{ flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+        {JOB_ROLE_FILTER.map(r => (
+          <button
+            key={r.value}
+            className={`filter-tab${jobRole === r.value ? ' active' : ''}`}
+            onClick={() => handleJobRole(r.value)}
+          >
+            {r.label}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <p className="text-muted">로딩 중...</p>
+      ) : rooms.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-icon">📭</div>
+          <h3>스터디가 없습니다</h3>
+          <p>첫 번째 스터디를 개설해보세요!</p>
+          <Link to="/rooms/new" className="btn btn-accent">스터디 개설하기</Link>
         </div>
-
-        {loading ? (
-          <p className="text-muted">로딩 중...</p>
-        ) : rooms.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">📭</div>
-            <h3>스터디가 없습니다</h3>
-            <p>첫 번째 스터디를 개설해보세요!</p>
-            <Link to="/rooms/new" className="btn btn-accent">스터디 개설하기</Link>
-          </div>
-        ) : (
+      ) : (
           <div className="room-grid">
             {rooms.map(room => (
               <Link key={room.id} to={`/rooms/${room.id}`} className="room-card">
@@ -134,14 +132,13 @@ export default function RoomBrowse() {
           </div>
         )}
 
-        {totalPages > 1 && (
-          <div className="pagination">
-            <button className="page-btn" disabled={page === 0} onClick={() => setPage(p => p - 1)}>이전</button>
-            <span className="page-info">{page + 1} / {totalPages}</span>
-            <button className="page-btn" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>다음</button>
-          </div>
-        )}
-      </div>
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button className="page-btn" disabled={page === 0} onClick={() => setPage(p => p - 1)}>이전</button>
+          <span className="page-info">{page + 1} / {totalPages}</span>
+          <button className="page-btn" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>다음</button>
+        </div>
+      )}
     </div>
   )
 }

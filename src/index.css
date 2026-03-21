@@ -267,6 +267,13 @@ button { cursor: pointer; font-family: inherit; }
 .brand-highlight {
   color: var(--accent);
 }
+.hero-title-sub {
+  font-size: clamp(14px, 2vw, 20px);
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: var(--accent);
+  opacity: 0.7;
+}
 .hero-sub {
   font-size: 17px;
   color: var(--text-2);
@@ -299,6 +306,7 @@ button { cursor: pointer; font-family: inherit; }
 .company-pill {
   display: inline-flex; flex-direction: column; align-items: center; gap: 8px;
   padding: 12px 16px 4px; border-radius: var(--radius-lg);
+  margin-right: 12px;
   font-size: 13px; font-weight: 600;
   border: 1.5px solid var(--border);
   color: var(--text-2);
@@ -636,7 +644,7 @@ button { cursor: pointer; font-family: inherit; }
 .community-desc  { font-size: 14px; color: var(--text-2); margin-top: 4px; }
 
 .community-tabs-wrap {
-  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 24px;
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;
 }
 .comm-tab {
   padding: 0 16px; height: 34px; font-size: 13px; font-weight: 500;
@@ -674,6 +682,69 @@ button { cursor: pointer; font-family: inherit; }
 }
 .review-filter-spacer { flex: 1; min-width: 8px; }
 .review-filter-selects { display: flex; gap: 6px; }
+
+/* 옵션B 필터 토글 */
+.review-filter-toggle-bar {
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap; margin-bottom: 10px;
+}
+.review-filter-toggle-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px; font-size: 13px; font-weight: 600;
+  border: 1.5px solid var(--border); border-radius: 50px;
+  background: var(--bg); color: var(--text-2);
+  cursor: pointer; transition: all 0.15s;
+}
+.review-filter-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+.review-filter-toggle-btn.has-filter { border-color: var(--accent); color: var(--accent); }
+.review-filter-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; font-size: 11px; font-weight: 700;
+  background: var(--accent); color: #fff; border-radius: 50%;
+}
+.review-filter-toggle-arrow { font-size: 10px; margin-left: 2px; }
+.review-active-filters { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.review-active-chip {
+  padding: 3px 10px; font-size: 12px; font-weight: 500;
+  background: var(--accent-light); color: var(--accent);
+  border-radius: 50px;
+}
+.review-filter-reset {
+  font-size: 12px; color: var(--text-3); background: none;
+  border: none; cursor: pointer; padding: 3px 6px;
+  text-decoration: underline;
+}
+.review-filter-reset:hover { color: var(--text); }
+
+/* 옵션A/B 공통 칩 필터 패널 */
+.review-filter-panel {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.review-filter-row {
+  display: flex; align-items: center; gap: 10px;
+}
+.review-filter-label {
+  font-size: 14px; font-weight: 700;
+  color: var(--text-3); letter-spacing: 0.3px;
+  width: 40px; flex-shrink: 0;
+}
+.review-chip-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.review-chip {
+  padding: 4px 12px; font-size: 13px; font-weight: 500;
+  border-radius: 50px; border: 1px solid var(--border);
+  background: transparent; color: var(--text-2);
+  cursor: pointer; transition: all 0.15s;
+}
+.review-chip:hover { border-color: var(--accent); color: var(--accent); }
+.review-chip.active {
+  background: var(--accent); color: #fff;
+  border-color: var(--accent);
+}
 .filter-pill-wrap { position: relative; display: inline-flex; }
 .filter-pill-select {
   appearance: none;
@@ -811,6 +882,8 @@ footer {
   .review-filter-selects { width: 100%; }
   .filter-pill-wrap { flex: 1; }
   .filter-pill-select { width: 100%; font-size: 12px; padding: 6px 26px 6px 12px; }
+  .review-chip { font-size: 12px; padding: 3px 10px; }
+  .review-chip-group { gap: 5px; }
   .post-row-right { display: none; }
   .post-row-left { flex-wrap: wrap; gap: 6px; }
 }

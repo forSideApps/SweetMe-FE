@@ -14,7 +14,7 @@ const STATUSES = [
   { value: 'DONE', label: '완료' },
 ]
 const CAREER_LEVELS = [
-  { value: '', label: '전체 경력' },
+  { value: '', label: '전체' },
   { value: 'JUNIOR', label: '신입' },
   { value: 'EXPERIENCED', label: '경력' },
 ]
@@ -36,7 +36,20 @@ export default function Review() {
   const [careerLevel, setCareerLevel] = useState('')
   const [keyword, setKeyword] = useState('')
   const [inputValue, setInputValue] = useState('')
+  const [filterOpen, setFilterOpen] = useState(false)
   const debounceRef = useRef(null)
+  const filterRef = useRef(null)
+
+  useEffect(() => {
+    if (!filterOpen) return
+    function handleClickOutside(e) {
+      if (filterRef.current && !filterRef.current.contains(e.target)) {
+        setFilterOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [filterOpen])
 
   const load = useCallback((params) => {
     setLoading(true)
@@ -57,6 +70,19 @@ export default function Review() {
     setter(value)
     setPage(0)
   }
+
+  function resetFilters() {
+    setStatus(''); setType(''); setCareerLevel(''); setJobCategory('')
+    setPage(0)
+  }
+
+  const activeFilters = [
+    status && STATUSES.find(s => s.value === status)?.label,
+    type && TYPES.find(t => t.value === type)?.label,
+    careerLevel && CAREER_LEVELS.find(c => c.value === careerLevel)?.label,
+    jobCategory && JOB_ROLES.find(j => j.value === jobCategory)?.label,
+  ].filter(Boolean)
+  const hasFilter = activeFilters.length > 0
 
   function handleSearch(e) {
     e.preventDefault()
@@ -99,54 +125,71 @@ export default function Review() {
         />
       </div>
 
-      {/* 필터 바 1행: 상태 (검토전/완료) */}
-      <div className="review-filter-bar" style={{ marginBottom: 8 }}>
-        {STATUSES.map(s => (
-          <button
-            key={s.value}
-            className={`comm-tab${status === s.value ? ' active' : ''}`}
-            onClick={() => handleFilterChange(setStatus, s.value)}
-          >
-            {s.label}
-          </button>
-        ))}
-        <div className="review-filter-spacer" />
-        <div className="review-filter-selects">
-          <div className="filter-pill-wrap">
-            <select
-              className={`filter-pill-select${careerLevel ? ' active' : ''}`}
-              value={careerLevel}
-              onChange={e => handleFilterChange(setCareerLevel, e.target.value)}
-            >
-              {CAREER_LEVELS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-            </select>
-            <span className="filter-pill-chevron">▾</span>
+      <div ref={filterRef}>
+      {/* 필터 토글 바 */}
+      <div className="review-filter-toggle-bar">
+        <button
+          className={`review-filter-toggle-btn${hasFilter ? ' has-filter' : ''}`}
+          onClick={() => setFilterOpen(o => !o)}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/>
+          </svg>
+          필터
+          {hasFilter && <span className="review-filter-count">{activeFilters.length}</span>}
+          <span className="review-filter-toggle-arrow">{filterOpen ? '▴' : '▾'}</span>
+        </button>
+        {hasFilter && (
+          <div className="review-active-filters">
+            {activeFilters.map(f => (
+              <span key={f} className="review-active-chip">{f}</span>
+            ))}
+            <button className="review-filter-reset" onClick={resetFilters}>초기화</button>
           </div>
-          <div className="filter-pill-wrap">
-            <select
-              className={`filter-pill-select${jobCategory ? ' active' : ''}`}
-              value={jobCategory}
-              onChange={e => handleFilterChange(setJobCategory, e.target.value)}
-            >
-              <option value="">전체 직군</option>
-              {JOB_ROLES.map(j => <option key={j.value} value={j.value}>{j.label}</option>)}
-            </select>
-            <span className="filter-pill-chevron">▾</span>
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* 필터 바 2행: 타입 (포폴/이력서) */}
-      <div className="review-filter-bar" style={{ marginBottom: 20 }}>
-        {TYPES.map(t => (
-          <button
-            key={t.value}
-            className={`comm-tab${type === t.value ? ' active' : ''}`}
-            onClick={() => handleFilterChange(setType, t.value)}
-          >
-            {t.label}
-          </button>
-        ))}
+      {/* 필터 패널 */}
+      {filterOpen && (
+        <div className="review-filter-panel">
+          <div className="review-filter-row">
+            <span className="review-filter-label">상태</span>
+            <div className="review-chip-group">
+              {STATUSES.map(s => (
+                <button key={s.value} className={`review-chip${status === s.value ? ' active' : ''}`} onClick={() => handleFilterChange(setStatus, s.value)}>{s.label}</button>
+              ))}
+            </div>
+          </div>
+          <div className="review-filter-row">
+            <span className="review-filter-label">종류</span>
+            <div className="review-chip-group">
+              {TYPES.map(t => (
+                <button key={t.value} className={`review-chip${type === t.value ? ' active' : ''}`} onClick={() => handleFilterChange(setType, t.value)}>{t.label}</button>
+              ))}
+            </div>
+          </div>
+          <div className="review-filter-row">
+            <span className="review-filter-label">경력</span>
+            <div className="review-chip-group">
+              {CAREER_LEVELS.map(c => (
+                <button key={c.value} className={`review-chip${careerLevel === c.value ? ' active' : ''}`} onClick={() => handleFilterChange(setCareerLevel, c.value)}>{c.label}</button>
+              ))}
+            </div>
+          </div>
+          <div className="review-filter-row">
+            <span className="review-filter-label">직군</span>
+            <div className="review-chip-group">
+              <button className={`review-chip${jobCategory === '' ? ' active' : ''}`} onClick={() => handleFilterChange(setJobCategory, '')}>전체</button>
+              {JOB_ROLES.map(j => (
+                <button key={j.value} className={`review-chip${jobCategory === j.value ? ' active' : ''}`} onClick={() => handleFilterChange(setJobCategory, j.value)}>{j.label}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+            <button className="review-filter-reset" onClick={resetFilters}>초기화</button>
+          </div>
+        </div>
+      )}
       </div>
 
       <div className="section-sm" style={{ paddingTop: 8 }}>
