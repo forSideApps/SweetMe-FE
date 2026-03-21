@@ -538,7 +538,7 @@ function NoticeTab({ setMsg, adminKey }) {
     }
     setSubmitting(true)
     try {
-      await createNotice({ title: form.title.trim(), content: form.content.trim(), authorName: '방장' }, adminKey)
+      await createNotice({ title: form.title.trim(), content: form.content.trim(), authorName: '운영자' }, adminKey)
       setForm({ title: '', content: '' })
       setMsg({ type: 'success', text: '공지사항이 등록되었습니다.' })
       load()

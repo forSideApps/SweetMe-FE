@@ -45,7 +45,7 @@ export default function CommunityDetail() {
   function validateComment() {
     const errs = {}
     if (!comment.authorName.trim()) errs.author = '작성자명을 입력해주세요.'
-    if (comment.authorName.includes('방장')) errs.author = '사용할 수 없는 닉네임입니다.'
+    if (comment.authorName.includes('방장') || comment.authorName.includes('운영자')) errs.author = '사용할 수 없는 닉네임입니다.'
     if (!comment.content.trim()) errs.content = '내용을 입력해주세요.'
     return errs
   }

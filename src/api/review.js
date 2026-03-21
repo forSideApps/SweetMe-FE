@@ -36,11 +36,15 @@ export const markReviewPending = (id) =>
 export const addReviewComment = (id, data) =>
   client.post(`/reviews/${id}/comments`, data)
 
-export const updateReviewComment = (reviewId, commentId, data) =>
-  client.put(`/reviews/${reviewId}/comments/${commentId}`, data)
+export const updateReviewComment = (reviewId, commentId, data, adminKey) =>
+  client.put(`/reviews/${reviewId}/comments/${commentId}`, data,
+    adminKey ? { headers: { 'X-Admin-Key': adminKey } } : undefined)
 
-export const deleteReviewComment = (reviewId, commentId, password) =>
-  client.delete(`/reviews/${reviewId}/comments/${commentId}`, { data: { password } })
+export const deleteReviewComment = (reviewId, commentId, password, adminKey) =>
+  client.delete(`/reviews/${reviewId}/comments/${commentId}`, {
+    data: { password },
+    ...(adminKey ? { headers: { 'X-Admin-Key': adminKey } } : {}),
+  })
 
 export const deleteReview = (id, adminKey) =>
   client.delete(`/reviews/${id}`, { headers: { 'X-Admin-Key': adminKey } })
