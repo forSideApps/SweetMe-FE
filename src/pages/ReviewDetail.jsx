@@ -147,35 +147,41 @@ export default function ReviewDetail() {
                   style={{ color: 'var(--accent)', fontSize: 14, wordBreak: 'break-all' }}>
                   {revealedLink}
                 </a>
-              ) : showLinkPwForm ? (
-                <form onSubmit={handleRevealLink} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                  <div style={{ flex: 1, minWidth: 180 }}>
-                    <input
-                      type="password"
-                      className={`form-input${linkPwError ? ' is-error' : ''}`}
-                      value={linkPw}
-                      onChange={e => setLinkPw(e.target.value)}
-                      placeholder="게시글 비밀번호 입력"
-                      autoFocus
-                      style={{ fontSize: 13 }}
-                    />
-                    {linkPwError && <span className="form-err">{linkPwError}</span>}
-                  </div>
-                  <button type="submit" className="btn btn-accent btn-sm" disabled={linkLoading}>
-                    {linkLoading ? '확인 중...' : '확인'}
-                  </button>
-                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowLinkPwForm(false)}>취소</button>
-                </form>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <>
+                  {/* 항상 보이는 blur 영역 */}
                   <div style={{
-                    flex: 1, fontSize: 14, color: 'var(--text-3)',
-                    filter: 'blur(5px)', userSelect: 'none', letterSpacing: 2
-                  }}>https://notion.so/••••••••••••••</div>
-                  <button className="btn btn-outline btn-sm" onClick={() => setShowLinkPwForm(true)}>
-                    🔒 링크 보기
-                  </button>
-                </div>
+                    fontSize: 14, color: 'var(--text-3)',
+                    filter: 'blur(6px)', userSelect: 'none', letterSpacing: 1,
+                    marginBottom: 12, pointerEvents: 'none'
+                  }}>https://notion.so/abcdefghijklmnopqrstuvwxyz</div>
+
+                  {/* 비밀번호 입력 영역 */}
+                  {showLinkPwForm ? (
+                    <form onSubmit={handleRevealLink} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                      <div style={{ flex: 1, minWidth: 180 }}>
+                        <input
+                          type="password"
+                          className={`form-input${linkPwError ? ' is-error' : ''}`}
+                          value={linkPw}
+                          onChange={e => setLinkPw(e.target.value)}
+                          placeholder="게시글 비밀번호 입력"
+                          autoFocus
+                          style={{ fontSize: 13 }}
+                        />
+                        {linkPwError && <span className="form-err">{linkPwError}</span>}
+                      </div>
+                      <button type="submit" className="btn btn-accent btn-sm" disabled={linkLoading}>
+                        {linkLoading ? '확인 중...' : '확인'}
+                      </button>
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowLinkPwForm(false)}>취소</button>
+                    </form>
+                  ) : (
+                    <button className="btn btn-outline btn-sm" onClick={() => setShowLinkPwForm(true)}>
+                      🔒 링크 보기
+                    </button>
+                  )}
+                </>
               )}
             </div>
           )}
