@@ -166,10 +166,16 @@ button { cursor: pointer; font-family: inherit; }
 .mobile-menu {
   display: none;
   flex-direction: column;
-  border-top: 1px solid var(--border);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
   padding: 12px 24px 16px;
   gap: 4px;
   background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  z-index: 99;
 }
 .mobile-menu.open { display: flex; }
 .mobile-menu .nav-link { color: var(--text); padding: 10px 8px; border-radius: var(--radius-sm); }
@@ -256,6 +262,9 @@ button { cursor: pointer; font-family: inherit; }
 }
 .hero-title em {
   font-style: normal;
+  color: var(--accent);
+}
+.brand-highlight {
   color: var(--accent);
 }
 .hero-sub {
