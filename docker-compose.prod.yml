@@ -1,0 +1,33 @@
+services:
+  app:
+    image: ghcr.io/forsideapps/withstudy-backend:latest
+    container_name: withstudy-app
+    environment:
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - TNS_ADMIN=/wallet
+    volumes:
+      - ./backend/wallet:/wallet:ro
+      - ./oci/config:/root/.oci/config:ro
+      - ./oci/oci_api_key.pem:/root/.oci/oci_api_key.pem:ro
+    mem_limit: 400m
+    restart: unless-stopped
+    networks:
+      - withstudy
+
+  nginx:
+    image: ghcr.io/forsideapps/withstudy-nginx:latest
+    container_name: withstudy-nginx
+    ports:
+      - "8880:80"
+    mem_limit: 64m
+    depends_on:
+      - app
+    restart: unless-stopped
+    networks:
+      - withstudy
+
+
+networks:
+  withstudy:
+    driver: bridge
