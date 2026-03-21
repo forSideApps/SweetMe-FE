@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { getRoomsByTheme } from '../api/rooms'
-import { getThemes } from '../api/themes'
-import ThemeLogo from '../components/ThemeLogo'
+import { Link } from 'react-router-dom'
+import { getAllRooms } from '../api/rooms'
 import { JOB_ROLE_FILTER } from '../constants/jobRoles'
+import ThemeLogo from '../components/ThemeLogo'
 
 function statusBadge(status) {
   if (status === 'OPEN') return <span className="badge badge-green">모집중</span>
@@ -16,55 +15,32 @@ function formatDate(str) {
   return str.slice(0, 10)
 }
 
-export default function RoomList() {
-  const { themeId } = useParams()
-  const [theme, setTheme] = useState(null)
+export default function RoomBrowse() {
   const [rooms, setRooms] = useState([])
   const [status, setStatus] = useState('')
   const [jobRole, setJobRole] = useState('')
-  const [keyword, setKeyword] = useState('')
   const [searchInput, setSearchInput] = useState('')
+  const [keyword, setKeyword] = useState('')
   const [page, setPage] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    getThemes().then(ts => {
-      const found = ts.find(t => String(t.id) === String(themeId))
-      setTheme(found || null)
-    }).catch(() => {})
-  }, [themeId])
-
   const fetchRooms = useCallback(() => {
     setLoading(true)
-    getRoomsByTheme(themeId, status, page, jobRole, keyword)
+    getAllRooms(status, jobRole, keyword, page)
       .then(data => {
         setRooms(data.content || data)
         setTotalPages(data.totalPages || 1)
       })
       .catch(() => setRooms([]))
       .finally(() => setLoading(false))
-  }, [themeId, status, page, jobRole, keyword])
+  }, [status, jobRole, keyword, page])
 
-  useEffect(() => {
-    fetchRooms()
-  }, [fetchRooms])
+  useEffect(() => { fetchRooms() }, [fetchRooms])
 
-  function handleStatusChange(s) {
-    setStatus(s)
-    setPage(0)
-  }
-
-  function handleJobRoleChange(r) {
-    setJobRole(r)
-    setPage(0)
-  }
-
-  function handleSearch(e) {
-    e.preventDefault()
-    setKeyword(searchInput.trim())
-    setPage(0)
-  }
+  function handleStatus(s) { setStatus(s); setPage(0) }
+  function handleJobRole(r) { setJobRole(r); setPage(0) }
+  function handleSearch(e) { e.preventDefault(); setKeyword(searchInput.trim()); setPage(0) }
 
   return (
     <div className="container">
@@ -72,13 +48,9 @@ export default function RoomList() {
         <div className="breadcrumb">
           <Link to="/">홈</Link>
           <span>/</span>
-          <span>스터디 목록</span>
+          <span>스터디</span>
         </div>
-        <div className="page-company">
-          {theme && <ThemeLogo logoUrl={theme.logoUrl} slug={theme.slug} size={48} />}
-        </div>
-        <h1>{theme ? theme.name : '스터디 목록'}</h1>
-        {theme?.description && <p>{theme.description}</p>}
+        <h1>스터디 목록</h1>
       </div>
 
       <div className="section-sm">
@@ -101,12 +73,10 @@ export default function RoomList() {
         {/* 필터 바 */}
         <div className="list-bar">
           <div className="filter-tabs">
-            <button className={`filter-tab${status === '' ? ' active' : ''}`} onClick={() => handleStatusChange('')}>전체</button>
-            <button className={`filter-tab${status === 'OPEN' ? ' active' : ''}`} onClick={() => handleStatusChange('OPEN')}>모집중</button>
+            <button className={`filter-tab${status === '' ? ' active' : ''}`} onClick={() => handleStatus('')}>전체</button>
+            <button className={`filter-tab${status === 'OPEN' ? ' active' : ''}`} onClick={() => handleStatus('OPEN')}>모집중</button>
           </div>
-          <Link to={`/rooms/new?themeId=${themeId}`} className="btn btn-accent">
-            스터디 개설
-          </Link>
+          <Link to="/rooms/new" className="btn btn-accent">스터디 개설</Link>
         </div>
 
         {/* 직군 필터 */}
@@ -115,7 +85,7 @@ export default function RoomList() {
             <button
               key={r.value}
               className={`job-role-tab${jobRole === r.value ? ' active' : ''}`}
-              onClick={() => handleJobRoleChange(r.value)}
+              onClick={() => handleJobRole(r.value)}
             >
               {r.label}
             </button>
@@ -129,7 +99,7 @@ export default function RoomList() {
             <div className="empty-icon">📭</div>
             <h3>스터디가 없습니다</h3>
             <p>첫 번째 스터디를 개설해보세요!</p>
-            <Link to={`/rooms/new?themeId=${themeId}`} className="btn btn-accent">스터디 개설하기</Link>
+            <Link to="/rooms/new" className="btn btn-accent">스터디 개설하기</Link>
           </div>
         ) : (
           <div className="room-grid">

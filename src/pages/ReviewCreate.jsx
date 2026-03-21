@@ -2,15 +2,11 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { createReview } from '../api/review'
 import Alert from '../components/Alert'
+import { JOB_ROLES } from '../constants/jobRoles'
 
 const TYPES = [
   { value: 'PORTFOLIO', label: '포트폴리오' },
   { value: 'RESUME', label: '이력서' },
-]
-const JOB_CATEGORIES = [
-  { value: 'BACKEND', label: '백엔드' },
-  { value: 'FRONTEND', label: '프론트' },
-  { value: 'OTHER', label: '기타' },
 ]
 const CAREER_LEVELS = [
   { value: 'JUNIOR', label: '신입' },
@@ -28,6 +24,7 @@ export default function ReviewCreate() {
     careerLevel: 'JUNIOR',
     title: '',
     content: '',
+    portfolioLink: '',
     authorName: '',
     contactInfo: '',
     password: '',
@@ -110,7 +107,7 @@ export default function ReviewCreate() {
                   value={form.jobCategory}
                   onChange={e => setForm(f => ({ ...f, jobCategory: e.target.value }))}
                 >
-                  {JOB_CATEGORIES.map(j => <option key={j.value} value={j.value}>{j.label}</option>)}
+                  {JOB_ROLES.map(j => <option key={j.value} value={j.value}>{j.label}</option>)}
                 </select>
               </div>
             </div>
@@ -137,6 +134,17 @@ export default function ReviewCreate() {
                 style={{ minHeight: 240 }}
               />
               {errors.content && <span className="form-err">{errors.content}</span>}
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">포트폴리오/이력서 링크 <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>(선택)</span></label>
+              <input
+                className="form-input"
+                value={form.portfolioLink}
+                onChange={e => setForm(f => ({ ...f, portfolioLink: e.target.value }))}
+                placeholder="노션, GitHub, 구글 드라이브 등 링크 (비밀번호 입력 후 공개)"
+              />
+              <span className="form-hint">링크는 비밀번호를 입력한 사람만 볼 수 있습니다.</span>
             </div>
 
             <div className="form-row">

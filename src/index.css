@@ -630,10 +630,11 @@ button { cursor: pointer; font-family: inherit; }
   display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 24px;
 }
 .comm-tab {
-  padding: 6px 16px; font-size: 13px; font-weight: 500;
+  padding: 0 16px; height: 34px; font-size: 13px; font-weight: 500;
   color: var(--text-2); border-radius: 50px;
   border: 1.5px solid var(--border); background: transparent;
-  white-space: nowrap; transition: all 0.15s;
+  white-space: nowrap; transition: all 0.15s; box-sizing: border-box;
+  display: inline-flex; align-items: center;
 }
 .comm-tab:hover { border-color: var(--accent); color: var(--accent); }
 .comm-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
@@ -667,7 +668,7 @@ button { cursor: pointer; font-family: inherit; }
 .filter-pill-wrap { position: relative; display: inline-flex; }
 .filter-pill-select {
   appearance: none;
-  padding: 6px 28px 6px 14px;
+  padding: 0 28px 0 14px; height: 34px; box-sizing: border-box;
   border: 1.5px solid var(--border); border-radius: 50px;
   background: var(--bg); font-size: 13px; font-weight: 500; color: var(--text-2);
   cursor: pointer; outline: none; transition: all 0.15s;

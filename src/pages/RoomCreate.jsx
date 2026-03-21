@@ -4,6 +4,7 @@ import { getThemes } from '../api/themes'
 import { createRoom } from '../api/rooms'
 import Alert from '../components/Alert'
 import ThemeLogo from '../components/ThemeLogo'
+import { JOB_ROLES } from '../constants/jobRoles'
 
 export default function RoomCreate() {
   const navigate = useNavigate()
@@ -15,13 +16,6 @@ export default function RoomCreate() {
   const [alert, setAlert] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
-
-  const JOB_ROLES = [
-    { value: 'FRONTEND', label: '프론트엔드' },
-    { value: 'BACKEND', label: '백엔드' },
-    { value: 'MOBILE', label: '모바일' },
-    { value: 'OTHER', label: '기타' },
-  ]
 
   const [form, setForm] = useState({
     title: '',

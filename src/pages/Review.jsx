@@ -1,17 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { getReviews } from '../api/review'
+import { JOB_ROLES } from '../constants/jobRoles'
 
 const TYPES = [
   { value: '', label: '전체' },
   { value: 'PORTFOLIO', label: '포트폴리오' },
   { value: 'RESUME', label: '이력서' },
-]
-const JOB_CATEGORIES = [
-  { value: '', label: '전체 직군' },
-  { value: 'BACKEND', label: '백엔드' },
-  { value: 'FRONTEND', label: '프론트' },
-  { value: 'OTHER', label: '기타' },
 ]
 const CAREER_LEVELS = [
   { value: '', label: '전체 경력' },
@@ -127,7 +122,8 @@ export default function Review() {
               value={jobCategory}
               onChange={e => handleFilterChange(setJobCategory, e.target.value)}
             >
-              {JOB_CATEGORIES.map(j => <option key={j.value} value={j.value}>{j.label}</option>)}
+              <option value="">전체 직군</option>
+              {JOB_ROLES.map(j => <option key={j.value} value={j.value}>{j.label}</option>)}
             </select>
             <span className="filter-pill-chevron">▾</span>
           </div>

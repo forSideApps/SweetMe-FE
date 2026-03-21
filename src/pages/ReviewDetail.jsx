@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { getReview, incrementReviewView, addReviewComment } from '../api/review'
+import { getReview, incrementReviewView, addReviewComment, getReviewLink } from '../api/review'
 import Alert from '../components/Alert'
 
 const STATUS_STYLE = {
@@ -22,6 +22,11 @@ export default function ReviewDetail() {
   const [commentErrors, setCommentErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const viewedRef = useRef(false)
+  const [linkPw, setLinkPw] = useState('')
+  const [linkPwError, setLinkPwError] = useState('')
+  const [revealedLink, setRevealedLink] = useState(null)
+  const [linkLoading, setLinkLoading] = useState(false)
+  const [showLinkPwForm, setShowLinkPwForm] = useState(false)
 
   const fetchReview = useCallback(() => {
     getReview(id).then(setReview).finally(() => setLoading(false))
@@ -40,6 +45,22 @@ export default function ReviewDetail() {
     if (!comment.authorName.trim()) errs.authorName = '작성자명을 입력해주세요.'
     if (!comment.content.trim()) errs.content = '내용을 입력해주세요.'
     return errs
+  }
+
+  async function handleRevealLink(e) {
+    e.preventDefault()
+    if (!linkPw) { setLinkPwError('비밀번호를 입력해주세요.'); return }
+    setLinkPwError('')
+    setLinkLoading(true)
+    try {
+      const data = await getReviewLink(id, linkPw)
+      setRevealedLink(data.link)
+      setShowLinkPwForm(false)
+    } catch (err) {
+      setLinkPwError(err?.response?.status === 401 ? '비밀번호가 올바르지 않습니다.' : '오류가 발생했습니다.')
+    } finally {
+      setLinkLoading(false)
+    }
   }
 
   async function handleCommentSubmit(e) {
@@ -112,6 +133,52 @@ export default function ReviewDetail() {
           </div>
 
           <div className="post-detail-body">{review.content}</div>
+
+          {review.hasPortfolioLink && (
+            <div style={{
+              margin: '0 24px 20px',
+              padding: '16px',
+              background: 'var(--bg-2)', borderRadius: 'var(--radius)',
+              border: '1px solid var(--border)'
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>포트폴리오/이력서 링크</div>
+              {revealedLink ? (
+                <a href={revealedLink} target="_blank" rel="noopener noreferrer"
+                  style={{ color: 'var(--accent)', fontSize: 14, wordBreak: 'break-all' }}>
+                  {revealedLink}
+                </a>
+              ) : showLinkPwForm ? (
+                <form onSubmit={handleRevealLink} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: 180 }}>
+                    <input
+                      type="password"
+                      className={`form-input${linkPwError ? ' is-error' : ''}`}
+                      value={linkPw}
+                      onChange={e => setLinkPw(e.target.value)}
+                      placeholder="게시글 비밀번호 입력"
+                      autoFocus
+                      style={{ fontSize: 13 }}
+                    />
+                    {linkPwError && <span className="form-err">{linkPwError}</span>}
+                  </div>
+                  <button type="submit" className="btn btn-accent btn-sm" disabled={linkLoading}>
+                    {linkLoading ? '확인 중...' : '확인'}
+                  </button>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowLinkPwForm(false)}>취소</button>
+                </form>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{
+                    flex: 1, fontSize: 14, color: 'var(--text-3)',
+                    filter: 'blur(5px)', userSelect: 'none', letterSpacing: 2
+                  }}>https://notion.so/••••••••••••••</div>
+                  <button className="btn btn-outline btn-sm" onClick={() => setShowLinkPwForm(true)}>
+                    🔒 링크 보기
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {review.contactInfo && (
             <div style={{

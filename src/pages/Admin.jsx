@@ -6,12 +6,13 @@ import client from '../api/client'
 import ThemeLogo from '../components/ThemeLogo'
 
 const TABS = [
+  { key: 'visitor', label: '방문자 통계' },
   { key: 'company', label: '회사 관리' },
   { key: 'review', label: '포폴 · 이력서 검토' },
 ]
 
 export default function Admin() {
-  const [activeTab, setActiveTab] = useState('company')
+  const [activeTab, setActiveTab] = useState('visitor')
   const [msg, setMsg] = useState(null)
 
   return (
@@ -39,9 +40,35 @@ export default function Admin() {
         ))}
       </div>
 
+      {activeTab === 'visitor' && <VisitorTab />}
       {activeTab === 'company' && <CompanyTab setMsg={setMsg} />}
       {activeTab === 'review'  && <ReviewTab setMsg={setMsg} />}
     </div>
+  )
+}
+
+/* ─── 방문자 통계 탭 ─── */
+function VisitorTab() {
+  const [stats, setStats] = useState({ today: null, total: null })
+
+  useEffect(() => {
+    client.get('/admin/visitors').then(r => setStats(r.data)).catch(() => {})
+  }, [])
+
+  return (
+    <>
+      <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16 }}>방문자 통계</div>
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', padding: '28px 24px', textAlign: 'center', flex: 1 }}>
+          <div style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 12 }}>오늘 방문자</div>
+          <div style={{ fontSize: 40, fontWeight: 800, color: 'var(--accent)' }}>{stats.today ?? '—'}</div>
+        </div>
+        <div style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', padding: '28px 24px', textAlign: 'center', flex: 1 }}>
+          <div style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 12 }}>누적 방문자</div>
+          <div style={{ fontSize: 40, fontWeight: 800, color: 'var(--accent)' }}>{stats.total ?? '—'}</div>
+        </div>
+      </div>
+    </>
   )
 }
 

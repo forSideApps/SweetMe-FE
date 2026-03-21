@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Home from './pages/Home'
+import RoomBrowse from './pages/RoomBrowse'
 import RoomList from './pages/RoomList'
 import RoomCreate from './pages/RoomCreate'
 import RoomDetail from './pages/RoomDetail'
@@ -23,6 +24,7 @@ function AppInner() {
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/rooms" element={<RoomBrowse />} />
           <Route path="/rooms/theme/:themeId" element={<RoomList />} />
           <Route path="/rooms/new" element={<RoomCreate />} />
           <Route path="/rooms/:roomId/manage/dashboard" element={<ManageDashboard />} />

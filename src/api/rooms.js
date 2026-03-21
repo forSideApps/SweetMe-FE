@@ -1,5 +1,9 @@
 import client from './client'
 
+export function getAllRooms(status = '', jobRole = '', keyword = '', page = 0) {
+  return client.get('/rooms', { params: { status: status || undefined, jobRole: jobRole || undefined, keyword: keyword || undefined, page } }).then(r => r.data)
+}
+
 export function getRecentRooms(limit = 6) {
   return client.get('/rooms/recent', { params: { limit } }).then(r => r.data)
 }
