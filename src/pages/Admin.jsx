@@ -1,18 +1,20 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { getThemes } from '../api/themes'
 import { getReviews, deleteReview, markReviewDone, markReviewPending, addReviewComment } from '../api/review'
 import client from '../api/client'
 import ThemeLogo from '../components/ThemeLogo'
 
 const TABS = [
-  { key: 'visitor', label: '방문자 통계' },
-  { key: 'company', label: '회사 관리' },
-  { key: 'review', label: '포폴 · 이력서 검토' },
+  { key: 'visitors', path: '/admin/visitors', label: '방문자 통계' },
+  { key: 'company', path: '/admin/company', label: '회사 관리' },
+  { key: 'review', path: '/admin/review', label: '포폴 · 이력서 검토' },
 ]
 
 export default function Admin() {
-  const [activeTab, setActiveTab] = useState('visitor')
+  const location = useLocation()
+  const navigate = useNavigate()
+  const activeTab = TABS.find(t => location.pathname === t.path)?.key ?? 'visitors'
   const [msg, setMsg] = useState(null)
   const [adminKey, setAdminKey] = useState(() => sessionStorage.getItem('adminKey') || '')
   const [keyInput, setKeyInput] = useState('')
@@ -26,6 +28,7 @@ export default function Admin() {
         sessionStorage.setItem('adminKey', keyInput)
         setAdminKey(keyInput)
         setKeyError('')
+        navigate('/admin/visitors')
       })
       .catch(() => setKeyError('비밀번호가 올바르지 않습니다.'))
   }
@@ -57,33 +60,16 @@ export default function Admin() {
 
   return (
     <div className="container-sm" style={{ padding: '40px 24px' }}>
-      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 0 }}>어드민</h1>
-        <button className="btn btn-ghost btn-sm" onClick={() => { sessionStorage.removeItem('adminKey'); setAdminKey('') }}>로그아웃</button>
-      </div>
-
-      {msg && (
+{msg && (
         <div className={`alert ${msg.type === 'success' ? 'alert-success' : 'alert-error'}`} style={{ marginBottom: 20 }}>
           {msg.text}
           <button className="alert-close" onClick={() => setMsg(null)}>✕</button>
         </div>
       )}
 
-      <div className="community-tabs-wrap" style={{ marginBottom: 28 }}>
-        {TABS.map(t => (
-          <button
-            key={t.key}
-            className={`comm-tab${activeTab === t.key ? ' active' : ''}`}
-            onClick={() => setActiveTab(t.key)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {activeTab === 'visitor' && <VisitorTab adminKey={adminKey} onUnauthorized={() => { sessionStorage.removeItem('adminKey'); setAdminKey('') }} />}
-      {activeTab === 'company' && <CompanyTab setMsg={setMsg} adminKey={adminKey} />}
-      {activeTab === 'review'  && <ReviewTab setMsg={setMsg} adminKey={adminKey} />}
+{activeTab === 'visitors' && <VisitorTab adminKey={adminKey} onUnauthorized={() => { sessionStorage.removeItem('adminKey'); setAdminKey('') }} />}
+      {activeTab === 'company'  && <CompanyTab setMsg={setMsg} adminKey={adminKey} />}
+      {activeTab === 'review'   && <ReviewTab setMsg={setMsg} adminKey={adminKey} />}
     </div>
   )
 }
@@ -130,14 +116,18 @@ function VisitorTab({ adminKey, onUnauthorized }) {
 function CompanyTab({ setMsg, adminKey }) {
   const [companies, setCompanies] = useState([])
   const [loading, setLoading] = useState(true)
-  const [form, setForm] = useState({ name: '', slug: '', accentColor: '#6366f1', displayOrder: '' })
+  const [form, setForm] = useState({ name: '', slug: '', accentColor: '#6366f1' })
   const [formErr, setFormErr] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [uploadingId, setUploadingId] = useState(null)
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({})
   const [savingId, setSavingId] = useState(null)
+  const [savingOrder, setSavingOrder] = useState(false)
   const fileInputs = useRef({})
+  const createFileRef = useRef(null)
+  const dragItem = useRef(null)
+  const dragOver = useRef(null)
 
   useEffect(() => { load() }, [])
 
@@ -160,13 +150,22 @@ function CompanyTab({ setMsg, adminKey }) {
     if (Object.keys(errs).length) { setFormErr(errs); return }
     setSubmitting(true)
     try {
-      await client.post('/admin/companies', {
+      const res = await client.post('/admin/companies', {
         name: form.name.trim(),
         slug: form.slug.trim(),
         accentColor: form.accentColor,
-        displayOrder: form.displayOrder ? parseInt(form.displayOrder) : undefined,
       }, { headers: { 'X-Admin-Key': adminKey } })
-      setForm({ name: '', slug: '', accentColor: '#6366f1', displayOrder: '' })
+      // 파일 선택돼 있으면 바로 로고 업로드
+      const file = createFileRef.current?.files?.[0]
+      if (file && res.data?.id) {
+        const fd = new FormData()
+        fd.append('file', file)
+        await client.post(`/admin/companies/${res.data.id}/logo`, fd, {
+          headers: { 'Content-Type': 'multipart/form-data', 'X-Admin-Key': adminKey }
+        })
+      }
+      setForm({ name: '', slug: '', accentColor: '#6366f1' })
+      if (createFileRef.current) createFileRef.current.value = ''
       setFormErr({})
       setMsg({ type: 'success', text: '회사가 등록되었습니다.' })
       load()
@@ -180,7 +179,7 @@ function CompanyTab({ setMsg, adminKey }) {
 
   function startEdit(c) {
     setEditingId(c.id)
-    setEditForm({ name: c.name, slug: c.slug, accentColor: c.accentColor || '#6366f1', displayOrder: c.displayOrder ?? '' })
+    setEditForm({ name: c.name, slug: c.slug, accentColor: c.accentColor || '#6366f1' })
   }
 
   function cancelEdit() {
@@ -196,7 +195,6 @@ function CompanyTab({ setMsg, adminKey }) {
         name: editForm.name.trim(),
         slug: editForm.slug.trim(),
         accentColor: editForm.accentColor,
-        displayOrder: editForm.displayOrder !== '' ? parseInt(editForm.displayOrder) : null,
       }, { headers: { 'X-Admin-Key': adminKey } })
       setMsg({ type: 'success', text: '수정되었습니다.' })
       setEditingId(null)
@@ -207,6 +205,26 @@ function CompanyTab({ setMsg, adminKey }) {
     } finally {
       setSavingId(null)
     }
+  }
+
+  function handleDragStart(index) { dragItem.current = index }
+  function handleDragEnter(index) { dragOver.current = index }
+  function handleDragEnd() {
+    const from = dragItem.current
+    const to = dragOver.current
+    if (from === null || to === null || from === to) return
+    const next = [...companies]
+    const [moved] = next.splice(from, 1)
+    next.splice(to, 0, moved)
+    setCompanies(next)
+    dragItem.current = null
+    dragOver.current = null
+    // 서버에 순서 저장
+    setSavingOrder(true)
+    client.put('/admin/companies/order', next.map(c => c.id), { headers: { 'X-Admin-Key': adminKey } })
+      .then(() => setMsg({ type: 'success', text: '순서가 저장되었습니다.' }))
+      .catch(() => setMsg({ type: 'error', text: '순서 저장 실패' }))
+      .finally(() => setSavingOrder(false))
   }
 
   async function handleLogoUpload(company) {
@@ -275,14 +293,8 @@ function CompanyTab({ setMsg, adminKey }) {
               </div>
             </div>
             <div className="form-group">
-              <label className="form-label">표시 순서</label>
-              <input
-                className="form-input"
-                type="number"
-                placeholder="예: 11"
-                value={form.displayOrder}
-                onChange={e => setForm(f => ({ ...f, displayOrder: e.target.value }))}
-              />
+              <label className="form-label">로고 이미지</label>
+              <input type="file" accept="image/*" ref={createFileRef} style={{ fontSize: 13, color: 'var(--text-2)' }} />
             </div>
           </div>
           <div className="form-actions">
@@ -293,76 +305,69 @@ function CompanyTab({ setMsg, adminKey }) {
         </form>
       </div>
 
-      <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>
+      <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
         등록된 회사 ({companies.length}개)
+        {savingOrder && <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>순서 저장 중...</span>}
       </div>
       {loading ? (
         <p className="text-muted">로딩 중...</p>
       ) : companies.length === 0 ? (
         <p className="text-muted">등록된 회사가 없습니다.</p>
+      ) : editingId ? (
+        /* 수정 폼: 전체 너비 */
+        <div style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', padding: '18px' }}>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label req">회사명</label>
+              <input className="form-input" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} />
+            </div>
+            <div className="form-group">
+              <label className="form-label req">Slug</label>
+              <input className="form-input" value={editForm.slug} onChange={e => setEditForm(f => ({ ...f, slug: e.target.value.toLowerCase() }))} />
+            </div>
+          </div>
+          <div className="form-row" style={{ marginTop: 10 }}>
+            <div className="form-group">
+              <label className="form-label">포인트 색상</label>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <input type="color" value={editForm.accentColor} onChange={e => setEditForm(f => ({ ...f, accentColor: e.target.value }))} style={{ width: 44, height: 40, border: '1.5px solid var(--border)', borderRadius: 6, cursor: 'pointer', padding: 2, background: 'var(--bg)' }} />
+                <input className="form-input" value={editForm.accentColor} onChange={e => setEditForm(f => ({ ...f, accentColor: e.target.value }))} />
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+            <button className="btn btn-accent btn-sm" disabled={savingId === editingId} onClick={() => handleUpdate(companies.find(c => c.id === editingId))}>
+              {savingId === editingId ? '저장 중...' : '저장'}
+            </button>
+            <button className="btn btn-ghost btn-sm" onClick={cancelEdit}>취소</button>
+          </div>
+        </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {companies.map(c => (
-            <div key={c.id} style={{
-              background: 'var(--bg)', border: '1.5px solid var(--border)',
-              borderRadius: 'var(--radius)', padding: '14px 18px'
-            }}>
-              {editingId === c.id ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label className="form-label req">회사명</label>
-                      <input className="form-input" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label req">Slug</label>
-                      <input className="form-input" value={editForm.slug} onChange={e => setEditForm(f => ({ ...f, slug: e.target.value.toLowerCase() }))} />
-                    </div>
-                  </div>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label className="form-label">포인트 색상</label>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <input type="color" value={editForm.accentColor} onChange={e => setEditForm(f => ({ ...f, accentColor: e.target.value }))} style={{ width: 44, height: 40, border: '1.5px solid var(--border)', borderRadius: 6, cursor: 'pointer', padding: 2, background: 'var(--bg)' }} />
-                        <input className="form-input" value={editForm.accentColor} onChange={e => setEditForm(f => ({ ...f, accentColor: e.target.value }))} />
-                      </div>
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">표시 순서</label>
-                      <input className="form-input" type="number" value={editForm.displayOrder} onChange={e => setEditForm(f => ({ ...f, displayOrder: e.target.value }))} />
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button className="btn btn-accent btn-sm" disabled={savingId === c.id} onClick={() => handleUpdate(c)}>
-                      {savingId === c.id ? '저장 중...' : '저장'}
-                    </button>
-                    <button className="btn btn-ghost btn-sm" onClick={cancelEdit}>취소</button>
-                  </div>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <ThemeLogo slug={c.slug} size={40} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: 15 }}>{c.name}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>
-                      slug: {c.slug}
-                      {c.accentColor && (
-                        <span style={{ marginLeft: 10 }}>
-                          <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: c.accentColor, marginRight: 4, verticalAlign: 'middle' }} />
-                          {c.accentColor}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <button className="btn btn-outline btn-sm" onClick={() => startEdit(c)}>수정</button>
-                    <input type="file" accept="image/*" ref={el => fileInputs.current[c.id] = el} style={{ fontSize: 13, color: 'var(--text-2)' }} />
-                    <button className="btn btn-outline btn-sm" disabled={uploadingId === c.id} onClick={() => handleLogoUpload(c)}>
-                      {uploadingId === c.id ? '저장 중...' : '로고 저장'}
-                    </button>
-                  </div>
-                </div>
-              )}
+        <div className="room-grid">
+          {companies.map((c, index) => (
+            <div
+              key={c.id}
+              className="room-card"
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragEnter={() => handleDragEnter(index)}
+              onDragEnd={handleDragEnd}
+              onDragOver={e => e.preventDefault()}
+              style={{ cursor: 'grab', userSelect: 'none', textAlign: 'left' }}
+            >
+              <div style={{ marginBottom: 8 }}>
+                <ThemeLogo logoUrl={c.logoUrl} slug={c.slug} size={32} />
+              </div>
+              <div className="room-title">{c.name}</div>
+
+              {/* 어드민 컨트롤 */}
+              <div style={{ marginTop: 12, display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
+                <button className="btn btn-outline btn-sm" style={{ flex: 1 }} onClick={() => startEdit(c)}>수정</button>
+                <label className="btn btn-outline btn-sm" style={{ flex: 1, textAlign: 'center', cursor: 'pointer', marginBottom: 0 }}>
+                  {uploadingId === c.id ? '...' : '로고'}
+                  <input type="file" accept="image/*" ref={el => fileInputs.current[c.id] = el} style={{ display: 'none' }} onChange={() => handleLogoUpload(c)} />
+                </label>
+              </div>
             </div>
           ))}
         </div>

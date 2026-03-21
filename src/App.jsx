@@ -38,6 +38,9 @@ function AppInner() {
           <Route path="/reviews/:id" element={<ReviewDetail />} />
           <Route path="/reviews/:id/edit" element={<ReviewEdit />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/visitors" element={<Admin />} />
+          <Route path="/admin/company" element={<Admin />} />
+          <Route path="/admin/review" element={<Admin />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
