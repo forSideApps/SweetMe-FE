@@ -49,39 +49,22 @@ jobs:
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1
         env:
-          DB_USERNAME:   ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD:   ${{ secrets.DB_PASSWORD }}
-          WALLET_BASE64: ${{ secrets.WALLET_BASE64 }}
-          OCI_BASE64:    ${{ secrets.OCI_BASE64 }}
-          GHCR_TOKEN:    ${{ secrets.GITHUB_TOKEN }}
-          GHCR_USER:     ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER:  ${{ github.actor }}
         with:
           host:     ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key:      ${{ secrets.EC2_KEY }}
-          envs: DB_USERNAME,DB_PASSWORD,WALLET_BASE64,OCI_BASE64,GHCR_TOKEN,GHCR_USER
+          envs: GHCR_TOKEN,GHCR_USER
           script: |
             set -e
             APP_DIR=/home/ubuntu/withstudy
 
             cd "$APP_DIR"
-            git pull origin main
+            git remote set-url origin https://github.com/forSideApps/WithStudy-FE.git
+            git fetch origin main
+            git reset --hard FETCH_HEAD
 
-            # Restore Oracle wallet
-            mkdir -p backend/wallet
-            echo "$WALLET_BASE64" | base64 -d | tar -xz -C backend/
-            # Fix sqlnet.ora to use absolute wallet path inside container
-            printf 'WALLET_LOCATION = (SOURCE = (METHOD = file) (METHOD_DATA = (DIRECTORY="/wallet")))\nSSL_SERVER_DN_MATCH=yes\n' > backend/wallet/sqlnet.ora
-
-            # Restore OCI credentials and fix key_file path for container
-            mkdir -p oci
-            echo "$OCI_BASE64" | base64 -d | tar -xz -C oci/
-            sed -i 's|key_file=.*|key_file=/root/.oci/oci_api_key.pem|' oci/config
-
-            # Write .env
-            printf 'DB_USERNAME=%s\nDB_PASSWORD=%s\n' "$DB_USERNAME" "$DB_PASSWORD" > .env
-
-            # Login to ghcr.io and pull new nginx image
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
             docker compose -f docker-compose.prod.yml pull nginx
             docker compose -f docker-compose.prod.yml up -d
