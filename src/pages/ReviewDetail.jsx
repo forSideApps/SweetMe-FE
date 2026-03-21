@@ -2,15 +2,11 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { getReview, incrementReviewView, addReviewComment, updateReviewComment, deleteReviewComment, getReviewLink, deleteReview } from '../api/review'
 import Alert from '../components/Alert'
+import { formatDateTime } from '../utils/date'
 
 const STATUS_STYLE = {
   PENDING: { background: 'var(--amber-bg)', color: 'var(--amber)' },
   DONE:    { background: '#dcfce7', color: '#16a34a' },
-}
-
-function formatDate(str) {
-  if (!str) return ''
-  return str.slice(0, 16).replace('T', ' ')
 }
 
 export default function ReviewDetail() {
@@ -50,12 +46,14 @@ export default function ReviewDetail() {
       viewedRef.current = true
       incrementReviewView(id).catch(() => {})
     }
-    if (adminKey) {
-      getReviewLink(id, undefined, adminKey)
-        .then(data => setRevealedLink(data.link))
-        .catch(() => {})
-    }
   }, [id])
+
+  useEffect(() => {
+    if (!adminKey) return
+    getReviewLink(id, undefined, adminKey)
+      .then(data => setRevealedLink(data.link))
+      .catch(() => {})
+  }, [id, adminKey])
 
   function validateComment() {
     const errs = {}
@@ -198,7 +196,7 @@ export default function ReviewDetail() {
                 <div className="post-detail-meta">
                   <span>{review.authorName}</span>
                   <span>조회 {review.viewCount}</span>
-                  <span>{formatDate(review.createdAt)}</span>
+                  <span>{formatDateTime(review.createdAt)}</span>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
@@ -294,7 +292,7 @@ export default function ReviewDetail() {
                       {c.authorName}
                     </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span className="comment-date">{formatDate(c.createdAt)}</span>
+                      <span className="comment-date">{formatDateTime(c.createdAt)}</span>
                       {(!c.admin || adminKey) && (
                         <>
                           <button className="btn btn-ghost btn-sm" style={{ padding: '1px 6px', fontSize: 12 }} onClick={() => startEdit(c)}>수정</button>
