@@ -147,18 +147,14 @@ export default function Register() {
             <div className="reg-row">
               <label className="reg-label">경력</label>
               <div className="reg-field">
-                <div style={{ display: 'flex', gap: 16, padding: '10px 0' }}>
+                <div className="review-chip-group" style={{ padding: '6px 0' }}>
                   {[{ value: '', label: '선택 안 함' }, { value: 'JUNIOR', label: '신입' }, { value: 'EXPERIENCED', label: '경력' }].map(c => (
-                    <label key={c.value} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 14 }}>
-                      <input
-                        type="radio"
-                        name="careerLevel"
-                        value={c.value}
-                        checked={form.careerLevel === c.value}
-                        onChange={() => setForm(f => ({ ...f, careerLevel: c.value }))}
-                      />
-                      {c.label}
-                    </label>
+                    <button
+                      key={c.value}
+                      type="button"
+                      className={`review-chip${form.careerLevel === c.value ? ' active' : ''}`}
+                      onClick={() => setForm(f => ({ ...f, careerLevel: c.value }))}
+                    >{c.label}</button>
                   ))}
                 </div>
               </div>
