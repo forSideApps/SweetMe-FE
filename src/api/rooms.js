@@ -52,6 +52,6 @@ export function updateRoom(id, password, data) {
   return client.patch(`/rooms/${id}`, data, { params: { password } }).then(r => r.data)
 }
 
-export function deleteRoom(id, adminKey) {
-  return client.delete(`/rooms/${id}`, { headers: { 'X-Admin-Key': adminKey } })
+export function deleteRoom(id) {
+  return client.delete(`/rooms/${id}`)
 }

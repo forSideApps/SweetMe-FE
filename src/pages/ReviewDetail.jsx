@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { getReview, incrementReviewView, addReviewComment, updateReviewComment, deleteReviewComment, getReviewLink, deleteReview } from '../api/review'
-import { getMe } from '../api/auth'
+import { getReview, incrementReviewView, addReviewComment, updateReviewComment, deleteReviewComment, getReviewLink, deleteReview, createExchange } from '../api/review'
+import { getMe, getMyReviews } from '../api/auth'
 import Alert from '../components/Alert'
 import { formatDateTime } from '../utils/date'
 
@@ -39,6 +39,12 @@ export default function ReviewDetail() {
   const [deleteIsMine, setDeleteIsMine] = useState(false)
   const [deletePw, setDeletePw] = useState('')
   const [deleteError, setDeleteError] = useState('')
+  const [exchangeOpen, setExchangeOpen] = useState(false)
+  const [myReviews, setMyReviews] = useState(null)
+  const [selectedMyReview, setSelectedMyReview] = useState(null)
+  const [exchangeLoading, setExchangeLoading] = useState(false)
+  const [exchangeLink, setExchangeLink] = useState(null)
+  const [exchangeError, setExchangeError] = useState('')
 
   const fetchReview = useCallback(() => {
     getReview(id).then(setReview).finally(() => setLoading(false))
@@ -136,6 +142,30 @@ export default function ReviewDetail() {
     }
   }
 
+  async function openExchangeModal() {
+    setExchangeOpen(true)
+    setExchangeLink(null)
+    setExchangeError('')
+    setSelectedMyReview(null)
+    if (!myReviews) {
+      getMyReviews().then(data => setMyReviews(data.filter(r => r.id !== review.id))).catch(() => setMyReviews([]))
+    }
+  }
+
+  async function handleExchange() {
+    if (!selectedMyReview) { setExchangeError('내 글을 선택해주세요.'); return }
+    setExchangeLoading(true)
+    setExchangeError('')
+    try {
+      const data = await createExchange(review.id, selectedMyReview)
+      setExchangeLink(data.link)
+    } catch (err) {
+      setExchangeError(err?.response?.data?.message || '서로보기에 실패했습니다.')
+    } finally {
+      setExchangeLoading(false)
+    }
+  }
+
   async function handleRevealLink(e) {
     e.preventDefault()
     if (!linkPw) { setLinkPwError('비밀번호를 입력해주세요.'); return }
@@ -169,6 +199,8 @@ export default function ReviewDetail() {
       setSubmitting(false)
     }
   }
+
+  const isNotOwner = user && review && review.memberUsername && review.memberUsername !== user.username
 
   if (loading) return <div className="container"><p className="text-muted" style={{ padding: '40px 0' }}>로딩 중...</p></div>
   if (!review) return <div className="container"><p className="text-muted" style={{ padding: '40px 0' }}>게시글을 찾을 수 없습니다.</p></div>
@@ -259,30 +291,45 @@ export default function ReviewDetail() {
                     marginBottom: 12, pointerEvents: 'none'
                   }}>https://notion.so/abcdefghijklmnopqrstuvwxyz</div>
 
-                  {showLinkPwForm ? (
-                    <form onSubmit={handleRevealLink} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                      <div style={{ flex: 1, minWidth: 180 }}>
-                        <input
-                          type="password"
-                          className={`form-input${linkPwError ? ' is-error' : ''}`}
-                          value={linkPw}
-                          onChange={e => setLinkPw(e.target.value)}
-                          placeholder="게시글 비밀번호 입력"
-                          autoFocus
-                          style={{ fontSize: 13 }}
-                        />
-                        {linkPwError && <span className="form-err">{linkPwError}</span>}
-                      </div>
-                      <button type="submit" className="btn btn-accent btn-sm" disabled={linkLoading}>
-                        {linkLoading ? '확인 중...' : '확인'}
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                    {/* 비밀번호로 보기 */}
+                    {showLinkPwForm ? (
+                      <form onSubmit={handleRevealLink} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                        <div style={{ flex: 1, minWidth: 180 }}>
+                          <input
+                            type="password"
+                            className={`form-input${linkPwError ? ' is-error' : ''}`}
+                            value={linkPw}
+                            onChange={e => setLinkPw(e.target.value)}
+                            placeholder="게시글 비밀번호 입력"
+                            autoFocus
+                            style={{ fontSize: 13 }}
+                          />
+                          {linkPwError && <span className="form-err">{linkPwError}</span>}
+                        </div>
+                        <button type="submit" className="btn btn-accent btn-sm" disabled={linkLoading}>
+                          {linkLoading ? '확인 중...' : '확인'}
+                        </button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowLinkPwForm(false)}>취소</button>
+                      </form>
+                    ) : (
+                      <button className="btn btn-outline btn-sm" onClick={() => setShowLinkPwForm(true)}>
+                        🔒 링크 보기
                       </button>
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowLinkPwForm(false)}>취소</button>
-                    </form>
-                  ) : (
-                    <button className="btn btn-outline btn-sm" onClick={() => setShowLinkPwForm(true)}>
-                      🔒 링크 보기
-                    </button>
-                  )}
+                    )}
+
+                    {/* 서로보기 버튼 (로그인 유저 + 타인 글) */}
+                    {user && review.memberUsername && review.memberUsername !== user.username && (
+                      <div className="tooltip-wrap">
+                        <button className="btn btn-accent btn-sm" onClick={openExchangeModal}>
+                          🔄 서로보기
+                        </button>
+                        <div className="tooltip-box">
+                          내 포폴·이력서 링크를 공유하고<br />상대방의 링크를 볼 수 있어요
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
             </div>
@@ -408,6 +455,79 @@ export default function ReviewDetail() {
           </div>
         </div>
       </div>
+
+      {/* 서로보기 모달 */}
+      {exchangeOpen && (
+        <div className="modal-overlay" onClick={() => setExchangeOpen(false)}>
+          <div className="modal-card" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <span className="modal-title">🔄 서로보기</span>
+              <button className="btn-close-edit" onClick={() => setExchangeOpen(false)}>✕</button>
+            </div>
+            <p style={{ fontSize: 14, color: 'var(--text-2)', marginBottom: 16 }}>
+              내 포폴·이력서 글을 선택하면, 상대방의 링크를 확인할 수 있습니다.<br />
+              선택한 내 글의 링크도 상대방이 볼 수 있게 됩니다.
+            </p>
+
+            {exchangeLink ? (
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: 'var(--accent)' }}>✅ 링크 확인!</div>
+                <a href={exchangeLink} target="_blank" rel="noopener noreferrer"
+                  style={{ color: 'var(--accent)', wordBreak: 'break-all', fontSize: 14 }}>
+                  {exchangeLink}
+                </a>
+                <div style={{ marginTop: 16 }}>
+                  <button className="btn btn-ghost btn-sm" onClick={() => setExchangeOpen(false)}>닫기</button>
+                </div>
+              </div>
+            ) : myReviews === null ? (
+              <p className="text-muted">내 글을 불러오는 중...</p>
+            ) : myReviews.length === 0 ? (
+              <div>
+                <p style={{ fontSize: 14, color: 'var(--text-2)', marginBottom: 16 }}>
+                  서로보기를 하려면 먼저 포폴·이력서 검토 요청 글을 작성해야 합니다.
+                </p>
+                <Link to="/reviews/new" className="btn btn-accent btn-sm" onClick={() => setExchangeOpen(false)}>
+                  검토 요청 글 작성하기
+                </Link>
+              </div>
+            ) : (
+              <div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16, maxHeight: 260, overflowY: 'auto' }}>
+                  {myReviews.map(r => (
+                    <label key={r.id} style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
+                      border: selectedMyReview === r.id ? '1.5px solid var(--accent)' : '1px solid var(--border)',
+                      background: selectedMyReview === r.id ? 'var(--accent-bg, rgba(99,102,241,0.07))' : 'var(--bg)',
+                    }}>
+                      <input
+                        type="radio"
+                        name="myReview"
+                        value={r.id}
+                        checked={selectedMyReview === r.id}
+                        onChange={() => setSelectedMyReview(r.id)}
+                        style={{ accentColor: 'var(--accent)' }}
+                      />
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 500 }}>{r.title}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-3)' }}>{r.typeDisplay} · {r.careerLevelDisplay}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+                {exchangeError && <div className="form-err" style={{ marginBottom: 8 }}>{exchangeError}</div>}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="btn btn-accent" onClick={handleExchange} disabled={exchangeLoading}>
+                    {exchangeLoading ? '처리 중...' : '서로 링크 확인하기'}
+                  </button>
+                  <button className="btn btn-ghost" onClick={() => setExchangeOpen(false)}>취소</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

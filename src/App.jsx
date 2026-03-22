@@ -43,6 +43,7 @@ function AppInner() {
           <Route path="/reviews/:id" element={<ReviewDetail />} />
           <Route path="/reviews/:id/edit" element={<ReviewEdit />} />
           <Route path="/mypage" element={<MyPage />} />
+          <Route path="/mypage/:tab" element={<MyPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/admin" element={<Admin />} />

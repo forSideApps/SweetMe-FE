@@ -36,18 +36,19 @@ export const markReviewPending = (id) =>
 export const addReviewComment = (id, data) =>
   client.post(`/reviews/${id}/comments`, data)
 
-export const updateReviewComment = (reviewId, commentId, data, adminKey) =>
-  client.put(`/reviews/${reviewId}/comments/${commentId}`, data,
-    adminKey ? { headers: { 'X-Admin-Key': adminKey } } : undefined)
+export const updateReviewComment = (reviewId, commentId, data) =>
+  client.put(`/reviews/${reviewId}/comments/${commentId}`, data)
 
-export const deleteReviewComment = (reviewId, commentId, password, adminKey) =>
+export const deleteReviewComment = (reviewId, commentId, password) =>
   client.delete(`/reviews/${reviewId}/comments/${commentId}`, {
     data: { password },
-    ...(adminKey ? { headers: { 'X-Admin-Key': adminKey } } : {}),
   })
 
-export const deleteReview = (id, adminKey) =>
-  client.delete(`/reviews/${id}`, { headers: { 'X-Admin-Key': adminKey } })
+export const deleteReview = (id) =>
+  client.delete(`/reviews/${id}`)
 
-export const getReviewLink = (id, password, adminKey) =>
-  client.post(`/reviews/${id}/link`, { password, adminKey }).then(r => r.data)
+export const getReviewLink = (id, password) =>
+  client.post(`/reviews/${id}/link`, { password }).then(r => r.data)
+
+export const createExchange = (targetId, myReviewId) =>
+  client.post(`/reviews/${targetId}/exchange`, { myReviewId }).then(r => r.data)

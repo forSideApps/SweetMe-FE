@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { verifyManagePassword } from '../api/rooms'
+import { verifyManagePassword, getRoomDetail } from '../api/rooms'
+import { getMe } from '../api/auth'
 
 export default function ManageLogin() {
   const { roomId } = useParams()
@@ -8,6 +9,17 @@ export default function ManageLogin() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    Promise.all([getMe(), getRoomDetail(roomId)])
+      .then(([user, room]) => {
+        if (user && room.memberUsername && user.username === room.memberUsername) {
+          sessionStorage.setItem(`room_${roomId}_password`, '')
+          navigate(`/study/${roomId}/manage/dashboard`, { replace: true })
+        }
+      })
+      .catch(() => {})
+  }, [roomId])
 
   async function handleSubmit(e) {
     e.preventDefault()

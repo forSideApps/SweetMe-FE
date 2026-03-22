@@ -19,3 +19,15 @@ export function getMe() {
 export function updateProfile(data) {
   return client.put('/auth/profile', data).then(r => r.data)
 }
+
+export function getMyRooms() {
+  return client.get('/auth/me/rooms').then(r => r.data)
+}
+
+export function getMyReviews() {
+  return client.get('/auth/me/reviews').then(r => r.data)
+}
+
+export function getMyPosts() {
+  return client.get('/auth/me/posts').then(r => r.data)
+}

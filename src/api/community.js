@@ -20,10 +20,18 @@ export function incrementPostView(postId) {
   return client.post(`/community/${postId}/view`)
 }
 
-export function deletePost(id, adminKey) {
-  return client.delete(`/community/${id}`, { headers: { 'X-Admin-Key': adminKey } })
+export function deletePost(id) {
+  return client.delete(`/community/${id}`)
 }
 
-export function createNotice(data, adminKey) {
-  return client.post('/community', { ...data, category: 'NOTICE' }, { headers: { 'X-Admin-Key': adminKey } }).then(r => r.data)
+export function updateComment(postId, commentId, data) {
+  return client.put(`/community/${postId}/comments/${commentId}`, data)
+}
+
+export function deleteComment(postId, commentId) {
+  return client.delete(`/community/${postId}/comments/${commentId}`)
+}
+
+export function createNotice(data) {
+  return client.post('/community', { ...data, category: 'NOTICE' }).then(r => r.data)
 }

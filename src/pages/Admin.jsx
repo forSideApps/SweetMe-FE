@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { getThemes } from '../api/themes'
 import { getReviews, deleteReview, markReviewDone, markReviewPending } from '../api/review'
 import { getPosts, createNotice, deletePost as deleteCommunityPost } from '../api/community'
+import { getMe } from '../api/auth'
 import client from '../api/client'
 import ThemeLogo from '../components/ThemeLogo'
 
@@ -18,75 +19,49 @@ export default function Admin() {
   const navigate = useNavigate()
   const activeTab = TABS.find(t => location.pathname === t.path)?.key ?? 'visitors'
   const [msg, setMsg] = useState(null)
-  const [adminKey, setAdminKey] = useState(() => sessionStorage.getItem('adminKey') || '')
-  const [keyInput, setKeyInput] = useState('')
-  const [keyError, setKeyError] = useState('')
+  const [authLoading, setAuthLoading] = useState(true)
 
-  function handleLogin(e) {
-    e.preventDefault()
-    if (!keyInput) { setKeyError('비밀번호를 입력해주세요.'); return }
-    client.get('/admin/visitors', { headers: { 'X-Admin-Key': keyInput } })
-      .then(() => {
-        sessionStorage.setItem('adminKey', keyInput)
-        setAdminKey(keyInput)
-        setKeyError('')
-        navigate('/admin/visitors')
+  useEffect(() => {
+    getMe()
+      .then(data => {
+        if (data.role !== 'ADMIN') {
+          navigate('/login?from=' + encodeURIComponent(location.pathname))
+        }
       })
-      .catch(() => setKeyError('비밀번호가 올바르지 않습니다.'))
-  }
+      .catch(() => navigate('/login?from=' + encodeURIComponent(location.pathname)))
+      .finally(() => setAuthLoading(false))
+  }, [])
 
-  if (!adminKey) {
-    return (
-      <div className="auth-wrap">
-        <div className="auth-card">
-          <div className="auth-icon">🔐</div>
-          <div className="auth-title">어드민 인증</div>
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div className="form-group">
-              <input
-                type="password"
-                className={`form-input${keyError ? ' is-error' : ''}`}
-                value={keyInput}
-                onChange={e => setKeyInput(e.target.value)}
-                placeholder="어드민 비밀번호"
-                autoFocus
-              />
-              {keyError && <span className="form-err">{keyError}</span>}
-            </div>
-            <button type="submit" className="btn btn-accent w-full">확인</button>
-          </form>
-        </div>
-      </div>
-    )
-  }
+  if (authLoading) return null
 
   const containerClass = activeTab === 'company' ? 'container' : 'container-sm'
 
   return (
     <div className={containerClass} style={{ padding: '40px 24px' }}>
-{msg && (
+
+      {msg && (
         <div className={`alert ${msg.type === 'success' ? 'alert-success' : 'alert-error'}`} style={{ marginBottom: 20 }}>
           {msg.text}
           <button className="alert-close" onClick={() => setMsg(null)}>✕</button>
         </div>
       )}
 
-{activeTab === 'visitors' && <VisitorTab adminKey={adminKey} onUnauthorized={() => { sessionStorage.removeItem('adminKey'); setAdminKey('') }} />}
-      {activeTab === 'company'  && <CompanyTab setMsg={setMsg} adminKey={adminKey} />}
-      {activeTab === 'review'   && <ReviewTab setMsg={setMsg} adminKey={adminKey} />}
-      {activeTab === 'notice'   && <NoticeTab setMsg={setMsg} adminKey={adminKey} />}
+      {activeTab === 'visitors' && <VisitorTab onUnauthorized={() => navigate('/login')} />}
+      {activeTab === 'company'  && <CompanyTab setMsg={setMsg} />}
+      {activeTab === 'review'   && <ReviewTab setMsg={setMsg} />}
+      {activeTab === 'notice'   && <NoticeTab setMsg={setMsg} />}
     </div>
   )
 }
 
 /* ─── 방문자 통계 탭 ─── */
-function VisitorTab({ adminKey, onUnauthorized }) {
+function VisitorTab({ onUnauthorized }) {
   const [stats, setStats] = useState({ today: null, total: null })
   const [error, setError] = useState(null)
 
   function load() {
     setError(null)
-    client.get('/admin/visitors', { headers: { 'X-Admin-Key': adminKey } })
+    client.get('/admin/visitors')
       .then(r => setStats(r.data))
       .catch(err => {
         if (err?.response?.status === 401) { onUnauthorized(); return }
@@ -94,7 +69,7 @@ function VisitorTab({ adminKey, onUnauthorized }) {
       })
   }
 
-  useEffect(() => { load() }, [adminKey])
+  useEffect(() => { load() }, [])
 
   return (
     <>
@@ -121,7 +96,7 @@ const MODAL_STYLE = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)
 const MODAL_BOX = { background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', padding: '28px 24px', width: '100%', maxWidth: 480, margin: '0 16px' }
 
 /* ─── 회사 관리 탭 ─── */
-function CompanyTab({ setMsg, adminKey }) {
+function CompanyTab({ setMsg }) {
   const [companies, setCompanies] = useState([])
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState({ name: '', slug: '', accentColor: '#6366f1' })
@@ -163,14 +138,13 @@ function CompanyTab({ setMsg, adminKey }) {
         name: form.name.trim(),
         slug: form.slug.trim(),
         accentColor: form.accentColor,
-      }, { headers: { 'X-Admin-Key': adminKey } })
-      // 파일 선택돼 있으면 바로 로고 업로드
+      })
       const file = createFileRef.current?.files?.[0]
       if (file && res.data?.id) {
         const fd = new FormData()
         fd.append('file', file)
         await client.post(`/admin/companies/${res.data.id}/logo`, fd, {
-          headers: { 'Content-Type': 'multipart/form-data', 'X-Admin-Key': adminKey }
+          headers: { 'Content-Type': 'multipart/form-data' }
         })
       }
       setForm({ name: '', slug: '', accentColor: '#6366f1' })
@@ -205,7 +179,7 @@ function CompanyTab({ setMsg, adminKey }) {
         name: editForm.name.trim(),
         slug: editForm.slug.trim(),
         accentColor: editForm.accentColor,
-      }, { headers: { 'X-Admin-Key': adminKey } })
+      })
       setMsg({ type: 'success', text: '수정되었습니다.' })
       setEditModal(null)
       load()
@@ -229,9 +203,8 @@ function CompanyTab({ setMsg, adminKey }) {
     setCompanies(next)
     dragItem.current = null
     dragOver.current = null
-    // 서버에 순서 저장
     setSavingOrder(true)
-    client.put('/admin/companies/order', next.map(c => c.id), { headers: { 'X-Admin-Key': adminKey } })
+    client.put('/admin/companies/order', next.map(c => c.id))
       .then(() => setMsg({ type: 'success', text: '순서가 저장되었습니다.' }))
       .catch(() => setMsg({ type: 'error', text: '순서 저장 실패' }))
       .finally(() => setSavingOrder(false))
@@ -245,7 +218,7 @@ function CompanyTab({ setMsg, adminKey }) {
     formData.append('file', file)
     try {
       await client.post(`/admin/companies/${company.id}/logo`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data', 'X-Admin-Key': adminKey }
+        headers: { 'Content-Type': 'multipart/form-data' }
       })
       setMsg({ type: 'success', text: `${company.name} 로고가 저장되었습니다. (새로고침 필요)` })
       if (fileInputs.current[company.id]) fileInputs.current[company.id].value = ''
@@ -259,7 +232,7 @@ function CompanyTab({ setMsg, adminKey }) {
   async function handleDeleteCompany(company) {
     if (!window.confirm(`'${company.name}' 회사를 삭제하시겠습니까?`)) return
     try {
-      await client.delete(`/admin/companies/${company.id}`, { headers: { 'X-Admin-Key': adminKey } })
+      await client.delete(`/admin/companies/${company.id}`)
       setMsg({ type: 'success', text: '삭제되었습니다.' })
       setEditModal(null)
       load()
@@ -270,7 +243,6 @@ function CompanyTab({ setMsg, adminKey }) {
 
   return (
     <>
-      {/* 헤더 */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div style={{ fontSize: 15, fontWeight: 700 }}>
           회사 ({companies.length}개)
@@ -279,7 +251,6 @@ function CompanyTab({ setMsg, adminKey }) {
         <button className="btn btn-accent btn-sm" onClick={() => setCreateModal(true)}>+ 회사 등록</button>
       </div>
 
-      {/* 회사 등록 모달 */}
       {createModal && (
         <div style={MODAL_STYLE} onClick={() => setCreateModal(false)}>
           <div style={MODAL_BOX} onClick={e => e.stopPropagation()}>
@@ -328,7 +299,6 @@ function CompanyTab({ setMsg, adminKey }) {
         </div>
       )}
 
-      {/* 수정 모달 */}
       {editModal && (
         <div style={MODAL_STYLE} onClick={cancelEdit}>
           <div style={MODAL_BOX} onClick={e => e.stopPropagation()}>
@@ -372,7 +342,6 @@ function CompanyTab({ setMsg, adminKey }) {
         </div>
       )}
 
-      {/* 카드 그리드 */}
       {loading ? (
         <p className="text-muted">로딩 중...</p>
       ) : companies.length === 0 ? (
@@ -404,7 +373,7 @@ function CompanyTab({ setMsg, adminKey }) {
 }
 
 /* ─── 포폴·이력서 검토 탭 ─── */
-function ReviewTab({ setMsg, adminKey }) {
+function ReviewTab({ setMsg }) {
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('')
@@ -514,7 +483,7 @@ function ReviewTab({ setMsg, adminKey }) {
 }
 
 /* ─── 공지사항 관리 탭 ─── */
-function NoticeTab({ setMsg, adminKey }) {
+function NoticeTab({ setMsg }) {
   const [notices, setNotices] = useState([])
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState({ title: '', content: '' })
@@ -538,7 +507,7 @@ function NoticeTab({ setMsg, adminKey }) {
     }
     setSubmitting(true)
     try {
-      await createNotice({ title: form.title.trim(), content: form.content.trim(), authorName: '운영자' }, adminKey)
+      await createNotice({ title: form.title.trim(), content: form.content.trim(), authorName: '운영자' })
       setForm({ title: '', content: '' })
       setMsg({ type: 'success', text: '공지사항이 등록되었습니다.' })
       load()
@@ -552,7 +521,7 @@ function NoticeTab({ setMsg, adminKey }) {
   async function handleDelete(id) {
     if (!window.confirm('공지사항을 삭제하시겠습니까?')) return
     try {
-      await deleteCommunityPost(id, adminKey)
+      await deleteCommunityPost(id)
       setNotices(prev => prev.filter(n => n.id !== id))
       setMsg({ type: 'success', text: '삭제되었습니다.' })
     } catch {
