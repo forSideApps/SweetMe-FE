@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { getThemes } from '../api/themes'
 import { createRoom } from '../api/rooms'
+import { getMe } from '../api/auth'
 import Alert from '../components/Alert'
+import LockedField from '../components/LockedField'
 import ThemeLogo from '../components/ThemeLogo'
 import { JOB_ROLES } from '../constants/jobRoles'
 
@@ -13,6 +15,7 @@ export default function RoomCreate() {
 
   const [themes, setThemes] = useState([])
   const [selectedTheme, setSelectedTheme] = useState(null)
+  const [user, setUser] = useState(null)
   const [alert, setAlert] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
@@ -37,6 +40,7 @@ export default function RoomCreate() {
         if (found) setSelectedTheme(found)
       }
     }).catch(() => {})
+    getMe().then(setUser).catch(() => {})
   }, [initialThemeId])
 
   function validate() {
@@ -45,8 +49,8 @@ export default function RoomCreate() {
     if (!form.maxMembers || form.maxMembers < 2 || form.maxMembers > 10) errs.maxMembers = '최대 인원은 2~10명이어야 합니다.'
     if (!form.jobRole) errs.jobRole = '직군을 선택해주세요.'
     if (!form.kakaoLink.trim()) errs.kakaoLink = '카카오 오픈채팅 링크를 입력해주세요.'
-    if (!form.creatorNickname.trim()) errs.creatorNickname = '방장 닉네임을 입력해주세요.'
-    if (!form.password || form.password.length < 4) errs.password = '비밀번호는 4자 이상이어야 합니다.'
+    if (!user && !form.creatorNickname.trim()) errs.creatorNickname = '방장 닉네임을 입력해주세요.'
+    if (!user && (!form.password || form.password.length < 4)) errs.password = '비밀번호는 4자 이상이어야 합니다.'
     return errs
   }
 
@@ -202,29 +206,37 @@ export default function RoomCreate() {
           <div className="form-section">
             <div className="form-section-label">방장 정보</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div className="form-group">
-                <label className="form-label req">방장 닉네임</label>
-                <input
-                  className={`form-input${errors.creatorNickname ? ' is-error' : ''}`}
-                  value={form.creatorNickname}
-                  onChange={e => setForm(f => ({ ...f, creatorNickname: e.target.value }))}
-                  placeholder="닉네임을 입력해주세요"
-                />
-                {errors.creatorNickname && <span className="form-err">{errors.creatorNickname}</span>}
-              </div>
-
-              <div className="form-group">
-                <label className="form-label req">비밀번호</label>
-                <input
-                  type="password"
-                  className={`form-input${errors.password ? ' is-error' : ''}`}
-                  value={form.password}
-                  onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                  placeholder="관리자 접근용 비밀번호 (4자 이상)"
-                />
-                {errors.password && <span className="form-err">{errors.password}</span>}
-                <span className="form-hint">신청자 관리 페이지에 접근할 때 사용됩니다.</span>
-              </div>
+              {user ? (
+                <div className="form-group">
+                  <label className="form-label">방장 닉네임</label>
+                  <LockedField value={user.username} />
+                </div>
+              ) : (
+                <>
+                  <div className="form-group">
+                    <label className="form-label req">방장 닉네임</label>
+                    <input
+                      className={`form-input${errors.creatorNickname ? ' is-error' : ''}`}
+                      value={form.creatorNickname}
+                      onChange={e => setForm(f => ({ ...f, creatorNickname: e.target.value }))}
+                      placeholder="닉네임을 입력해주세요"
+                    />
+                    {errors.creatorNickname && <span className="form-err">{errors.creatorNickname}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label req">비밀번호</label>
+                    <input
+                      type="password"
+                      className={`form-input${errors.password ? ' is-error' : ''}`}
+                      value={form.password}
+                      onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                      placeholder="관리자 접근용 비밀번호 (4자 이상)"
+                    />
+                    {errors.password && <span className="form-err">{errors.password}</span>}
+                    <span className="form-hint">신청자 관리 페이지에 접근할 때 사용됩니다.</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

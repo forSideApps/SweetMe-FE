@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { createReview } from '../api/review'
+import { getMe } from '../api/auth'
 import Alert from '../components/Alert'
+import LockedField from '../components/LockedField'
 import { JOB_ROLES } from '../constants/jobRoles'
 
 const TYPES = [
@@ -18,6 +20,7 @@ export default function ReviewCreate() {
   const [alert, setAlert] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
+  const [user, setUser] = useState(null)
   const [form, setForm] = useState({
     type: 'PORTFOLIO',
     jobCategory: 'BACKEND',
@@ -30,12 +33,19 @@ export default function ReviewCreate() {
     password: '',
   })
 
+  useEffect(() => {
+    getMe().then(data => {
+      setUser(data)
+      setForm(f => ({ ...f, authorName: data.username }))
+    }).catch(() => {})
+  }, [])
+
   function validate() {
     const errs = {}
     if (!form.title.trim()) errs.title = '제목을 입력해주세요.'
     if (!form.content.trim()) errs.content = '내용을 입력해주세요.'
-    if (!form.authorName.trim()) errs.authorName = '작성자명을 입력해주세요.'
-    if (!form.password.trim()) errs.password = '비밀번호를 입력해주세요.'
+    if (!user && !form.authorName.trim()) errs.authorName = '작성자명을 입력해주세요.'
+    if (!user && !form.password.trim()) errs.password = '비밀번호를 입력해주세요.'
     return errs
   }
 
@@ -129,7 +139,7 @@ export default function ReviewCreate() {
                 className={`form-textarea${errors.content ? ' is-error' : ''}`}
                 value={form.content}
                 onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
-                placeholder={`포트폴리오/이력서에서 피드백을 받고 싶은 내용을 작성해주세요.\n\n- 피드백 원하는 부분: 프로젝트 설명 방식, 기술 스택 표현 등`}
+                placeholder={`포트폴리오/이력서에서 피드백을 받고 싶은 내용을 작성해주세요.\n\n- 피드백 원하는 부분 : 프로젝트 설명 방식, 기술 스택 표현 등`}
                 rows={10}
                 style={{ minHeight: 240 }}
               />
@@ -142,21 +152,27 @@ export default function ReviewCreate() {
                 className="form-input"
                 value={form.portfolioLink}
                 onChange={e => setForm(f => ({ ...f, portfolioLink: e.target.value }))}
-                placeholder="노션, GitHub, 구글 드라이브 등 링크 (비밀번호 입력 후 공개)"
+                placeholder="노션, GitHub, 구글 드라이브 등 링크"
               />
-              <span className="form-hint">링크는 비밀번호를 입력한 사람만 볼 수 있습니다.</span>
+              {!user && <span className="form-hint">링크는 비밀번호를 입력한 사람만 볼 수 있습니다.</span>}
             </div>
 
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label req">작성자명</label>
-                <input
-                  className={`form-input${errors.authorName ? ' is-error' : ''}`}
-                  value={form.authorName}
-                  onChange={e => setForm(f => ({ ...f, authorName: e.target.value }))}
-                  placeholder="닉네임"
-                />
-                {errors.authorName && <span className="form-err">{errors.authorName}</span>}
+                {user ? (
+                  <LockedField value={user.username} />
+                ) : (
+                  <>
+                    <input
+                      className={`form-input${errors.authorName ? ' is-error' : ''}`}
+                      value={form.authorName}
+                      onChange={e => setForm(f => ({ ...f, authorName: e.target.value }))}
+                      placeholder="닉네임"
+                    />
+                    {errors.authorName && <span className="form-err">{errors.authorName}</span>}
+                  </>
+                )}
               </div>
               <div className="form-group">
                 <label className="form-label">연락처 <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>(선택)</span></label>
@@ -169,17 +185,19 @@ export default function ReviewCreate() {
               </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label req">비밀번호</label>
-              <input
-                type="password"
-                className={`form-input${errors.password ? ' is-error' : ''}`}
-                value={form.password}
-                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                placeholder="나중에 수정 시 사용할 비밀번호"
-              />
-              {errors.password && <span className="form-err">{errors.password}</span>}
-            </div>
+            {!user && (
+              <div className="form-group">
+                <label className="form-label req">비밀번호</label>
+                <input
+                  type="password"
+                  className={`form-input${errors.password ? ' is-error' : ''}`}
+                  value={form.password}
+                  onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                  placeholder="나중에 수정 시 사용할 비밀번호"
+                />
+                {errors.password && <span className="form-err">{errors.password}</span>}
+              </div>
+            )}
 
             <div className="form-actions">
               <button type="submit" className="btn btn-accent btn-lg" disabled={submitting}>

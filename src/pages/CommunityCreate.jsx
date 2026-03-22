@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { createPost } from '../api/community'
+import { getMe } from '../api/auth'
 import Alert from '../components/Alert'
+import LockedField from '../components/LockedField'
 
 const CATEGORIES = [
   { value: 'FREE', label: '자유게시판' },
@@ -13,6 +15,7 @@ export default function CommunityCreate() {
   const [alert, setAlert] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
+  const [user, setUser] = useState(null)
 
   const [form, setForm] = useState({
     category: 'FREE',
@@ -21,12 +24,19 @@ export default function CommunityCreate() {
     authorName: '',
   })
 
+  useEffect(() => {
+    getMe().then(data => {
+      setUser(data)
+      setForm(f => ({ ...f, authorName: data.username }))
+    }).catch(() => {})
+  }, [])
+
   function validate() {
     const errs = {}
     if (!form.category) errs.category = '카테고리를 선택해주세요.'
     if (!form.title.trim()) errs.title = '제목을 입력해주세요.'
     if (!form.content.trim()) errs.content = '내용을 입력해주세요.'
-    if (!form.authorName.trim()) errs.authorName = '작성자명을 입력해주세요.'
+    if (!user && !form.authorName.trim()) errs.authorName = '작성자명을 입력해주세요.'
     return errs
   }
 
@@ -109,13 +119,19 @@ export default function CommunityCreate() {
 
             <div className="form-group">
               <label className="form-label req">작성자명</label>
-              <input
-                className={`form-input${errors.authorName ? ' is-error' : ''}`}
-                value={form.authorName}
-                onChange={e => setForm(f => ({ ...f, authorName: e.target.value }))}
-                placeholder="닉네임을 입력해주세요"
-              />
-              {errors.authorName && <span className="form-err">{errors.authorName}</span>}
+              {user ? (
+                <LockedField value={user.username} />
+              ) : (
+                <>
+                  <input
+                    className={`form-input${errors.authorName ? ' is-error' : ''}`}
+                    value={form.authorName}
+                    onChange={e => setForm(f => ({ ...f, authorName: e.target.value }))}
+                    placeholder="닉네임을 입력해주세요"
+                  />
+                  {errors.authorName && <span className="form-err">{errors.authorName}</span>}
+                </>
+              )}
             </div>
 
             <div className="form-actions">

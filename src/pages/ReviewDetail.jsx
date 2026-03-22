@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { getReview, incrementReviewView, addReviewComment, updateReviewComment, deleteReviewComment, getReviewLink, deleteReview } from '../api/review'
+import { getMe } from '../api/auth'
 import Alert from '../components/Alert'
 import { formatDateTime } from '../utils/date'
 
@@ -19,7 +20,8 @@ export default function ReviewDetail() {
   const [commentErrors, setCommentErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const viewedRef = useRef(false)
-  const adminKey = sessionStorage.getItem('adminKey') || ''
+  const [user, setUser] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [adminComment, setAdminComment] = useState('')
   const [adminSubmitting, setAdminSubmitting] = useState(false)
   const [linkPw, setLinkPw] = useState('')
@@ -29,10 +31,12 @@ export default function ReviewDetail() {
   const [showLinkPwForm, setShowLinkPwForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [editingIsAdmin, setEditingIsAdmin] = useState(false)
+  const [editingIsMine, setEditingIsMine] = useState(false)
   const [editForm, setEditForm] = useState({ content: '', password: '' })
   const [editError, setEditError] = useState('')
   const [deleteId, setDeleteId] = useState(null)
   const [deleteIsAdmin, setDeleteIsAdmin] = useState(false)
+  const [deleteIsMine, setDeleteIsMine] = useState(false)
   const [deletePw, setDeletePw] = useState('')
   const [deleteError, setDeleteError] = useState('')
 
@@ -46,21 +50,33 @@ export default function ReviewDetail() {
       viewedRef.current = true
       incrementReviewView(id).catch(() => {})
     }
+    getMe()
+      .then(data => {
+        setUser(data)
+        if (data.role === 'ADMIN') {
+          setIsAdmin(true)
+          getReviewLink(id)
+            .then(d => setRevealedLink(d.link))
+            .catch(() => {})
+        }
+      })
+      .catch(() => {})
   }, [id])
 
+  // 로그인 유저가 review 작성자면 포폴 링크 자동 노출
   useEffect(() => {
-    if (!adminKey) return
-    getReviewLink(id, undefined, adminKey)
-      .then(data => setRevealedLink(data.link))
-      .catch(() => {})
-  }, [id, adminKey])
+    if (user && review && !isAdmin && review.memberUsername && review.memberUsername === user.username && !revealedLink) {
+      getReviewLink(id).then(d => setRevealedLink(d.link)).catch(() => {})
+    }
+  }, [user, review])
 
   function validateComment() {
     const errs = {}
-    if (!comment.authorName.trim()) errs.authorName = '작성자명을 입력해주세요.'
-    if (comment.authorName.includes('방장') || comment.authorName.includes('운영자')) errs.authorName = '사용할 수 없는 닉네임입니다.'
+    if (!user) {
+      if (!comment.authorName.trim()) errs.authorName = '작성자명을 입력해주세요.'
+      if (comment.authorName.includes('방장') || comment.authorName.includes('운영자')) errs.authorName = '사용할 수 없는 닉네임입니다.'
+    }
     if (!comment.content.trim()) errs.content = '내용을 입력해주세요.'
-    if (!comment.password.trim()) errs.password = '비밀번호를 입력해주세요.'
     return errs
   }
 
@@ -69,7 +85,7 @@ export default function ReviewDetail() {
     if (!adminComment.trim()) return
     setAdminSubmitting(true)
     try {
-      await addReviewComment(id, { authorName: '운영자', content: adminComment, adminKey })
+      await addReviewComment(id, { authorName: '운영자', content: adminComment })
       setAdminComment('')
       setAlert({ type: 'success', message: '운영자 댓글이 작성되었습니다.' })
       fetchReview()
@@ -83,15 +99,16 @@ export default function ReviewDetail() {
   function startEdit(c) {
     setEditingId(c.id)
     setEditingIsAdmin(c.admin || false)
+    setEditingIsMine(!!(user && c.memberUsername === user.username))
     setEditForm({ content: c.content, password: '' })
     setEditError('')
   }
 
   async function handleEditSubmit(e) {
     e.preventDefault()
-    if (!editingIsAdmin && !editForm.password.trim()) { setEditError('비밀번호를 입력해주세요.'); return }
+    if (!editingIsAdmin && !editingIsMine && !editForm.password.trim()) { setEditError('비밀번호를 입력해주세요.'); return }
     try {
-      await updateReviewComment(id, editingId, editForm, editingIsAdmin ? adminKey : undefined)
+      await updateReviewComment(id, editingId, editForm)
       setEditingId(null)
       fetchReview()
     } catch (err) {
@@ -99,18 +116,19 @@ export default function ReviewDetail() {
     }
   }
 
-  function startDelete(commentId, isAdmin) {
+  function startDelete(commentId, isAdminComment, isMineComment) {
     setDeleteId(commentId)
-    setDeleteIsAdmin(isAdmin || false)
+    setDeleteIsAdmin(isAdminComment || false)
+    setDeleteIsMine(isMineComment || false)
     setDeletePw('')
     setDeleteError('')
   }
 
   async function handleDeleteSubmit(e) {
     e.preventDefault()
-    if (!deleteIsAdmin && !deletePw.trim()) { setDeleteError('비밀번호를 입력해주세요.'); return }
+    if (!deleteIsAdmin && !deleteIsMine && !deletePw.trim()) { setDeleteError('비밀번호를 입력해주세요.'); return }
     try {
-      await deleteReviewComment(id, deleteId, deletePw || undefined, deleteIsAdmin ? adminKey : undefined)
+      await deleteReviewComment(id, deleteId, deletePw || undefined)
       setDeleteId(null)
       fetchReview()
     } catch (err) {
@@ -200,14 +218,16 @@ export default function ReviewDetail() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                <Link to={`/reviews/${review.id}/edit`} className="btn btn-outline btn-sm">수정하기</Link>
-                {adminKey && (
+                {(isAdmin || (user && review.memberUsername && review.memberUsername === user.username)) && (
+                  <Link to={`/reviews/${review.id}/edit`} className="btn btn-outline btn-sm">수정하기</Link>
+                )}
+                {isAdmin && (
                   <button
                     className="btn btn-sm"
                     style={{ background: '#ef4444', color: '#fff' }}
                     onClick={async () => {
                       if (!confirm('이 게시글을 삭제하시겠습니까?')) return
-                      await deleteReview(review.id, adminKey)
+                      await deleteReview(review.id)
                       navigate('/reviews', { replace: true })
                     }}
                   >삭제</button>
@@ -233,14 +253,12 @@ export default function ReviewDetail() {
                 </a>
               ) : (
                 <>
-                  {/* 항상 보이는 blur 영역 */}
                   <div style={{
                     fontSize: 14, color: 'var(--text-3)',
                     filter: 'blur(6px)', userSelect: 'none', letterSpacing: 1,
                     marginBottom: 12, pointerEvents: 'none'
                   }}>https://notion.so/abcdefghijklmnopqrstuvwxyz</div>
 
-                  {/* 비밀번호 입력 영역 */}
                   {showLinkPwForm ? (
                     <form onSubmit={handleRevealLink} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                       <div style={{ flex: 1, minWidth: 180 }}>
@@ -270,13 +288,11 @@ export default function ReviewDetail() {
             </div>
           )}
 
-
           <div className="post-detail-actions">
             <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm">← 목록으로</button>
           </div>
         </div>
 
-        {/* 댓글 섹션 */}
         <div className="comments-section">
           <div className="comments-title">댓글 {comments.length}개</div>
 
@@ -289,14 +305,15 @@ export default function ReviewDetail() {
                   <div className="comment-header">
                     <span className="comment-author">
                       {c.admin && <span style={{ marginRight: 3 }}>👑</span>}
+                      {!c.admin && c.memberUsername && <span className="comment-member-badge">●</span>}
                       {c.authorName}
                     </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span className="comment-date">{formatDateTime(c.createdAt)}</span>
-                      {(!c.admin || adminKey) && (
+                      {(isAdmin || (user && c.memberUsername === user.username)) && (
                         <>
                           <button className="btn btn-ghost btn-sm" style={{ padding: '1px 6px', fontSize: 12 }} onClick={() => startEdit(c)}>수정</button>
-                          <button className="btn btn-ghost btn-sm" style={{ padding: '1px 6px', fontSize: 12, color: 'var(--danger, #ef4444)' }} onClick={() => startDelete(c.id, c.admin)}>삭제</button>
+                          <button className="btn btn-ghost btn-sm" style={{ padding: '1px 6px', fontSize: 12, color: 'var(--danger, #ef4444)' }} onClick={() => startDelete(c.id, c.admin, !!(user && c.memberUsername === user.username))}>삭제</button>
                         </>
                       )}
                     </div>
@@ -310,16 +327,6 @@ export default function ReviewDetail() {
                         rows={3}
                         style={{ minHeight: 70 }}
                       />
-                      {!editingIsAdmin && (
-                        <input
-                          type="password"
-                          className={`form-input${editError ? ' is-error' : ''}`}
-                          value={editForm.password}
-                          onChange={e => setEditForm(f => ({ ...f, password: e.target.value }))}
-                          placeholder="작성 시 입력한 비밀번호"
-                          style={{ fontSize: 13 }}
-                        />
-                      )}
                       {editError && <span className="form-err">{editError}</span>}
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button type="submit" className="btn btn-accent btn-sm">저장</button>
@@ -328,22 +335,7 @@ export default function ReviewDetail() {
                     </form>
                   ) : deleteId === c.id ? (
                     <form onSubmit={handleDeleteSubmit} style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {deleteIsAdmin ? (
-                        <div style={{ fontSize: 13, color: 'var(--text-2)' }}>운영자 댓글을 삭제하시겠습니까?</div>
-                      ) : (
-                        <>
-                          <div style={{ fontSize: 13, color: 'var(--text-2)' }}>비밀번호를 입력하면 댓글이 삭제됩니다.</div>
-                          <input
-                            type="password"
-                            className={`form-input${deleteError ? ' is-error' : ''}`}
-                            value={deletePw}
-                            onChange={e => setDeletePw(e.target.value)}
-                            placeholder="작성 시 입력한 비밀번호"
-                            autoFocus
-                            style={{ fontSize: 13 }}
-                          />
-                        </>
-                      )}
+                      <div style={{ fontSize: 13, color: 'var(--text-2)' }}>댓글을 삭제하시겠습니까?</div>
                       {deleteError && <span className="form-err">{deleteError}</span>}
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button type="submit" className="btn btn-sm" style={{ background: '#ef4444', color: '#fff' }}>삭제</button>
@@ -358,7 +350,7 @@ export default function ReviewDetail() {
             </div>
           )}
 
-          {adminKey && (
+          {isAdmin && (
             <div style={{ marginBottom: 20, padding: '16px', background: 'var(--bg-2)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)' }}>
               <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>👑 운영자 댓글 남기기</div>
               <form onSubmit={handleAdminCommentSubmit}>
@@ -380,25 +372,21 @@ export default function ReviewDetail() {
           <div className="comment-form">
             <form onSubmit={handleCommentSubmit}>
               <div className="comment-inputs">
-                <div className="form-group">
-                  <input
-                    className={`form-input${commentErrors.authorName ? ' is-error' : ''}`}
-                    value={comment.authorName}
-                    onChange={e => setComment(c => ({ ...c, authorName: e.target.value }))}
-                    placeholder="작성자명"
-                  />
-                  {commentErrors.authorName && <span className="form-err">{commentErrors.authorName}</span>}
-                </div>
-                <div className="form-group">
-                  <input
-                    type="password"
-                    className={`form-input${commentErrors.password ? ' is-error' : ''}`}
-                    value={comment.password}
-                    onChange={e => setComment(c => ({ ...c, password: e.target.value }))}
-                    placeholder="비밀번호 (수정/삭제 시 필요)"
-                  />
-                  {commentErrors.password && <span className="form-err">{commentErrors.password}</span>}
-                </div>
+                {user ? (
+                  <div className="comment-author-label">
+                    <span className="comment-member-badge">●</span> {user.username}으로 작성됩니다
+                  </div>
+                ) : (
+                  <div className="form-group">
+                    <input
+                      className={`form-input${commentErrors.authorName ? ' is-error' : ''}`}
+                      value={comment.authorName}
+                      onChange={e => setComment(c => ({ ...c, authorName: e.target.value }))}
+                      placeholder="작성자명"
+                    />
+                    {commentErrors.authorName && <span className="form-err">{commentErrors.authorName}</span>}
+                  </div>
+                )}
                 <div className="form-group">
                   <textarea
                     className={`form-textarea${commentErrors.content ? ' is-error' : ''}`}

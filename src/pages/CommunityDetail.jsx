@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { getPost, addComment, incrementPostView, deletePost } from '../api/community'
+import { getPost, addComment, updateComment, deleteComment, incrementPostView, deletePost } from '../api/community'
+import { getMe } from '../api/auth'
 import Alert from '../components/Alert'
 import { formatDateTime } from '../utils/date'
 
@@ -13,7 +14,8 @@ const CATEGORY_LABELS = {
 export default function CommunityDetail() {
   const { postId } = useParams()
   const navigate = useNavigate()
-  const adminKey = sessionStorage.getItem('adminKey') || ''
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [user, setUser] = useState(null)
   const [post, setPost] = useState(null)
   const [loading, setLoading] = useState(true)
   const [alert, setAlert] = useState(null)
@@ -21,6 +23,9 @@ export default function CommunityDetail() {
   const [comment, setComment] = useState({ authorName: '', content: '' })
   const [commentErrors, setCommentErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const [editContent, setEditContent] = useState('')
+  const [editError, setEditError] = useState('')
   const viewedRef = useRef(false)
 
   const fetchPost = useCallback(() => {
@@ -36,12 +41,15 @@ export default function CommunityDetail() {
       viewedRef.current = true
       incrementPostView(postId)
     }
+    getMe().then(data => { setUser(data); if (data.role === 'ADMIN') setIsAdmin(true) }).catch(() => {})
   }, [postId])
 
   function validateComment() {
     const errs = {}
-    if (!comment.authorName.trim()) errs.author = '작성자명을 입력해주세요.'
-    if (comment.authorName.includes('방장') || comment.authorName.includes('운영자')) errs.author = '사용할 수 없는 닉네임입니다.'
+    if (!user) {
+      if (!comment.authorName.trim()) errs.author = '작성자명을 입력해주세요.'
+      if (comment.authorName.includes('방장') || comment.authorName.includes('운영자')) errs.author = '사용할 수 없는 닉네임입니다.'
+    }
     if (!comment.content.trim()) errs.content = '내용을 입력해주세요.'
     return errs
   }
@@ -103,13 +111,13 @@ export default function CommunityDetail() {
                   <span>{formatDateTime(post.createdAt)}</span>
                 </div>
               </div>
-              {adminKey && (
+              {isAdmin && (
                 <button
                   className="btn btn-sm"
                   style={{ background: '#ef4444', color: '#fff', flexShrink: 0 }}
                   onClick={async () => {
                     if (!confirm('이 게시글을 삭제하시겠습니까?')) return
-                    await deletePost(postId, adminKey)
+                    await deletePost(postId)
                     navigate('/community', { replace: true })
                   }}
                 >삭제</button>
@@ -132,10 +140,62 @@ export default function CommunityDetail() {
               {comments.map(c => (
                 <div key={c.id} className="comment-item">
                   <div className="comment-header">
-                    <span className="comment-author">{c.authorName}</span>
-                    <span className="comment-date">{formatDateTime(c.createdAt)}</span>
+                    <span className="comment-author">
+                      {c.memberUsername ? <span className="comment-member-badge">●</span> : null}
+                      {c.authorName}
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span className="comment-date">{formatDateTime(c.createdAt)}</span>
+                      {user && c.memberUsername === user.username && (
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          style={{ padding: '1px 6px', fontSize: 12 }}
+                          onClick={() => { setEditingId(c.id); setEditContent(c.content); setEditError('') }}
+                        >수정</button>
+                      )}
+                      {(isAdmin || (user && c.memberUsername === user.username)) && (
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          style={{ padding: '1px 6px', fontSize: 12, color: 'var(--danger, #ef4444)' }}
+                          onClick={async () => {
+                            if (!confirm('댓글을 삭제하시겠습니까?')) return
+                            try {
+                              await deleteComment(postId, c.id)
+                              fetchPost()
+                            } catch { setAlert({ type: 'error', message: '삭제에 실패했습니다.' }) }
+                          }}
+                        >삭제</button>
+                      )}
+                    </div>
                   </div>
-                  <div className="comment-body">{c.content}</div>
+                  {editingId === c.id ? (
+                    <div style={{ marginTop: 6 }}>
+                      <textarea
+                        className="form-textarea"
+                        value={editContent}
+                        onChange={e => setEditContent(e.target.value)}
+                        rows={3}
+                        style={{ minHeight: 70, width: '100%' }}
+                      />
+                      {editError && <span className="form-err">{editError}</span>}
+                      <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                        <button
+                          className="btn btn-accent btn-sm"
+                          onClick={async () => {
+                            if (!editContent.trim()) { setEditError('내용을 입력해주세요.'); return }
+                            try {
+                              await updateComment(postId, c.id, { content: editContent })
+                              setEditingId(null)
+                              fetchPost()
+                            } catch { setEditError('수정에 실패했습니다.') }
+                          }}
+                        >저장</button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => setEditingId(null)}>취소</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="comment-body">{c.content}</div>
+                  )}
                 </div>
               ))}
             </div>
@@ -144,15 +204,21 @@ export default function CommunityDetail() {
           <div className="comment-form">
             <form onSubmit={handleCommentSubmit}>
               <div className="comment-inputs">
-                <div className="form-group">
-                  <input
-                    className={`form-input${commentErrors.author ? ' is-error' : ''}`}
-                    value={comment.authorName}
-                    onChange={e => setComment(c => ({ ...c, authorName: e.target.value }))}
-                    placeholder="작성자명"
-                  />
-                  {commentErrors.author && <span className="form-err">{commentErrors.author}</span>}
-                </div>
+                {user ? (
+                  <div className="comment-author-label">
+                    <span className="comment-member-badge">●</span> {user.username}으로 작성됩니다
+                  </div>
+                ) : (
+                  <div className="form-group">
+                    <input
+                      className={`form-input${commentErrors.author ? ' is-error' : ''}`}
+                      value={comment.authorName}
+                      onChange={e => setComment(c => ({ ...c, authorName: e.target.value }))}
+                      placeholder="작성자명"
+                    />
+                    {commentErrors.author && <span className="form-err">{commentErrors.author}</span>}
+                  </div>
+                )}
                 <div className="form-group">
                   <textarea
                     className={`form-textarea${commentErrors.content ? ' is-error' : ''}`}

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { getRoomDetail, applyToRoom, deleteRoom } from '../api/rooms'
+import { getMe } from '../api/auth'
 import Alert from '../components/Alert'
+import LockedField from '../components/LockedField'
 import ThemeLogo from '../components/ThemeLogo'
 import StatusBadge from '../components/StatusBadge'
 import { JOB_ROLES } from '../constants/jobRoles'
@@ -22,7 +24,8 @@ const ALGO_GRADES = [
 export default function RoomDetail() {
   const { roomId } = useParams()
   const navigate = useNavigate()
-  const adminKey = sessionStorage.getItem('adminKey') || ''
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [user, setUser] = useState(null)
   const [room, setRoom] = useState(null)
   const [loading, setLoading] = useState(true)
   const [alert, setAlert] = useState(null)
@@ -43,11 +46,16 @@ export default function RoomDetail() {
       .then(setRoom)
       .catch(() => setAlert({ type: 'error', message: '스터디 정보를 불러오지 못했습니다.' }))
       .finally(() => setLoading(false))
+    getMe().then(data => {
+      setUser(data)
+      if (data.role === 'ADMIN') setIsAdmin(true)
+      setForm(f => ({ ...f, applicantName: data.username }))
+    }).catch(() => {})
   }, [roomId])
 
   function validate() {
     const errs = {}
-    if (!form.applicantName.trim()) errs.applicantName = '닉네임을 입력해주세요.'
+    if (!user && !form.applicantName.trim()) errs.applicantName = '닉네임을 입력해주세요.'
     if (!form.jobRole) errs.jobRole = '직군을 선택해주세요.'
     return errs
   }
@@ -92,13 +100,13 @@ export default function RoomDetail() {
             {room.themeId && <span>/</span>}
             <span>상세</span>
           </div>
-          {adminKey && (
+          {isAdmin && (
             <button
               className="btn btn-sm"
               style={{ background: '#ef4444', color: '#fff' }}
               onClick={async () => {
                 if (!confirm('이 스터디를 삭제하시겠습니까?')) return
-                await deleteRoom(roomId, adminKey)
+                await deleteRoom(roomId)
                 navigate(-1)
               }}
             >삭제</button>
@@ -140,13 +148,19 @@ export default function RoomDetail() {
               <form className="apply-form" onSubmit={handleSubmit}>
                 <div className="form-group">
                   <label className="form-label req">닉네임</label>
-                  <input
-                    className={`form-input${errors.applicantName ? ' is-error' : ''}`}
-                    value={form.applicantName}
-                    onChange={e => setForm(f => ({ ...f, applicantName: e.target.value }))}
-                    placeholder="닉네임을 입력해주세요"
-                  />
-                  {errors.applicantName && <span className="form-err">{errors.applicantName}</span>}
+                  {user ? (
+                    <LockedField value={user.username} />
+                  ) : (
+                    <>
+                      <input
+                        className={`form-input${errors.applicantName ? ' is-error' : ''}`}
+                        value={form.applicantName}
+                        onChange={e => setForm(f => ({ ...f, applicantName: e.target.value }))}
+                        placeholder="닉네임을 입력해주세요"
+                      />
+                      {errors.applicantName && <span className="form-err">{errors.applicantName}</span>}
+                    </>
+                  )}
                 </div>
 
                 <div className="form-row">
@@ -267,15 +281,27 @@ export default function RoomDetail() {
             )}
           </div>
 
-          <div className="card">
-            <div className="sidebar-title">방장이신가요?</div>
-            <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 12 }}>
-              신청자 관리 및 스터디 운영을 위해 로그인하세요.
-            </p>
-            <Link to={`/study/${roomId}/manage`} className="btn btn-outline w-full">
-              방장 로그인
-            </Link>
-          </div>
+          {user && room.memberUsername && user.username === room.memberUsername ? (
+            <div className="card">
+              <div className="sidebar-title">방장이시군요 👋</div>
+              <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 12 }}>
+                신청자 관리 및 스터디 운영을 관리해보세요.
+              </p>
+              <Link to={`/study/${roomId}/manage/dashboard`} className="btn btn-accent w-full">
+                스터디 관리
+              </Link>
+            </div>
+          ) : (
+            <div className="card">
+              <div className="sidebar-title">방장이신가요?</div>
+              <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 12 }}>
+                신청자 관리 및 스터디 운영을 위해 로그인하세요.
+              </p>
+              <Link to={`/study/${roomId}/manage`} className="btn btn-outline w-full">
+                방장 로그인
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

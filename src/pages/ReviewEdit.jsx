@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { getReview, verifyReviewPassword, updateReview, getReviewLink } from '../api/review'
+import { getMe } from '../api/auth'
 import Alert from '../components/Alert'
 import { JOB_ROLES } from '../constants/jobRoles'
 
@@ -30,14 +31,31 @@ export default function ReviewEdit() {
   const [alert, setAlert] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
-  // sessionStorage에 이미 인증된 경우 바로 edit 단계로
   useEffect(() => {
+    // 1) 세션 저장 비번 있으면 바로 edit
     const saved = sessionStorage.getItem(SESSION_KEY(id))
     if (saved) {
       setPassword(saved)
       loadReview()
       setStep('edit')
+      return
     }
+    // 2) 로그인 유저가 작성자면 비번 없이 바로 edit
+    Promise.all([getReview(id), getMe().catch(() => null)]).then(([data, userData]) => {
+      if (userData && data.memberUsername && data.memberUsername === userData.username) {
+        setReview(data)
+        setForm({
+          type: data.type,
+          jobCategory: data.jobCategory,
+          careerLevel: data.careerLevel,
+          title: data.title,
+          content: data.content,
+          portfolioLink: '',
+          contactInfo: data.contactInfo || '',
+        })
+        setStep('edit')
+      }
+    })
   }, [id])
 
   function loadReview() {
