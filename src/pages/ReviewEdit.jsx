@@ -20,7 +20,7 @@ export default function ReviewEdit() {
   const { id } = useParams()
   const navigate = useNavigate()
 
-  const [step, setStep] = useState('verify') // 'verify' | 'edit'
+  const [step, setStep] = useState('loading') // 'loading' | 'verify' | 'edit'
   const [password, setPassword] = useState('')
   const [pwError, setPwError] = useState('')
   const [pwLoading, setPwLoading] = useState(false)
@@ -32,16 +32,26 @@ export default function ReviewEdit() {
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
-    // 1) 세션 저장 비번 있으면 바로 edit
+    // 1) 세션 저장 비번 있으면 상태 확인 후 edit
     const saved = sessionStorage.getItem(SESSION_KEY(id))
     if (saved) {
       setPassword(saved)
-      loadReview()
-      setStep('edit')
+      getReview(id).then(data => {
+        if (data.status === 'DONE') {
+          navigate(`/reviews/${id}`, { replace: true, state: { errorMsg: '검토가 완료된 글은 수정할 수 없습니다.' } })
+          return
+        }
+        loadReview()
+        setStep('edit')
+      }).catch(() => setStep('verify'))
       return
     }
-    // 2) 로그인 유저가 작성자면 비번 없이 바로 edit
+    // 2) 로그인 유저가 작성자면 비번 없이 바로 edit, 아니면 verify
     Promise.all([getReview(id), getMe().catch(() => null)]).then(([data, userData]) => {
+      if (data.status === 'DONE') {
+        navigate(`/reviews/${id}`, { replace: true, state: { errorMsg: '검토가 완료된 글은 수정할 수 없습니다.' } })
+        return
+      }
       if (userData && data.memberUsername && data.memberUsername === userData.username) {
         setReview(data)
         setForm({
@@ -54,8 +64,10 @@ export default function ReviewEdit() {
           contactInfo: data.contactInfo || '',
         })
         setStep('edit')
+      } else {
+        setStep('verify')
       }
-    })
+    }).catch(() => setStep('verify'))
   }, [id])
 
   function loadReview() {
@@ -118,6 +130,10 @@ export default function ReviewEdit() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  if (step === 'loading') {
+    return <div className="container"><p className="text-muted" style={{ padding: '40px 0' }}>로딩 중...</p></div>
   }
 
   if (step === 'verify') {

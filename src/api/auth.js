@@ -35,3 +35,7 @@ export function getMyPosts() {
 export function getMyApplications() {
   return client.get('/auth/me/applications').then(r => r.data)
 }
+
+export function getMyExchanges() {
+  return client.get('/auth/me/exchanges').then(r => r.data)
+}

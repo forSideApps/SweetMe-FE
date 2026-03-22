@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { getReview, incrementReviewView, addReviewComment, updateReviewComment, deleteReviewComment, getReviewLink, deleteReview, createExchange } from '../api/review'
 import { getMe, getMyReviews } from '../api/auth'
 import Alert from '../components/Alert'
@@ -13,9 +13,10 @@ const STATUS_STYLE = {
 export default function ReviewDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const [review, setReview] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [alert, setAlert] = useState(null)
+  const [alert, setAlert] = useState(location.state?.errorMsg ? { type: 'error', message: location.state.errorMsg } : null)
   const [comment, setComment] = useState({ authorName: '', content: '', password: '' })
   const [commentErrors, setCommentErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
@@ -509,9 +510,12 @@ export default function ReviewDetail() {
                         onChange={() => setSelectedMyReview(r.id)}
                         style={{ accentColor: 'var(--accent)' }}
                       />
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 500 }}>{r.title}</div>
-                        <div style={{ fontSize: 12, color: 'var(--text-3)' }}>{r.typeDisplay} · {r.careerLevelDisplay}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ fontSize: 14, fontWeight: 500 }}>{r.title}</div>
+                          <span className={`app-status-badge ${r.status}`} style={{ fontSize: 11 }}>{r.statusDisplayName}</span>
+                        </div>
+                        <div style={{ fontSize: 12, color: 'var(--text-3)' }}>{r.typeDisplayName} · {r.careerLevelDisplayName}</div>
                       </div>
                     </label>
                   ))}

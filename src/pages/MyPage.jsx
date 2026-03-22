@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { getMe, updateProfile, getMyRooms, getMyReviews, getMyPosts, getMyApplications } from '../api/auth'
+import { getMe, updateProfile, getMyRooms, getMyReviews, getMyPosts, getMyApplications, getMyExchanges } from '../api/auth'
 import { JOB_ROLES } from '../constants/jobRoles'
 import Alert from '../components/Alert'
 import StatusBadge from '../components/StatusBadge'
@@ -28,6 +28,7 @@ const TABS = [
   { key: 'rooms', label: '개설한 스터디' },
   { key: 'applications', label: '신청한 스터디' },
   { key: 'reviews', label: '포폴·이력서' },
+  { key: 'exchanges', label: '서로보기' },
   { key: 'posts', label: '커뮤니티' },
 ]
 
@@ -43,6 +44,7 @@ export default function MyPage() {
   const [rooms, setRooms] = useState(null)
   const [applications, setApplications] = useState(null)
   const [reviews, setReviews] = useState(null)
+  const [exchanges, setExchanges] = useState(null)
   const [posts, setPosts] = useState(null)
 
   useEffect(() => {
@@ -64,6 +66,7 @@ export default function MyPage() {
     if (tab === 'rooms' && rooms === null) getMyRooms().then(setRooms).catch(() => setRooms([]))
     if (tab === 'applications' && applications === null) getMyApplications().then(setApplications).catch(() => setApplications([]))
     if (tab === 'reviews' && reviews === null) getMyReviews().then(setReviews).catch(() => setReviews([]))
+    if (tab === 'exchanges' && exchanges === null) getMyExchanges().then(setExchanges).catch(() => setExchanges([]))
     if (tab === 'posts' && posts === null) getMyPosts().then(setPosts).catch(() => setPosts([]))
   }, [tab, user])
 
@@ -305,6 +308,49 @@ export default function MyPage() {
                     </div>
                   </div>
                 </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 서로보기 탭 */}
+      {tab === 'exchanges' && (
+        <div>
+          {exchanges === null ? (
+            <p className="text-muted">로딩 중...</p>
+          ) : exchanges.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">🔗</div>
+              <h3>서로보기 내역이 없습니다</h3>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {exchanges.map(e => (
+                <div key={e.id} className="room-card">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <span style={{
+                      fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99,
+                      background: e.direction === 'RECEIVED' ? 'var(--accent-bg, rgba(99,102,241,0.1))' : 'rgba(16,185,129,0.1)',
+                      color: e.direction === 'RECEIVED' ? 'var(--accent)' : '#10b981',
+                    }}>
+                      {e.direction === 'RECEIVED' ? '받은 요청' : '보낸 요청'}
+                    </span>
+                    <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{formatDate(e.createdAt)}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <Link to={`/reviews/${e.myReviewId}`} style={{ color: 'var(--text-1)', fontWeight: 500, fontSize: 14 }}>
+                      {e.myReviewTitle}
+                    </Link>
+                    <span style={{ fontSize: 12, color: 'var(--text-3)' }}>↔</span>
+                    <Link to={`/reviews/${e.theirReviewId}`} style={{ color: 'var(--accent)', fontWeight: 500, fontSize: 14 }}>
+                      {e.theirReviewTitle}
+                    </Link>
+                    {e.theirUsername && (
+                      <span style={{ fontSize: 12, color: 'var(--text-3)' }}>({e.theirUsername})</span>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           )}
