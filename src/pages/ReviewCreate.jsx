@@ -21,6 +21,7 @@ export default function ReviewCreate() {
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
   const [user, setUser] = useState(null)
+  const [contacts, setContacts] = useState([''])
   const [form, setForm] = useState({
     type: 'PORTFOLIO',
     jobCategory: 'BACKEND',
@@ -29,7 +30,6 @@ export default function ReviewCreate() {
     content: '',
     portfolioLink: '',
     authorName: '',
-    contactInfo: '',
     password: '',
   })
 
@@ -42,6 +42,7 @@ export default function ReviewCreate() {
         ...(data.jobRole && { jobCategory: data.jobRole }),
         ...(data.careerLevel && { careerLevel: data.careerLevel }),
       }))
+      if (data.email) setContacts([data.email])
     }).catch(() => {})
   }, [])
 
@@ -61,7 +62,7 @@ export default function ReviewCreate() {
     setErrors({})
     setSubmitting(true)
     try {
-      const result = await createReview(form)
+      const result = await createReview({ ...form, contactInfo: contacts.filter(c => c.trim()).join('\n') || null })
       navigate(`/reviews/${result.id}`)
     } catch {
       setAlert({ type: 'error', message: '작성에 실패했습니다.' })
@@ -181,12 +182,33 @@ export default function ReviewCreate() {
               </div>
               <div className="form-group">
                 <label className="form-label">연락처 <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>(선택)</span></label>
-                <input
-                  className="form-input"
-                  value={form.contactInfo}
-                  onChange={e => setForm(f => ({ ...f, contactInfo: e.target.value }))}
-                  placeholder="카카오 오픈채팅, 이메일 등"
-                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {contacts.map((c, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 6 }}>
+                      <input
+                        className="form-input"
+                        value={c}
+                        onChange={e => setContacts(prev => prev.map((v, idx) => idx === i ? e.target.value : v))}
+                        placeholder="카카오 오픈채팅, 이메일 등"
+                        style={{ flex: 1 }}
+                      />
+                      {contacts.length > 1 && (
+                        <button
+                          type="button"
+                          className="btn btn-ghost"
+                          style={{ padding: '0 10px', fontSize: 18, lineHeight: 1 }}
+                          onClick={() => setContacts(prev => prev.filter((_, idx) => idx !== i))}
+                        >×</button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    style={{ alignSelf: 'flex-start', fontSize: 13 }}
+                    onClick={() => setContacts(prev => [...prev, ''])}
+                  >+ 연락처 추가</button>
+                </div>
               </div>
             </div>
 

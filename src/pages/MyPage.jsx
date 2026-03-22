@@ -105,40 +105,38 @@ export default function MyPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             <div className="form-group">
               <label className="form-label">직군</label>
-              <select
-                className="form-select"
-                value={form.jobRole}
-                onChange={e => setForm(f => ({ ...f, jobRole: e.target.value }))}
-              >
-                <option value="">선택 안 함</option>
-                {JOB_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-              </select>
+              <div className="review-chip-group" style={{ marginTop: 6 }}>
+                <button
+                  type="button"
+                  className={`review-chip${form.jobRole === '' ? ' active' : ''}`}
+                  onClick={() => setForm(f => ({ ...f, jobRole: '' }))}
+                >선택 안 함</button>
+                {JOB_ROLES.map(r => (
+                  <button
+                    key={r.value}
+                    type="button"
+                    className={`review-chip${form.jobRole === r.value ? ' active' : ''}`}
+                    onClick={() => setForm(f => ({ ...f, jobRole: r.value }))}
+                  >{r.label}</button>
+                ))}
+              </div>
             </div>
 
             <div className="form-group">
               <label className="form-label">경력</label>
-              <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 14 }}>
-                  <input
-                    type="radio"
-                    name="careerLevel"
-                    value=""
-                    checked={form.careerLevel === ''}
-                    onChange={() => setForm(f => ({ ...f, careerLevel: '' }))}
-                  />
-                  선택 안 함
-                </label>
+              <div className="review-chip-group" style={{ marginTop: 6 }}>
+                <button
+                  type="button"
+                  className={`review-chip${form.careerLevel === '' ? ' active' : ''}`}
+                  onClick={() => setForm(f => ({ ...f, careerLevel: '' }))}
+                >선택 안 함</button>
                 {CAREER_LEVELS.map(c => (
-                  <label key={c.value} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 14 }}>
-                    <input
-                      type="radio"
-                      name="careerLevel"
-                      value={c.value}
-                      checked={form.careerLevel === c.value}
-                      onChange={() => setForm(f => ({ ...f, careerLevel: c.value }))}
-                    />
-                    {c.label}
-                  </label>
+                  <button
+                    key={c.value}
+                    type="button"
+                    className={`review-chip${form.careerLevel === c.value ? ' active' : ''}`}
+                    onClick={() => setForm(f => ({ ...f, careerLevel: c.value }))}
+                  >{c.label}</button>
                 ))}
               </div>
             </div>

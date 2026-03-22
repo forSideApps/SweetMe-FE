@@ -70,7 +70,7 @@ export default function RoomCreate() {
         maxMembers: Number(form.maxMembers),
         creatorNickname: form.creatorNickname,
         password: form.password,
-        jobRole: form.jobRole,
+        jobRole: form.jobRole || null,
         kakaoLink: form.kakaoLink,
         schedule: form.schedule || null,
         requirements: form.requirements || null,
