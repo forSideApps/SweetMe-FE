@@ -40,7 +40,10 @@ export default function RoomCreate() {
         if (found) setSelectedTheme(found)
       }
     }).catch(() => {})
-    getMe().then(setUser).catch(() => {})
+    getMe().then(data => {
+      setUser(data)
+      if (data.jobRole) setForm(f => ({ ...f, jobRole: data.jobRole }))
+    }).catch(() => {})
   }, [initialThemeId])
 
   function validate() {

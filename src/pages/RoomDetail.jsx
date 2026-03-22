@@ -49,7 +49,12 @@ export default function RoomDetail() {
     getMe().then(data => {
       setUser(data)
       if (data.role === 'ADMIN') setIsAdmin(true)
-      setForm(f => ({ ...f, applicantName: data.username }))
+      setForm(f => ({
+        ...f,
+        applicantName: data.username,
+        ...(data.jobRole && { jobRole: data.jobRole }),
+        ...(data.algoGrade && { algoGrade: data.algoGrade }),
+      }))
     }).catch(() => {})
   }, [roomId])
 

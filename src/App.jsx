@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import { useTheme } from './hooks/useTheme'
 import Home from './pages/Home'
 import RoomBrowse from './pages/RoomBrowse'
 import RoomList from './pages/RoomList'
@@ -8,6 +9,8 @@ import RoomCreate from './pages/RoomCreate'
 import RoomDetail from './pages/RoomDetail'
 import ManageLogin from './pages/ManageLogin'
 import ManageDashboard from './pages/ManageDashboard'
+import Login from './pages/Login'
+import Register from './pages/Register'
 import Community from './pages/Community'
 import CommunityCreate from './pages/CommunityCreate'
 import CommunityDetail from './pages/CommunityDetail'
@@ -16,8 +19,10 @@ import ReviewCreate from './pages/ReviewCreate'
 import ReviewDetail from './pages/ReviewDetail'
 import ReviewEdit from './pages/ReviewEdit'
 import Admin from './pages/Admin'
+import MyPage from './pages/MyPage'
 
 function AppInner() {
+  const { theme, toggleTheme } = useTheme()
   return (
     <>
       <Navbar />
@@ -37,6 +42,9 @@ function AppInner() {
           <Route path="/reviews/new" element={<ReviewCreate />} />
           <Route path="/reviews/:id" element={<ReviewDetail />} />
           <Route path="/reviews/:id/edit" element={<ReviewEdit />} />
+          <Route path="/mypage" element={<MyPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/visitors" element={<Admin />} />
           <Route path="/admin/company" element={<Admin />} />
@@ -46,6 +54,9 @@ function AppInner() {
         </Routes>
       </main>
       <Footer />
+      <button className="theme-float-btn" onClick={toggleTheme} aria-label="테마 변경">
+        {theme === 'dark' ? '🌙' : '☀️'}
+      </button>
     </>
   )
 }

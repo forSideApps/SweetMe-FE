@@ -25,7 +25,7 @@ export default function ManageDashboard() {
   const password = sessionStorage.getItem(`room_${roomId}_password`)
 
   useEffect(() => {
-    if (!password) {
+    if (password === null) {
       navigate(`/study/${roomId}/manage`)
       return
     }
@@ -249,10 +249,10 @@ export default function ManageDashboard() {
                 </div>
               </div>
               <div className="edit-room-actions">
-                <button type="button" className="btn btn-ghost" onClick={() => setEditOpen(false)}>취소</button>
                 <button type="submit" className="btn btn-accent" disabled={saving}>
                   {saving ? '저장 중...' : '저장하기'}
                 </button>
+                <button type="button" className="btn btn-ghost" onClick={() => setEditOpen(false)}>취소</button>
               </div>
             </form>
           </div>

@@ -36,7 +36,12 @@ export default function ReviewCreate() {
   useEffect(() => {
     getMe().then(data => {
       setUser(data)
-      setForm(f => ({ ...f, authorName: data.username }))
+      setForm(f => ({
+        ...f,
+        authorName: data.username,
+        ...(data.jobRole && { jobCategory: data.jobRole }),
+        ...(data.careerLevel && { careerLevel: data.careerLevel }),
+      }))
     }).catch(() => {})
   }, [])
 
