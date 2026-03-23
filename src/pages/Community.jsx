@@ -10,6 +10,7 @@ const CATEGORIES = [
   { value: 'NOTICE', label: '공지사항' },
   { value: 'FREE', label: '자유게시판' },
   { value: 'SUGGESTION', label: '건의 기능 요청' },
+  { value: 'COMPANY_SCHEDULE', label: '채용 일정 정보' },
 ]
 
 export default function Community() {
@@ -79,7 +80,10 @@ export default function Community() {
           <p className="community-desc">스터디원들과 정보를 나눠보세요.</p>
         </div>
         {category !== 'NOTICE' && (
-          <Link to="/community/new" className="btn btn-accent">글쓰기</Link>
+          <Link
+            to={category ? `/community/new?prefillCategory=${category}` : '/community/new'}
+            className="btn btn-accent"
+          >글쓰기</Link>
         )}
       </div>
 
@@ -111,7 +115,13 @@ export default function Community() {
         {loading ? (
           <p className="text-muted">로딩 중...</p>
         ) : posts.length === 0 ? (
-          <EmptyState icon="✍️" title="게시글이 없습니다" description="첫 번째 글을 작성해보세요!" actionLabel={category !== 'NOTICE' ? '글쓰기' : undefined} actionTo={category !== 'NOTICE' ? '/community/new' : undefined} />
+          <EmptyState
+            icon={category === 'COMPANY_SCHEDULE' ? '📅' : '✍️'}
+            title="게시글이 없습니다"
+            description={category === 'COMPANY_SCHEDULE' ? '서류·코테·면접 발표 일정을 공유해보세요!' : '첫 번째 글을 작성해보세요!'}
+            actionLabel={category !== 'NOTICE' ? '글쓰기' : undefined}
+            actionTo={category !== 'NOTICE' ? (category ? `/community/new?prefillCategory=${category}` : '/community/new') : undefined}
+          />
         ) : (
           <div className="post-list">
             {posts.map(post => (

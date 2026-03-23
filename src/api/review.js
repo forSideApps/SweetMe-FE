@@ -52,3 +52,9 @@ export const getReviewLink = (id, password) =>
 
 export const createExchange = (targetId, myReviewId) =>
   client.post(`/reviews/${targetId}/exchange`, { myReviewId }).then(r => r.data)
+
+export const acceptExchange = (exchangeId) =>
+  client.post(`/reviews/exchanges/${exchangeId}/accept`).then(r => r.data)
+
+export const rejectExchange = (exchangeId) =>
+  client.post(`/reviews/exchanges/${exchangeId}/reject`).then(r => r.data)

@@ -44,7 +44,7 @@ export default function ReviewDetail() {
   const [myReviews, setMyReviews] = useState(null)
   const [selectedMyReview, setSelectedMyReview] = useState(null)
   const [exchangeLoading, setExchangeLoading] = useState(false)
-  const [exchangeLink, setExchangeLink] = useState(null)
+  const [exchangeRequested, setExchangeRequested] = useState(false)
   const [exchangeError, setExchangeError] = useState('')
 
   const fetchReview = useCallback(() => {
@@ -145,7 +145,7 @@ export default function ReviewDetail() {
 
   async function openExchangeModal() {
     setExchangeOpen(true)
-    setExchangeLink(null)
+    setExchangeRequested(false)
     setExchangeError('')
     setSelectedMyReview(null)
     if (!myReviews) {
@@ -158,8 +158,8 @@ export default function ReviewDetail() {
     setExchangeLoading(true)
     setExchangeError('')
     try {
-      const data = await createExchange(review.id, selectedMyReview)
-      setExchangeLink(data.link)
+      await createExchange(review.id, selectedMyReview)
+      setExchangeRequested(true)
     } catch (err) {
       setExchangeError(err?.response?.data?.message || '서로보기에 실패했습니다.')
     } finally {
@@ -353,7 +353,9 @@ export default function ReviewDetail() {
                   <div className="comment-header">
                     <span className="comment-author">
                       {c.admin && <span style={{ marginRight: 3 }}>👑</span>}
-                      {!c.admin && c.memberUsername && <span className="comment-member-badge">●</span>}
+                      {!c.admin && c.memberUsername && (
+                        <span className={user && c.memberUsername === user.username ? 'comment-member-badge--blink' : 'comment-member-badge'}>●</span>
+                      )}
                       {c.authorName}
                     </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -466,20 +468,17 @@ export default function ReviewDetail() {
               <button className="btn-close-edit" onClick={() => setExchangeOpen(false)}>✕</button>
             </div>
             <p style={{ fontSize: 14, color: 'var(--text-2)', marginBottom: 16 }}>
-              내 포폴·이력서 글을 선택하면, 상대방의 링크를 확인할 수 있습니다.<br />
-              선택한 내 글의 링크도 상대방이 볼 수 있게 됩니다.
+              내 포폴·이력서 글을 선택하고 서로보기를 신청하세요.<br />
+              상대방이 수락하면 서로의 링크를 확인할 수 있습니다.
             </p>
 
-            {exchangeLink ? (
+            {exchangeRequested ? (
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: 'var(--accent)' }}>✅ 링크 확인!</div>
-                <a href={exchangeLink} target="_blank" rel="noopener noreferrer"
-                  style={{ color: 'var(--accent)', wordBreak: 'break-all', fontSize: 14 }}>
-                  {exchangeLink}
-                </a>
-                <div style={{ marginTop: 16 }}>
-                  <button className="btn btn-ghost btn-sm" onClick={() => setExchangeOpen(false)}>닫기</button>
-                </div>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8, color: 'var(--green)' }}>✅ 서로보기 신청 완료!</div>
+                <p style={{ fontSize: 13, color: 'var(--text-2)', marginBottom: 16 }}>
+                  상대방이 수락하면 마이페이지 &gt; 서로보기 탭에서 링크를 확인할 수 있습니다.
+                </p>
+                <button className="btn btn-ghost btn-sm" onClick={() => setExchangeOpen(false)}>닫기</button>
               </div>
             ) : myReviews === null ? (
               <p className="text-muted">내 글을 불러오는 중...</p>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getMe, updateProfile, getMyRooms, getMyReviews, getMyPosts, getMyApplications, getMyExchanges } from '../api/auth'
+import { acceptExchange, rejectExchange } from '../api/review'
 import { JOB_ROLES } from '../constants/jobRoles'
 import Alert from '../components/Alert'
 import StatusBadge from '../components/StatusBadge'
@@ -103,7 +104,7 @@ export default function MyPage() {
       )}
 
       {/* 탭 네비게이션 */}
-      <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)', marginBottom: 24 }}>
+      <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)', marginBottom: 24, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
         {TABS.map(t => (
           <Link
             key={t.key}
@@ -116,6 +117,8 @@ export default function MyPage() {
               borderBottom: tab === t.key ? '2px solid var(--accent)' : '2px solid transparent',
               textDecoration: 'none',
               marginBottom: -1,
+              flexShrink: 0,
+              whiteSpace: 'nowrap',
             }}
           >{t.label}</Link>
         ))}
@@ -328,7 +331,7 @@ export default function MyPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {exchanges.map(e => (
                 <div key={e.id} className="room-card">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
                     <span style={{
                       fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99,
                       background: e.direction === 'RECEIVED' ? 'var(--accent-bg, rgba(99,102,241,0.1))' : 'rgba(16,185,129,0.1)',
@@ -336,9 +339,16 @@ export default function MyPage() {
                     }}>
                       {e.direction === 'RECEIVED' ? '받은 요청' : '보낸 요청'}
                     </span>
+                    <span style={{
+                      fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99,
+                      background: e.status === 'ACCEPTED' ? 'var(--green-bg)' : 'var(--amber-bg)',
+                      color: e.status === 'ACCEPTED' ? 'var(--green)' : 'var(--amber)',
+                    }}>
+                      {e.status === 'ACCEPTED' ? '수락됨' : '대기 중'}
+                    </span>
                     <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{formatDate(e.createdAt)}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
                     <Link to={`/reviews/${e.myReviewId}`} style={{ color: 'var(--text-1)', fontWeight: 500, fontSize: 14 }}>
                       {e.myReviewTitle}
                     </Link>
@@ -350,6 +360,43 @@ export default function MyPage() {
                       <span style={{ fontSize: 12, color: 'var(--text-3)' }}>({e.theirUsername})</span>
                     )}
                   </div>
+                  {/* 받은 요청 + 대기 중일 때 수락/거절 버튼 */}
+                  {e.direction === 'RECEIVED' && e.status === 'PENDING' && (
+                    <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                      <button
+                        className="btn btn-accent btn-sm"
+                        onClick={async () => {
+                          try {
+                            await acceptExchange(e.id)
+                            setExchanges(prev => prev.map(x => x.id === e.id ? { ...x, status: 'ACCEPTED' } : x))
+                            setAlert({ type: 'success', message: '서로보기 요청을 수락했습니다.' })
+                          } catch { setAlert({ type: 'error', message: '수락에 실패했습니다.' }) }
+                        }}
+                      >수락</button>
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        style={{ color: 'var(--red)' }}
+                        onClick={async () => {
+                          try {
+                            await rejectExchange(e.id)
+                            setExchanges(prev => prev.filter(x => x.id !== e.id))
+                            setAlert({ type: 'success', message: '서로보기 요청을 거절했습니다.' })
+                          } catch { setAlert({ type: 'error', message: '거절에 실패했습니다.' }) }
+                        }}
+                      >거절</button>
+                    </div>
+                  )}
+                  {/* 받은 요청이고 상대 포폴이 의심스러울 때 운영자 문의 */}
+                  {e.direction === 'RECEIVED' && (
+                    <div style={{ marginTop: 6 }}>
+                      <Link
+                        to={`/community/new?prefillTitle=${encodeURIComponent('[포폴 허위 문의] ' + e.theirUsername)}&prefillContent=${encodeURIComponent('상대방 아이디: ' + e.theirUsername + '\n상대방 글: ' + e.theirReviewTitle + '\n\n허위 여부 확인 부탁드립니다.')}&prefillCategory=SUGGESTION`}
+                        style={{ fontSize: 12, color: 'var(--text-3)', textDecoration: 'underline' }}
+                      >
+                        포폴/이력서 허위 여부 운영자 문의
+                      </Link>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

@@ -50,6 +50,7 @@ export default function ReviewCreate() {
     const errs = {}
     if (!form.title.trim()) errs.title = '제목을 입력해주세요.'
     if (!form.content.trim()) errs.content = '내용을 입력해주세요.'
+    if (!form.portfolioLink.trim()) errs.portfolioLink = '노션 또는 구글 드라이브 링크를 입력해주세요.'
     if (!user && !form.authorName.trim()) errs.authorName = '작성자명을 입력해주세요.'
     if (!user && !form.password.trim()) errs.password = '비밀번호를 입력해주세요.'
     return errs
@@ -153,14 +154,15 @@ export default function ReviewCreate() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">포트폴리오/이력서 링크 <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>(선택)</span></label>
+              <label className="form-label req">포트폴리오/이력서 링크</label>
               <input
-                className="form-input"
+                className={`form-input${errors.portfolioLink ? ' is-error' : ''}`}
                 value={form.portfolioLink}
                 onChange={e => setForm(f => ({ ...f, portfolioLink: e.target.value }))}
-                placeholder="노션, GitHub, 구글 드라이브 등 링크"
+                placeholder="노션 또는 구글 드라이브 링크 (필수)"
               />
-              {!user && <span className="form-hint">링크는 비밀번호를 입력한 사람만 볼 수 있습니다.</span>}
+              {errors.portfolioLink && <span className="form-err">{errors.portfolioLink}</span>}
+              <span className="form-hint">링크는 서로보기 수락 또는 비밀번호를 입력한 사람만 볼 수 있습니다.</span>
             </div>
 
             <div className="form-row">

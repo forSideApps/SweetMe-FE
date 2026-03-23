@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { createPost } from '../api/community'
 import { getMe } from '../api/auth'
 import Alert from '../components/Alert'
@@ -8,19 +8,25 @@ import LockedField from '../components/LockedField'
 const CATEGORIES = [
   { value: 'FREE', label: '자유게시판' },
   { value: 'SUGGESTION', label: '건의 기능 요청' },
+  { value: 'COMPANY_SCHEDULE', label: '채용 일정 정보' },
 ]
 
 export default function CommunityCreate() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [alert, setAlert] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
   const [user, setUser] = useState(null)
 
+  const prefillTitle = searchParams.get('prefillTitle') || ''
+  const prefillContent = searchParams.get('prefillContent') || ''
+  const prefillCategory = searchParams.get('prefillCategory') || 'FREE'
+
   const [form, setForm] = useState({
-    category: 'FREE',
-    title: '',
-    content: '',
+    category: CATEGORIES.find(c => c.value === prefillCategory) ? prefillCategory : 'FREE',
+    title: prefillTitle,
+    content: prefillContent,
     authorName: '',
   })
 

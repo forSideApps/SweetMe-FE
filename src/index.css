@@ -62,7 +62,7 @@ main { flex: 1; }
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-x: hidden; }
 
 body {
   overflow-x: hidden;
@@ -743,6 +743,15 @@ button { cursor: pointer; font-family: inherit; }
 .comment-header   { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
 .comment-author   { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
 .comment-member-badge { color: var(--accent); font-size: 8px; }
+.comment-member-badge--blink {
+  color: var(--accent); font-size: 8px;
+  animation: badge-blink 1.4s ease-in-out infinite;
+  text-shadow: 0 0 4px var(--accent);
+}
+@keyframes badge-blink {
+  0%, 100% { opacity: 1; text-shadow: 0 0 6px var(--accent); }
+  50% { opacity: 0.2; text-shadow: none; }
+}
 .comment-author-label { font-size: 13px; color: var(--text-3); display: flex; align-items: center; gap: 6px; padding: 6px 0; }
 .locked-field { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: var(--text-1); background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; }
 .comment-date     { font-size: 12px; color: var(--text-3); }

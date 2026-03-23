@@ -19,6 +19,7 @@ export default function RoomCreate() {
   const [alert, setAlert] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
+  const [showEventPopup, setShowEventPopup] = useState(true)
 
   const [form, setForm] = useState({
     title: '',
@@ -114,6 +115,24 @@ export default function RoomCreate() {
             ))}
           </div>
         </div>
+
+        {/* 이벤트 팝업 */}
+        {showEventPopup && (
+          <div className="modal-overlay" onClick={() => setShowEventPopup(false)}>
+            <div className="modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: 420, textAlign: 'center' }}>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>🎉</div>
+              <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 8, color: 'var(--accent)' }}>스터디 개설 이벤트</div>
+              <div style={{ fontSize: 14, color: 'var(--text-2)', lineHeight: 1.7, marginBottom: 20 }}>
+                스터디를 개설하면<br />
+                <strong style={{ color: 'var(--text)' }}>포폴 · 이력서 무료 검토</strong> 혜택을 드립니다!<br />
+                <span style={{ fontSize: 12, color: 'var(--text-3)' }}>스터디 개설 후 운영자에게 문의하세요.</span>
+              </div>
+              <button className="btn btn-accent" style={{ width: '100%' }} onClick={() => setShowEventPopup(false)}>
+                확인하고 개설하기
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     )
   }

@@ -9,6 +9,8 @@ const CATEGORY_LABELS = {
   REGIONAL: '지역 정보',
   SUGGESTION: '건의 기능 요청',
   FREE: '자유게시판',
+  NOTICE: '공지사항',
+  COMPANY_SCHEDULE: '채용 일정 정보',
 }
 
 export default function CommunityDetail() {
@@ -141,7 +143,9 @@ export default function CommunityDetail() {
                 <div key={c.id} className="comment-item">
                   <div className="comment-header">
                     <span className="comment-author">
-                      {c.memberUsername ? <span className="comment-member-badge">●</span> : null}
+                      {c.memberUsername ? (
+                        <span className={user && c.memberUsername === user.username ? 'comment-member-badge--blink' : 'comment-member-badge'}>●</span>
+                      ) : null}
                       {c.authorName}
                     </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
