@@ -120,16 +120,15 @@ export default function Review() {
   return (
     <div className="container">
       {isLoggedIn === false && !bannerHidden && (
-        <div className="guest-review-banner">
-          <div className="guest-review-banner-content">
-            <span className="guest-review-banner-icon">🎯</span>
-            <div>
-              <div className="guest-review-banner-title">로그인하면 포폴·이력서를 더 편리하게 이용할 수 있어요!</div>
-              <div className="guest-review-banner-desc">서로보기 신청, 포트폴리오 링크 열람, 내 게시글 관리 기능을 제공합니다.</div>
-            </div>
-            <div className="guest-review-banner-actions">
-              <Link to="/login" className="btn btn-accent btn-sm">로그인</Link>
-              <button className="btn btn-ghost btn-sm" onClick={hideBanner}>다시 보지 않기</button>
+        <div className="guest-popup-overlay" onClick={hideBanner}>
+          <div className="guest-popup" onClick={e => e.stopPropagation()}>
+            <button className="guest-popup-close" onClick={hideBanner} aria-label="닫기">✕</button>
+            <div className="guest-popup-icon">🎯</div>
+            <div className="guest-popup-title">로그인하면 더 편리하게 이용할 수 있어요!</div>
+            <div className="guest-popup-desc">서로보기 신청, 포트폴리오 링크 열람,<br/>내 게시글 관리 기능을 제공합니다.</div>
+            <div className="guest-popup-actions">
+              <Link to="/login" className="btn btn-accent">로그인</Link>
+              <button className="btn btn-ghost" onClick={hideBanner}>다시 보지 않기</button>
             </div>
           </div>
         </div>

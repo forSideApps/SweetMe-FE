@@ -1089,28 +1089,50 @@ footer {
   .theme-float-btn { bottom: 16px; right: 16px; width: 40px; height: 40px; font-size: 16px; }
 }
 
-/* ── Guest Review Banner ─────────────────── */
-.guest-review-banner {
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 20px;
-  margin-bottom: 20px;
-}
-.guest-review-banner-content {
+/* ── Guest Popup ─────────────────────────── */
+.guest-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.18s ease;
 }
-.guest-review-banner-icon { font-size: 28px; flex-shrink: 0; }
-.guest-review-banner-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
-.guest-review-banner-desc { font-size: 13px; color: var(--text-3); }
-.guest-review-banner-actions { display: flex; gap: 8px; margin-left: auto; flex-shrink: 0; }
-@media (max-width: 600px) {
-  .guest-review-banner-content { flex-direction: column; align-items: flex-start; }
-  .guest-review-banner-actions { margin-left: 0; }
+.guest-popup {
+  position: relative;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 36px 32px 28px;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  animation: slideUp 0.2s ease;
 }
+.guest-popup-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--text-3);
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+}
+.guest-popup-close:hover { color: var(--text); }
+.guest-popup-icon { font-size: 40px; margin-bottom: 14px; }
+.guest-popup-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 10px; line-height: 1.4; }
+.guest-popup-desc { font-size: 13px; color: var(--text-3); line-height: 1.6; margin-bottom: 22px; }
+.guest-popup-actions { display: flex; flex-direction: column; gap: 8px; }
+.guest-popup-actions .btn { width: 100%; justify-content: center; }
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes slideUp { from { transform: translateY(16px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
 
 /* ── Company Schedule Cards ──────────────── */
 .schedule-grid { display: flex; flex-direction: column; gap: 10px; }
