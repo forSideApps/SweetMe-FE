@@ -1106,8 +1106,8 @@ footer {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 36px 32px 28px;
-  max-width: 380px;
+  padding: 40px 28px 28px;
+  max-width: 320px;
   width: 100%;
   text-align: center;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);

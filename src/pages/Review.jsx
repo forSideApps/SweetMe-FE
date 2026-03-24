@@ -123,11 +123,9 @@ export default function Review() {
         <div className="guest-popup-overlay" onClick={hideBanner}>
           <div className="guest-popup" onClick={e => e.stopPropagation()}>
             <button className="guest-popup-close" onClick={hideBanner} aria-label="닫기">✕</button>
-            <div className="guest-popup-icon">🎯</div>
-            <div className="guest-popup-title">로그인하면 더 편리하게 이용할 수 있어요!</div>
-            <div className="guest-popup-desc">서로보기 신청, 포트폴리오 링크 열람,<br/>내 게시글 관리 기능을 제공합니다.</div>
+            <div className="guest-popup-title">회원가입을 하면 포폴/이력서를 볼 수 있어요 !</div>
             <div className="guest-popup-actions">
-              <Link to="/login" className="btn btn-accent">로그인</Link>
+              <Link to="/register" className="btn btn-accent">회원가입</Link>
               <button className="btn btn-ghost" onClick={hideBanner}>다시 보지 않기</button>
             </div>
           </div>
