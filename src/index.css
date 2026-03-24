@@ -1137,6 +1137,34 @@ footer {
 }
 .guest-popup-hide:hover { color: var(--text-2); text-decoration: underline; }
 @keyframes slideUp { from { transform: translateY(16px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+@keyframes slideUpSheet { from { transform: translateY(100%) } to { transform: translateY(0) } }
+@media (max-width: 480px) {
+  .modal-overlay:has(.guest-popup) {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .guest-popup {
+    width: 100%;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.25);
+    animation: slideUpSheet 0.3s ease;
+  }
+  .guest-popup-header {
+    padding: 20px 24px 24px;
+  }
+  .guest-popup-header::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.4);
+    margin: 0 auto 20px;
+  }
+  .guest-popup-body {
+    padding: 24px 24px 36px;
+  }
+}
 
 /* ── Company Schedule Cards ──────────────── */
 .schedule-grid { display: flex; flex-direction: column; gap: 10px; }
