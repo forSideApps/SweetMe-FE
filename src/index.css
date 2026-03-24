@@ -1126,9 +1126,11 @@ footer {
   padding: 4px;
 }
 .guest-popup-close:hover { color: var(--text); }
-.guest-popup-icon { font-size: 40px; margin-bottom: 14px; }
-.guest-popup-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 10px; line-height: 1.4; }
-.guest-popup-desc { font-size: 13px; color: var(--text-3); line-height: 1.6; margin-bottom: 22px; }
+.guest-popup-icon { font-size: 36px; margin-bottom: 12px; }
+.guest-popup-title { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 8px; line-height: 1.45; }
+.guest-popup-desc { font-size: 13px; color: var(--text-3); line-height: 1.6; margin-bottom: 16px; }
+.guest-popup-features { list-style: none; padding: 0; margin: 0 0 22px; display: flex; flex-direction: column; gap: 7px; }
+.guest-popup-features li { font-size: 13px; color: var(--text-2); text-align: left; }
 .guest-popup-actions { display: flex; flex-direction: column; gap: 8px; }
 .guest-popup-actions .btn { width: 100%; justify-content: center; }
 @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
