@@ -128,7 +128,7 @@ export default function Review() {
           <div className="guest-popup" onClick={e => e.stopPropagation()}>
             <button className="guest-popup-close" onClick={closePopup} aria-label="닫기">✕</button>
             <div className="guest-popup-icon">📄</div>
-            <div className="guest-popup-title">포폴·이력서, 혼자 보기엔 아깝잖아요</div>
+            <div className="guest-popup-title">포폴·이력서<br/>혼자 보기엔 아깝잖아요</div>
             <div className="guest-popup-desc">로그인하고 서로 리뷰하며 함께 성장해요.</div>
             <ul className="guest-popup-features">
               <li>✓ 포트폴리오 &amp; 이력서 서로보기 신청</li>
