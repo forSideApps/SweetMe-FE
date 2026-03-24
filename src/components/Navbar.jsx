@@ -107,7 +107,7 @@ export default function Navbar() {
         {links.map(l => (
           <Link key={l.to} to={l.to} className="nav-link" onClick={() => setMobileOpen(false)}>{l.label}</Link>
         ))}
-        <div style={{ borderTop: '1px solid var(--border)', marginTop: 8, paddingTop: 8 }}>
+        <div style={{ borderTop: '1px solid var(--border)', marginTop: 10, paddingTop: 10 }}>
           {user ? (
             <>
               <Link to="/mypage" className="nav-link" onClick={() => setMobileOpen(false)}>마이페이지</Link>

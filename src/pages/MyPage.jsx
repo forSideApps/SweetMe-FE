@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getMe, updateProfile, getMyRooms, getMyReviews, getMyPosts, getMyApplications, getMyExchanges } from '../api/auth'
-import { acceptExchange, rejectExchange, deleteReview } from '../api/review'
+import { acceptExchange, rejectExchange, cancelExchange, deleteReview } from '../api/review'
 import { deletePost } from '../api/community'
 import { deleteRoom } from '../api/rooms'
 import { JOB_ROLES } from '../constants/jobRoles'
@@ -313,9 +313,9 @@ export default function MyPage() {
               {reviews.map(r => (
                 <div key={r.id} className="room-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <Link to={`/reviews/${r.id}`} draggable={false} style={{ textDecoration: 'none', flex: 1 }}>
-                      <div className="room-title">{r.title}</div>
-                      <div className="room-meta" style={{ marginTop: 4 }}>
+                    <Link to={`/reviews/${r.id}`} draggable={false} style={{ textDecoration: 'none', flex: 1, minWidth: 0 }}>
+                      <div className="room-title" style={{ wordBreak: 'break-word' }}>{r.title}</div>
+                      <div className="room-meta" style={{ marginTop: 4, flexWrap: 'wrap', wordBreak: 'break-all' }}>
                         {r.typeDisplayName} · {r.careerLevelDisplayName} · {formatDate(r.createdAt)}
                       </div>
                     </Link>
@@ -365,9 +365,17 @@ export default function MyPage() {
                   >{label}</button>
                 ))}
               </div>
+              {(() => {
+                const filtered = exchanges.filter(e => exchangeFilter === 'ALL' || e.direction === exchangeFilter)
+                if (filtered.length === 0) {
+                  const msg = exchangeFilter === 'RECEIVED' ? '받은 요청이 없습니다.'
+                            : exchangeFilter === 'SENT' ? '보낸 요청이 없습니다.'
+                            : '서로보기 내역이 없습니다.'
+                  return <p className="text-muted" style={{ padding: '20px 0' }}>{msg}</p>
+                }
+                return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {exchanges
-                  .filter(e => exchangeFilter === 'ALL' || e.direction === exchangeFilter)
+                {filtered
                   .map(e => (
                   <div key={e.id} className="room-card">
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
@@ -425,6 +433,22 @@ export default function MyPage() {
                         >거절</button>
                       </div>
                     )}
+                    {/* 보낸 요청 + 대기 중일 때 취소 버튼 */}
+                    {e.direction === 'SENT' && e.status === 'PENDING' && (
+                      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          style={{ color: '#ef4444' }}
+                          onClick={async () => {
+                            try {
+                              await cancelExchange(e.id)
+                              setExchanges(prev => prev.filter(x => x.id !== e.id))
+                              setAlert({ type: 'success', message: '서로보기 요청을 취소했습니다.' })
+                            } catch { setAlert({ type: 'error', message: '취소에 실패했습니다.' }) }
+                          }}
+                        >요청 취소</button>
+                      </div>
+                    )}
                     {/* 받은 요청이고 수락 전일 때만 운영자 문의 */}
                     {e.direction === 'RECEIVED' && e.status !== 'ACCEPTED' && (
                       <div style={{ marginTop: 6 }}>
@@ -439,6 +463,8 @@ export default function MyPage() {
                   </div>
                 ))}
               </div>
+                )
+              })()}
             </>
           )}
         </div>

@@ -58,3 +58,6 @@ export const acceptExchange = (exchangeId) =>
 
 export const rejectExchange = (exchangeId) =>
   client.post(`/reviews/exchanges/${exchangeId}/reject`).then(r => r.data)
+
+export const cancelExchange = (exchangeId) =>
+  client.delete(`/reviews/exchanges/${exchangeId}`).then(r => r.data)

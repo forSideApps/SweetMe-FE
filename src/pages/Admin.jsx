@@ -417,11 +417,11 @@ function ReviewTab({ setMsg }) {
 
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
         <div style={{ fontSize: 15, fontWeight: 700 }}>
           검토 요청 ({filtered.length}건)
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {[{ value: '', label: '전체' }, { value: 'PENDING', label: '검토전' }, { value: 'DONE', label: '완료' }].map(s => (
             <button
               key={s.value}
@@ -432,6 +432,32 @@ function ReviewTab({ setMsg }) {
               {s.label}
             </button>
           ))}
+          <button
+            className="btn btn-sm"
+            style={{ fontSize: 12, padding: '3px 10px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+            onClick={async () => {
+              if (!window.confirm('커뮤니티 게시글을 전체 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return
+              try {
+                await client.delete('/community/all')
+                setMsg({ type: 'success', text: '커뮤니티 게시글이 전체 삭제되었습니다.' })
+              } catch {
+                setMsg({ type: 'error', text: '커뮤니티 전체 삭제에 실패했습니다.' })
+              }
+            }}
+          >커뮤니티 전체 삭제</button>
+          <button
+            className="btn btn-sm"
+            style={{ fontSize: 12, padding: '3px 10px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+            onClick={async () => {
+              if (!window.confirm('스터디를 전체 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return
+              try {
+                await client.delete('/rooms/all')
+                setMsg({ type: 'success', text: '스터디가 전체 삭제되었습니다.' })
+              } catch {
+                setMsg({ type: 'error', text: '스터디 전체 삭제에 실패했습니다.' })
+              }
+            }}
+          >스터디 전체 삭제</button>
         </div>
       </div>
 
