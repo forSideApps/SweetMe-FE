@@ -125,7 +125,7 @@ export default function Register() {
           </div>
 
           {/* 선택 프로필 */}
-          <div style={{ borderTop: '1px solid var(--border)', margin: '12px 0', paddingTop: 12 }}>
+          <div style={{ margin: '12px 0', paddingTop: 12 }}>
             <div style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 10 }}>
               프로필 정보 <span style={{ fontWeight: 400 }}>(선택 · 나중에 마이페이지에서 변경 가능)</span>
             </div>
