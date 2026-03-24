@@ -52,7 +52,9 @@ export default function Review() {
   const [inputValue, setInputValue] = useState(keyword)
 
   useEffect(() => {
-    getMe().then(() => setIsLoggedIn(true)).catch(() => setIsLoggedIn(false))
+    getMe()
+      .then(() => setIsLoggedIn(true))
+      .catch(err => { if (err?.response?.status === 401) setIsLoggedIn(false) })
   }, [])
 
   useEffect(() => {
