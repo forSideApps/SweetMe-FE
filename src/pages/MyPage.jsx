@@ -107,7 +107,7 @@ export default function MyPage() {
       )}
 
       {/* 탭 네비게이션 */}
-      <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)', marginBottom: 24, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+      <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)', marginBottom: 24, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', touchAction: 'pan-x' }}>
         {TABS.map(t => (
           <Link
             key={t.key}
