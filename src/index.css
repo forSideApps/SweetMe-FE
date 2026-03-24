@@ -369,10 +369,10 @@ button { cursor: pointer; font-family: inherit; }
 .company-carousel-border {
   padding: 20px 0 16px;
   border-bottom: 1px solid var(--border-2);
-  overflow: visible;
+  overflow: hidden;
 }
 .company-carousel-border .rfm-marquee-container {
-  overflow: visible !important;
+  overflow: hidden !important;
 }
 
 /* ── Company Pills ────────────────────── */

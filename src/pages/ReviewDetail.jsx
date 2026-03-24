@@ -467,11 +467,6 @@ export default function ReviewDetail() {
               <span className="modal-title">🔄 서로보기</span>
               <button className="btn-close-edit" onClick={() => setExchangeOpen(false)}>✕</button>
             </div>
-            <p style={{ fontSize: 14, color: 'var(--text-2)', marginBottom: 16 }}>
-              내 포폴·이력서 글을 선택하고 서로보기를 신청하세요.<br />
-              상대방이 수락하면 서로의 링크를 확인할 수 있습니다.
-            </p>
-
             {exchangeRequested ? (
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8, color: 'var(--green)' }}>✅ 서로보기 신청 완료!</div>
@@ -493,6 +488,10 @@ export default function ReviewDetail() {
               </div>
             ) : (
               <div>
+                <p style={{ fontSize: 14, color: 'var(--text-2)', marginBottom: 16 }}>
+                  내 포폴·이력서 글을 선택하고 서로보기를 신청하세요.<br />
+                  상대방이 수락하면 서로의 링크를 확인할 수 있습니다.
+                </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16, maxHeight: 260, overflowY: 'auto' }}>
                   {myReviews.map(r => (
                     <label key={r.id} style={{

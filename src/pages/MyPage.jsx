@@ -230,7 +230,7 @@ export default function MyPage() {
               {rooms.map(r => (
                 <div key={r.id} className="room-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <Link to={`/study/${r.id}`} style={{ textDecoration: 'none', flex: 1 }}>
+                    <Link to={`/study/${r.id}`} draggable={false} style={{ textDecoration: 'none', flex: 1 }}>
                       <div className="room-title">{r.title}</div>
                       <div className="room-meta" style={{ marginTop: 4 }}>
                         {r.themeName} · {formatDate(r.createdAt)}
@@ -313,7 +313,7 @@ export default function MyPage() {
               {reviews.map(r => (
                 <div key={r.id} className="room-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <Link to={`/reviews/${r.id}`} style={{ textDecoration: 'none', flex: 1 }}>
+                    <Link to={`/reviews/${r.id}`} draggable={false} style={{ textDecoration: 'none', flex: 1 }}>
                       <div className="room-title">{r.title}</div>
                       <div className="room-meta" style={{ marginTop: 4 }}>
                         {r.typeDisplayName} · {r.careerLevelDisplayName} · {formatDate(r.createdAt)}
@@ -460,7 +460,7 @@ export default function MyPage() {
               {posts.map(p => (
                 <div key={p.id} className="room-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <Link to={`/community/${p.id}`} style={{ textDecoration: 'none', flex: 1 }}>
+                    <Link to={`/community/${p.id}`} draggable={false} style={{ textDecoration: 'none', flex: 1 }}>
                       <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 2 }}>{p.categoryDisplay}</div>
                       <div className="room-title">{p.title}</div>
                       <div className="room-meta" style={{ marginTop: 4 }}>
