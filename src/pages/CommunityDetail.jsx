@@ -5,6 +5,18 @@ import { getMe } from '../api/auth'
 import Alert from '../components/Alert'
 import { formatDateTime } from '../utils/date'
 
+const URL_REGEX = /(https?:\/\/[^\s]+)/g
+
+function renderWithLinks(text) {
+  if (!text) return null
+  const parts = text.split(URL_REGEX)
+  return parts.map((part, i) =>
+    URL_REGEX.test(part)
+      ? <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline', wordBreak: 'break-all' }}>{part}</a>
+      : part
+  )
+}
+
 const CATEGORY_LABELS = {
   REGIONAL: '지역 정보',
   SUGGESTION: '건의 기능 요청',
@@ -126,7 +138,7 @@ export default function CommunityDetail() {
               )}
             </div>
           </div>
-          <div className="post-detail-body">{post.content}</div>
+          <div className="post-detail-body" style={{ whiteSpace: 'pre-wrap' }}>{renderWithLinks(post.content)}</div>
           <div className="post-detail-actions">
             <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm">← 목록으로</button>
           </div>
