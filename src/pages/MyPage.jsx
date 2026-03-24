@@ -49,6 +49,7 @@ export default function MyPage() {
   const [reviews, setReviews] = useState(null)
   const [exchanges, setExchanges] = useState(null)
   const [exchangeFilter, setExchangeFilter] = useState('ALL')
+  const [exchangeProcessing, setExchangeProcessing] = useState(null)
   const [posts, setPosts] = useState(null)
 
   useEffect(() => {
@@ -412,23 +413,37 @@ export default function MyPage() {
                       <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                         <button
                           className="btn btn-accent btn-sm"
+                          disabled={exchangeProcessing === e.id}
                           onClick={async () => {
+                            if (exchangeProcessing === e.id) return
+                            setExchangeProcessing(e.id)
                             try {
                               await acceptExchange(e.id)
                               setExchanges(prev => prev.map(x => x.id === e.id ? { ...x, status: 'ACCEPTED' } : x))
                               setAlert({ type: 'success', message: '서로보기 요청을 수락했습니다.' })
-                            } catch { setAlert({ type: 'error', message: '수락에 실패했습니다.' }) }
+                            } catch {
+                              setAlert({ type: 'error', message: '수락에 실패했습니다.' })
+                            } finally {
+                              setExchangeProcessing(null)
+                            }
                           }}
                         >수락</button>
                         <button
                           className="btn btn-ghost btn-sm"
                           style={{ color: '#ef4444' }}
+                          disabled={exchangeProcessing === e.id}
                           onClick={async () => {
+                            if (exchangeProcessing === e.id) return
+                            setExchangeProcessing(e.id)
                             try {
                               await rejectExchange(e.id)
-                              setExchanges(prev => prev.map(x => x.id === e.id ? { ...x, status: 'REJECTED' } : x))
+                              setExchanges(prev => prev.filter(x => x.id !== e.id))
                               setAlert({ type: 'success', message: '서로보기 요청을 거절했습니다.' })
-                            } catch { setAlert({ type: 'error', message: '거절에 실패했습니다.' }) }
+                            } catch {
+                              setAlert({ type: 'error', message: '거절에 실패했습니다.' })
+                            } finally {
+                              setExchangeProcessing(null)
+                            }
                           }}
                         >거절</button>
                       </div>
@@ -439,12 +454,19 @@ export default function MyPage() {
                         <button
                           className="btn btn-ghost btn-sm"
                           style={{ color: '#ef4444' }}
+                          disabled={exchangeProcessing === e.id}
                           onClick={async () => {
+                            if (exchangeProcessing === e.id) return
+                            setExchangeProcessing(e.id)
                             try {
                               await cancelExchange(e.id)
                               setExchanges(prev => prev.filter(x => x.id !== e.id))
                               setAlert({ type: 'success', message: '서로보기 요청을 취소했습니다.' })
-                            } catch { setAlert({ type: 'error', message: '취소에 실패했습니다.' }) }
+                            } catch {
+                              setAlert({ type: 'error', message: '취소에 실패했습니다.' })
+                            } finally {
+                              setExchangeProcessing(null)
+                            }
                           }}
                         >요청 취소</button>
                       </div>

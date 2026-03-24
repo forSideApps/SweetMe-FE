@@ -107,18 +107,18 @@ export default function Navbar() {
         {links.map(l => (
           <Link key={l.to} to={l.to} className="nav-link" onClick={() => setMobileOpen(false)}>{l.label}</Link>
         ))}
-        <div style={{ borderTop: '1px solid var(--border)', marginTop: 10, paddingTop: 10 }}>
+        <div style={{ borderTop: '1px solid var(--border)', marginTop: 14, paddingTop: 14 }}>
           {user ? (
             <>
-              <Link to="/mypage" className="nav-link" onClick={() => setMobileOpen(false)}>마이페이지</Link>
-              <button className="nav-link" style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)' }} onClick={() => { handleLogout(); setMobileOpen(false) }}>
+              <Link to="/mypage" className="nav-link" style={{ paddingTop: 10, paddingBottom: 10 }} onClick={() => setMobileOpen(false)}>마이페이지</Link>
+              <button className="nav-link" style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', paddingTop: 10, paddingBottom: 10 }} onClick={() => { handleLogout(); setMobileOpen(false) }}>
                 로그아웃 ({user.username})
               </button>
             </>
           ) : (
             <>
-              <Link to="/login" className="nav-link" onClick={() => setMobileOpen(false)}>로그인</Link>
-              <Link to="/register" className="nav-link" onClick={() => setMobileOpen(false)}>회원가입</Link>
+              <Link to="/login" className="nav-link" style={{ paddingTop: 10, paddingBottom: 10 }} onClick={() => setMobileOpen(false)}>로그인</Link>
+              <Link to="/register" className="nav-link" style={{ paddingTop: 10, paddingBottom: 10 }} onClick={() => setMobileOpen(false)}>회원가입</Link>
             </>
           )}
         </div>

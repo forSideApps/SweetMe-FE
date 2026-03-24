@@ -13,6 +13,27 @@ const CATEGORIES = [
   { value: 'COMPANY_SCHEDULE', label: '채용 일정 정보' },
 ]
 
+function extractCompany(post) {
+  const match = post.content?.match(/🏢 기업명: (.+)/)
+  return match ? match[1].trim() : post.title.split(' ')[0]
+}
+function extractStage(post) {
+  const match = post.content?.match(/🎯 전형 단계: (.+)/)
+  return match ? match[1].trim() : ''
+}
+function extractDate(post) {
+  const match = post.content?.match(/📅 결과 공개: (.+)/)
+  return match ? match[1].trim() : ''
+}
+function extractStageClass(post) {
+  const stage = extractStage(post)
+  if (stage.includes('서류')) return 'stage-doc'
+  if (stage.includes('코딩')) return 'stage-code'
+  if (stage.includes('면접')) return 'stage-interview'
+  if (stage.includes('합격')) return 'stage-pass'
+  return 'stage-default'
+}
+
 export default function Community() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [posts, setPosts] = useState([])
@@ -122,6 +143,22 @@ export default function Community() {
             actionLabel={category !== 'NOTICE' ? '글쓰기' : undefined}
             actionTo={category !== 'NOTICE' ? (category ? `/community/new?prefillCategory=${category}` : '/community/new') : undefined}
           />
+        ) : category === 'COMPANY_SCHEDULE' ? (
+          <div className="schedule-grid">
+            {posts.map(post => (
+              <Link key={post.id} to={`/community/${post.id}`} className="schedule-card">
+                <div className="schedule-card-header">
+                  <span className="schedule-company">{extractCompany(post)}</span>
+                  <span className={`schedule-stage-badge ${extractStageClass(post)}`}>{extractStage(post)}</span>
+                </div>
+                <div className="schedule-date">{extractDate(post)}</div>
+                <div className="schedule-footer">
+                  <span>{post.authorName}</span>
+                  <span>{formatDate(post.createdAt)}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
         ) : (
           <div className="post-list">
             {posts.map(post => (

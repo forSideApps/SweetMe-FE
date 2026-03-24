@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { getReviews } from '../api/review'
+import { getMe } from '../api/auth'
 import { JOB_ROLES } from '../constants/jobRoles'
 import { formatDate } from '../utils/date'
 import Pagination from '../components/Pagination'
@@ -22,6 +23,8 @@ const CAREER_LEVELS = [
   { value: 'EXPERIENCED', label: '경력' },
 ]
 
+const STORAGE_KEY = 'review_guest_banner_hidden'
+
 export default function Review() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [reviews, setReviews] = useState([])
@@ -30,6 +33,13 @@ export default function Review() {
   const [filterOpen, setFilterOpen] = useState(false)
   const debounceRef = useRef(null)
   const filterRef = useRef(null)
+  const [isLoggedIn, setIsLoggedIn] = useState(null)
+  const [bannerHidden, setBannerHidden] = useState(() => localStorage.getItem(STORAGE_KEY) === 'true')
+
+  function hideBanner() {
+    localStorage.setItem(STORAGE_KEY, 'true')
+    setBannerHidden(true)
+  }
 
   const type = searchParams.get('type') || ''
   const status = searchParams.get('status') || ''
@@ -38,6 +48,10 @@ export default function Review() {
   const keyword = searchParams.get('keyword') || ''
   const page = parseInt(searchParams.get('page') || '0', 10)
   const [inputValue, setInputValue] = useState(keyword)
+
+  useEffect(() => {
+    getMe().then(() => setIsLoggedIn(true)).catch(() => setIsLoggedIn(false))
+  }, [])
 
   useEffect(() => {
     if (!filterOpen) return
@@ -105,6 +119,21 @@ export default function Review() {
 
   return (
     <div className="container">
+      {isLoggedIn === false && !bannerHidden && (
+        <div className="guest-review-banner">
+          <div className="guest-review-banner-content">
+            <span className="guest-review-banner-icon">🎯</span>
+            <div>
+              <div className="guest-review-banner-title">로그인하면 포폴·이력서를 더 편리하게 이용할 수 있어요!</div>
+              <div className="guest-review-banner-desc">서로보기 신청, 포트폴리오 링크 열람, 내 게시글 관리 기능을 제공합니다.</div>
+            </div>
+            <div className="guest-review-banner-actions">
+              <Link to="/login" className="btn btn-accent btn-sm">로그인</Link>
+              <button className="btn btn-ghost btn-sm" onClick={hideBanner}>다시 보지 않기</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="community-header">
         <div>
           <h1 className="community-title">포폴 · 이력서 검토</h1>

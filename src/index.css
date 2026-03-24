@@ -367,12 +367,12 @@ button { cursor: pointer; font-family: inherit; }
 
 /* ── Company Carousel (자동 슬라이드) ──────────── */
 .company-carousel-border {
-  padding: 20px 0 16px;
+  padding: 28px 0 24px;
   border-bottom: 1px solid var(--border-2);
-  overflow: hidden;
+  overflow: visible;
 }
 .company-carousel-border .rfm-marquee-container {
-  overflow: hidden !important;
+  overflow: visible !important;
 }
 
 /* ── Company Pills ────────────────────── */
@@ -997,8 +997,8 @@ footer {
 
   /* Company pills */
   .company-filter { padding: 16px 0; }
-  .company-carousel-border { overflow: hidden; }
-  .company-carousel-border .rfm-marquee-container { overflow: hidden !important; }
+  .company-carousel-border { overflow: visible; padding-top: 28px; padding-bottom: 24px; }
+  .company-carousel-border .rfm-marquee-container { overflow: visible !important; }
 
   /* Sections */
   .section { padding: 36px 0; }
@@ -1088,3 +1088,59 @@ footer {
   /* Floating theme btn */
   .theme-float-btn { bottom: 16px; right: 16px; width: 40px; height: 40px; font-size: 16px; }
 }
+
+/* ── Guest Review Banner ─────────────────── */
+.guest-review-banner {
+  background: linear-gradient(135deg, var(--accent-light, #eff6ff) 0%, #f0fdf4 100%);
+  border: 1px solid var(--accent, #3b82f6);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+.guest-review-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.guest-review-banner-icon { font-size: 28px; flex-shrink: 0; }
+.guest-review-banner-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.guest-review-banner-desc { font-size: 13px; color: var(--text-3); }
+.guest-review-banner-actions { display: flex; gap: 8px; margin-left: auto; flex-shrink: 0; }
+@media (max-width: 600px) {
+  .guest-review-banner-content { flex-direction: column; align-items: flex-start; }
+  .guest-review-banner-actions { margin-left: 0; }
+}
+
+/* ── Company Schedule Cards ──────────────── */
+.schedule-grid { display: flex; flex-direction: column; gap: 10px; }
+.schedule-card {
+  display: block;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.schedule-card:hover { border-color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.schedule-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.schedule-company { font-size: 15px; font-weight: 700; color: var(--text); }
+.schedule-stage-badge {
+  font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 20px; white-space: nowrap;
+}
+.stage-doc { background: #dbeafe; color: #1d4ed8; }
+.stage-code { background: #fef3c7; color: #92400e; }
+.stage-interview { background: #dcfce7; color: #15803d; }
+.stage-pass { background: #f0fdf4; color: #166534; }
+.stage-default { background: var(--bg-2); color: var(--text-2); }
+.schedule-date { font-size: 14px; color: var(--accent); font-weight: 500; margin-bottom: 8px; }
+.schedule-footer { display: flex; gap: 12px; font-size: 12px; color: var(--text-3); }
+
+/* ── Schedule Form ───────────────────────── */
+.schedule-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.schedule-form-grid .form-group { display: flex; flex-direction: column; gap: 6px; }
+.schedule-form-grid .form-group label { font-size: 13px; font-weight: 600; color: var(--text-2); }
+.schedule-form-grid .form-group.full-width { grid-column: 1 / -1; }
+@media (max-width: 600px) { .schedule-form-grid { grid-template-columns: 1fr; } }
