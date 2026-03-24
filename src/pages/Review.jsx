@@ -34,11 +34,13 @@ export default function Review() {
   const debounceRef = useRef(null)
   const filterRef = useRef(null)
   const [isLoggedIn, setIsLoggedIn] = useState(null)
-  const [bannerHidden, setBannerHidden] = useState(() => localStorage.getItem(STORAGE_KEY) === 'true')
+  const [popupClosed, setPopupClosed] = useState(false)  // 이번 세션만 닫기
+  const [neverShow, setNeverShow] = useState(() => localStorage.getItem(STORAGE_KEY) === 'true')  // 영구 숨김
 
-  function hideBanner() {
+  function closePopup() { setPopupClosed(true) }  // X버튼 / 오버레이 — 세션만 닫기
+  function hideBanner() {                          // 다시보지않기 — localStorage 저장
     localStorage.setItem(STORAGE_KEY, 'true')
-    setBannerHidden(true)
+    setNeverShow(true)
   }
 
   const type = searchParams.get('type') || ''
@@ -119,10 +121,10 @@ export default function Review() {
 
   return (
     <div className="container">
-      {isLoggedIn === false && !bannerHidden && (
-        <div className="guest-popup-overlay" onClick={hideBanner}>
+      {isLoggedIn === false && !popupClosed && !neverShow && (
+        <div className="guest-popup-overlay" onClick={closePopup}>
           <div className="guest-popup" onClick={e => e.stopPropagation()}>
-            <button className="guest-popup-close" onClick={hideBanner} aria-label="닫기">✕</button>
+            <button className="guest-popup-close" onClick={closePopup} aria-label="닫기">✕</button>
             <div className="guest-popup-icon">📄</div>
             <div className="guest-popup-title">포폴·이력서, 혼자 보기엔 아깝잖아요</div>
             <div className="guest-popup-desc">로그인하고 서로 리뷰하며 함께 성장해요.</div>
