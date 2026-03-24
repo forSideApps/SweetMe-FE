@@ -124,18 +124,13 @@ export default function Review() {
   return (
     <div className="container">
       {isLoggedIn === false && !popupClosed && !neverShow && (
-        <div className="guest-popup-overlay" onClick={closePopup}>
-          <div className="guest-popup" onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={closePopup}>
+          <div className="modal-card guest-popup" onClick={e => e.stopPropagation()}>
             <button className="guest-popup-close" onClick={closePopup} aria-label="닫기">✕</button>
-            <div className="guest-popup-icon">🚀</div>
+            <div className="guest-popup-icon">✨</div>
             <div className="guest-popup-title">포폴·이력서<br/>혼자 보기엔 아깝잖아요</div>
             <div className="guest-popup-desc">로그인하고 서로 리뷰하며 함께 성장해요.</div>
-            <ul className="guest-popup-features">
-              <li>✓ 포트폴리오 &amp; 이력서 서로보기 신청</li>
-              <li>✓ 포트폴리오 링크 직접 열람</li>
-              <li>✓ 내 게시글 등록 및 관리</li>
-            </ul>
-            <div className="guest-popup-actions">
+<div className="guest-popup-actions">
               <Link to="/login" className="btn btn-accent">로그인하기</Link>
               <button className="btn btn-ghost" onClick={hideBanner}>다시 보지 않기</button>
             </div>
