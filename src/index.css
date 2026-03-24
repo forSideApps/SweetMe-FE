@@ -1091,8 +1091,8 @@ footer {
 
 /* ── Guest Review Banner ─────────────────── */
 .guest-review-banner {
-  background: linear-gradient(135deg, var(--accent-light, #eff6ff) 0%, #f0fdf4 100%);
-  border: 1px solid var(--accent, #3b82f6);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px 20px;
   margin-bottom: 20px;
