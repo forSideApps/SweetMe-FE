@@ -254,7 +254,7 @@ export default function ReviewDetail() {
                 {(isAdmin || (user && review.memberUsername && review.memberUsername === user.username)) && (
                   <Link to={`/reviews/${review.id}/edit`} className="btn btn-outline btn-sm">수정하기</Link>
                 )}
-                {isAdmin && (
+                {(isAdmin || (user && review.memberUsername && review.memberUsername === user.username)) && (
                   <button
                     className="btn btn-sm"
                     style={{ background: '#ef4444', color: '#fff' }}

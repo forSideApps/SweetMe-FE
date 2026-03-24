@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getMe, updateProfile, getMyRooms, getMyReviews, getMyPosts, getMyApplications, getMyExchanges } from '../api/auth'
-import { acceptExchange, rejectExchange } from '../api/review'
+import { acceptExchange, rejectExchange, deleteReview } from '../api/review'
+import { deletePost } from '../api/community'
+import { deleteRoom } from '../api/rooms'
 import { JOB_ROLES } from '../constants/jobRoles'
 import Alert from '../components/Alert'
 import StatusBadge from '../components/StatusBadge'
@@ -46,6 +48,7 @@ export default function MyPage() {
   const [applications, setApplications] = useState(null)
   const [reviews, setReviews] = useState(null)
   const [exchanges, setExchanges] = useState(null)
+  const [exchangeFilter, setExchangeFilter] = useState('ALL')
   const [posts, setPosts] = useState(null)
 
   useEffect(() => {
@@ -225,22 +228,34 @@ export default function MyPage() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {rooms.map(r => (
-                <Link key={r.id} to={`/study/${r.id}`} style={{ textDecoration: 'none' }}>
-                  <div className="room-card" style={{ cursor: 'pointer' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div>
-                        <div className="room-title">{r.title}</div>
-                        <div className="room-meta" style={{ marginTop: 4 }}>
-                          {r.themeName} · {formatDate(r.createdAt)}
-                        </div>
+                <div key={r.id} className="room-card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Link to={`/study/${r.id}`} style={{ textDecoration: 'none', flex: 1 }}>
+                      <div className="room-title">{r.title}</div>
+                      <div className="room-meta" style={{ marginTop: 4 }}>
+                        {r.themeName} · {formatDate(r.createdAt)}
                       </div>
+                    </Link>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                       <StatusBadge status={r.status} />
-                    </div>
-                    <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 6 }}>
-                      승인 {r.approvedCount}/{r.maxMembers}명 · 대기 {r.pendingCount}명
+                      <button
+                        className="btn btn-sm"
+                        style={{ background: '#ef4444', color: '#fff', padding: '2px 10px', fontSize: 12 }}
+                        onClick={async () => {
+                          if (!confirm('이 스터디를 삭제하시겠습니까?')) return
+                          try {
+                            await deleteRoom(r.id)
+                            setRooms(prev => prev.filter(x => x.id !== r.id))
+                            setAlert({ type: 'success', message: '스터디가 삭제되었습니다.' })
+                          } catch { setAlert({ type: 'error', message: '삭제에 실패했습니다.' }) }
+                        }}
+                      >삭제</button>
                     </div>
                   </div>
-                </Link>
+                  <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 6 }}>
+                    승인 {r.approvedCount}/{r.maxMembers}명 · 대기 {r.pendingCount}명
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -296,21 +311,32 @@ export default function MyPage() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {reviews.map(r => (
-                <Link key={r.id} to={`/reviews/${r.id}`} style={{ textDecoration: 'none' }}>
-                  <div className="room-card" style={{ cursor: 'pointer' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div>
-                        <div className="room-title">{r.title}</div>
-                        <div className="room-meta" style={{ marginTop: 4 }}>
-                          {r.typeDisplayName} · {r.careerLevelDisplayName} · {formatDate(r.createdAt)}
-                        </div>
+                <div key={r.id} className="room-card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Link to={`/reviews/${r.id}`} style={{ textDecoration: 'none', flex: 1 }}>
+                      <div className="room-title">{r.title}</div>
+                      <div className="room-meta" style={{ marginTop: 4 }}>
+                        {r.typeDisplayName} · {r.careerLevelDisplayName} · {formatDate(r.createdAt)}
                       </div>
-                      <span className={`app-status-badge ${r.status}`} style={{ fontSize: 12 }}>
-                        {r.statusDisplayName}
-                      </span>
+                    </Link>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                      <span className={`app-status-badge ${r.status}`} style={{ fontSize: 12 }}>{r.statusDisplayName}</span>
+                      <Link to={`/reviews/${r.id}/edit`} className="btn btn-outline btn-sm" style={{ fontSize: 12, padding: '2px 10px' }}>수정</Link>
+                      <button
+                        className="btn btn-sm"
+                        style={{ background: '#ef4444', color: '#fff', padding: '2px 10px', fontSize: 12 }}
+                        onClick={async () => {
+                          if (!confirm('이 글을 삭제하시겠습니까?')) return
+                          try {
+                            await deleteReview(r.id)
+                            setReviews(prev => prev.filter(x => x.id !== r.id))
+                            setAlert({ type: 'success', message: '글이 삭제되었습니다.' })
+                          } catch { setAlert({ type: 'error', message: '삭제에 실패했습니다.' }) }
+                        }}
+                      >삭제</button>
                     </div>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           )}
@@ -328,78 +354,92 @@ export default function MyPage() {
               <h3>서로보기 내역이 없습니다</h3>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {exchanges.map(e => (
-                <div key={e.id} className="room-card">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-                    <span style={{
-                      fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99,
-                      background: e.direction === 'RECEIVED' ? 'var(--accent-bg, rgba(99,102,241,0.1))' : 'rgba(16,185,129,0.1)',
-                      color: e.direction === 'RECEIVED' ? 'var(--accent)' : '#10b981',
-                    }}>
-                      {e.direction === 'RECEIVED' ? '받은 요청' : '보낸 요청'}
-                    </span>
-                    <span style={{
-                      fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99,
-                      background: e.status === 'ACCEPTED' ? 'var(--green-bg)' : 'var(--amber-bg)',
-                      color: e.status === 'ACCEPTED' ? 'var(--green)' : 'var(--amber)',
-                    }}>
-                      {e.status === 'ACCEPTED' ? '수락됨' : '대기 중'}
-                    </span>
-                    <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{formatDate(e.createdAt)}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
-                    <Link to={`/reviews/${e.myReviewId}`} style={{ color: 'var(--text-1)', fontWeight: 500, fontSize: 14 }}>
-                      {e.myReviewTitle}
-                    </Link>
-                    <span style={{ fontSize: 12, color: 'var(--text-3)' }}>↔</span>
-                    <Link to={`/reviews/${e.theirReviewId}`} style={{ color: 'var(--accent)', fontWeight: 500, fontSize: 14 }}>
-                      {e.theirReviewTitle}
-                    </Link>
-                    {e.theirUsername && (
-                      <span style={{ fontSize: 12, color: 'var(--text-3)' }}>({e.theirUsername})</span>
+            <>
+              {/* 필터 */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                {[['ALL', '전체'], ['RECEIVED', '받은 요청'], ['SENT', '보낸 요청']].map(([val, label]) => (
+                  <button
+                    key={val}
+                    className={`btn btn-sm ${exchangeFilter === val ? 'btn-accent' : 'btn-ghost'}`}
+                    onClick={() => setExchangeFilter(val)}
+                  >{label}</button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {exchanges
+                  .filter(e => exchangeFilter === 'ALL' || e.direction === exchangeFilter)
+                  .map(e => (
+                  <div key={e.id} className="room-card">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                      <span style={{
+                        fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99,
+                        background: e.direction === 'RECEIVED' ? 'var(--accent-bg, rgba(99,102,241,0.1))' : 'rgba(16,185,129,0.1)',
+                        color: e.direction === 'RECEIVED' ? 'var(--accent)' : '#10b981',
+                      }}>
+                        {e.direction === 'RECEIVED' ? '받은 요청' : '보낸 요청'}
+                      </span>
+                      <span style={{
+                        fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99,
+                        background: e.status === 'ACCEPTED' ? 'var(--green-bg)' : e.status === 'REJECTED' ? 'rgba(239,68,68,0.1)' : 'var(--amber-bg)',
+                        color: e.status === 'ACCEPTED' ? 'var(--green)' : e.status === 'REJECTED' ? '#ef4444' : 'var(--amber)',
+                      }}>
+                        {e.status === 'ACCEPTED' ? '수락됨' : e.status === 'REJECTED' ? '거절됨' : '대기 중'}
+                      </span>
+                      <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{formatDate(e.createdAt)}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+                      <Link to={`/reviews/${e.myReviewId}`} style={{ color: 'var(--text-1)', fontWeight: 500, fontSize: 14 }}>
+                        {e.myReviewTitle}
+                      </Link>
+                      <span style={{ fontSize: 12, color: 'var(--text-3)' }}>↔</span>
+                      <Link to={`/reviews/${e.theirReviewId}`} style={{ color: 'var(--accent)', fontWeight: 500, fontSize: 14 }}>
+                        {e.theirReviewTitle}
+                      </Link>
+                      {e.theirUsername && (
+                        <span style={{ fontSize: 12, color: 'var(--text-3)' }}>({e.theirUsername})</span>
+                      )}
+                    </div>
+                    {/* 받은 요청 + 대기 중일 때 수락/거절 버튼 */}
+                    {e.direction === 'RECEIVED' && e.status === 'PENDING' && (
+                      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                        <button
+                          className="btn btn-accent btn-sm"
+                          onClick={async () => {
+                            try {
+                              await acceptExchange(e.id)
+                              setExchanges(prev => prev.map(x => x.id === e.id ? { ...x, status: 'ACCEPTED' } : x))
+                              setAlert({ type: 'success', message: '서로보기 요청을 수락했습니다.' })
+                            } catch { setAlert({ type: 'error', message: '수락에 실패했습니다.' }) }
+                          }}
+                        >수락</button>
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          style={{ color: '#ef4444' }}
+                          onClick={async () => {
+                            try {
+                              await rejectExchange(e.id)
+                              setExchanges(prev => prev.map(x => x.id === e.id ? { ...x, status: 'REJECTED' } : x))
+                              setAlert({ type: 'success', message: '서로보기 요청을 거절했습니다.' })
+                            } catch { setAlert({ type: 'error', message: '거절에 실패했습니다.' }) }
+                          }}
+                        >거절</button>
+                      </div>
+                    )}
+                    {/* 받은 요청이고 수락 전일 때만 운영자 문의 */}
+                    {e.direction === 'RECEIVED' && e.status !== 'ACCEPTED' && (
+                      <div style={{ marginTop: 6 }}>
+                        <Link
+                          to={`/community/new?prefillTitle=${encodeURIComponent('[포폴 정상 여부 문의] ' + e.theirUsername)}&prefillContent=${encodeURIComponent('상대방 아이디: ' + e.theirUsername + '\n상대방 글: ' + e.theirReviewTitle + '\n상대방 글 링크: ' + window.location.origin + '/reviews/' + e.theirReviewId + '\n\n정상 여부 확인 부탁드립니다.')}&prefillCategory=SUGGESTION`}
+                          style={{ fontSize: 12, color: 'var(--text-3)', textDecoration: 'underline' }}
+                        >
+                          포폴/이력서 정상 여부 운영자 문의
+                        </Link>
+                      </div>
                     )}
                   </div>
-                  {/* 받은 요청 + 대기 중일 때 수락/거절 버튼 */}
-                  {e.direction === 'RECEIVED' && e.status === 'PENDING' && (
-                    <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                      <button
-                        className="btn btn-accent btn-sm"
-                        onClick={async () => {
-                          try {
-                            await acceptExchange(e.id)
-                            setExchanges(prev => prev.map(x => x.id === e.id ? { ...x, status: 'ACCEPTED' } : x))
-                            setAlert({ type: 'success', message: '서로보기 요청을 수락했습니다.' })
-                          } catch { setAlert({ type: 'error', message: '수락에 실패했습니다.' }) }
-                        }}
-                      >수락</button>
-                      <button
-                        className="btn btn-ghost btn-sm"
-                        style={{ color: 'var(--red)' }}
-                        onClick={async () => {
-                          try {
-                            await rejectExchange(e.id)
-                            setExchanges(prev => prev.filter(x => x.id !== e.id))
-                            setAlert({ type: 'success', message: '서로보기 요청을 거절했습니다.' })
-                          } catch { setAlert({ type: 'error', message: '거절에 실패했습니다.' }) }
-                        }}
-                      >거절</button>
-                    </div>
-                  )}
-                  {/* 받은 요청이고 상대 포폴이 의심스러울 때 운영자 문의 */}
-                  {e.direction === 'RECEIVED' && (
-                    <div style={{ marginTop: 6 }}>
-                      <Link
-                        to={`/community/new?prefillTitle=${encodeURIComponent('[포폴 허위 문의] ' + e.theirUsername)}&prefillContent=${encodeURIComponent('상대방 아이디: ' + e.theirUsername + '\n상대방 글: ' + e.theirReviewTitle + '\n\n허위 여부 확인 부탁드립니다.')}&prefillCategory=SUGGESTION`}
-                        style={{ fontSize: 12, color: 'var(--text-3)', textDecoration: 'underline' }}
-                      >
-                        포폴/이력서 허위 여부 운영자 문의
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}
@@ -418,19 +458,29 @@ export default function MyPage() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {posts.map(p => (
-                <Link key={p.id} to={`/community/${p.id}`} style={{ textDecoration: 'none' }}>
-                  <div className="room-card" style={{ cursor: 'pointer' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 2 }}>{p.categoryDisplay}</div>
-                        <div className="room-title">{p.title}</div>
-                        <div className="room-meta" style={{ marginTop: 4 }}>
-                          {formatDate(p.createdAt)} · 조회 {p.viewCount} · 댓글 {p.commentCount}
-                        </div>
+                <div key={p.id} className="room-card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Link to={`/community/${p.id}`} style={{ textDecoration: 'none', flex: 1 }}>
+                      <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 2 }}>{p.categoryDisplay}</div>
+                      <div className="room-title">{p.title}</div>
+                      <div className="room-meta" style={{ marginTop: 4 }}>
+                        {formatDate(p.createdAt)} · 조회 {p.viewCount} · 댓글 {p.commentCount}
                       </div>
-                    </div>
+                    </Link>
+                    <button
+                      className="btn btn-sm"
+                      style={{ background: '#ef4444', color: '#fff', padding: '2px 10px', fontSize: 12, flexShrink: 0, marginLeft: 8 }}
+                      onClick={async () => {
+                        if (!confirm('이 글을 삭제하시겠습니까?')) return
+                        try {
+                          await deletePost(p.id)
+                          setPosts(prev => prev.filter(x => x.id !== p.id))
+                          setAlert({ type: 'success', message: '글이 삭제되었습니다.' })
+                        } catch { setAlert({ type: 'error', message: '삭제에 실패했습니다.' }) }
+                      }}
+                    >삭제</button>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           )}

@@ -113,7 +113,7 @@ export default function CommunityDetail() {
                   <span>{formatDateTime(post.createdAt)}</span>
                 </div>
               </div>
-              {isAdmin && (
+              {(isAdmin || (user && post.memberUsername && post.memberUsername === user.username)) && (
                 <button
                   className="btn btn-sm"
                   style={{ background: '#ef4444', color: '#fff', flexShrink: 0 }}

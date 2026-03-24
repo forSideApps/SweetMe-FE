@@ -105,7 +105,7 @@ export default function RoomDetail() {
             {room.themeId && <span>/</span>}
             <span>상세</span>
           </div>
-          {isAdmin && (
+          {(isAdmin || (user && room.memberUsername && user.username === room.memberUsername)) && (
             <button
               className="btn btn-sm"
               style={{ background: '#ef4444', color: '#fff' }}
