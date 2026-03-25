@@ -374,6 +374,7 @@ export default function ReviewDetail() {
                         className="form-textarea"
                         value={editForm.content}
                         onChange={e => setEditForm(f => ({ ...f, content: e.target.value }))}
+                        onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); handleEditSubmit(e) } }}
                         rows={3}
                         style={{ minHeight: 70 }}
                       />
@@ -408,6 +409,7 @@ export default function ReviewDetail() {
                   className="form-textarea"
                   value={adminComment}
                   onChange={e => setAdminComment(e.target.value)}
+                  onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); handleAdminCommentSubmit(e) } }}
                   placeholder="운영자로 댓글을 남겨보세요"
                   rows={3}
                   style={{ minHeight: 80, marginBottom: 8 }}
@@ -442,6 +444,7 @@ export default function ReviewDetail() {
                     className={`form-textarea${commentErrors.content ? ' is-error' : ''}`}
                     value={comment.content}
                     onChange={e => setComment(c => ({ ...c, content: e.target.value }))}
+                    onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); handleCommentSubmit(e) } }}
                     placeholder="리뷰를 남겨보세요"
                     rows={3}
                     style={{ minHeight: 80 }}

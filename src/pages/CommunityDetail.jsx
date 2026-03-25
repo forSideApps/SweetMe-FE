@@ -66,6 +66,15 @@ export default function CommunityDetail() {
     return errs
   }
 
+  async function handleEditSubmit() {
+    if (!editContent.trim()) { setEditError('내용을 입력해주세요.'); return }
+    try {
+      await updateComment(postId, editingId, { content: editContent })
+      setEditingId(null)
+      fetchPost()
+    } catch { setEditError('수정에 실패했습니다.') }
+  }
+
   async function handleCommentSubmit(e) {
     e.preventDefault()
     const errs = validateComment()
@@ -188,6 +197,7 @@ export default function CommunityDetail() {
                         className="form-textarea"
                         value={editContent}
                         onChange={e => setEditContent(e.target.value)}
+                        onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); handleEditSubmit() } }}
                         rows={3}
                         style={{ minHeight: 70, width: '100%' }}
                       />
@@ -195,14 +205,7 @@ export default function CommunityDetail() {
                       <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
                         <button
                           className="btn btn-accent btn-sm"
-                          onClick={async () => {
-                            if (!editContent.trim()) { setEditError('내용을 입력해주세요.'); return }
-                            try {
-                              await updateComment(postId, c.id, { content: editContent })
-                              setEditingId(null)
-                              fetchPost()
-                            } catch { setEditError('수정에 실패했습니다.') }
-                          }}
+                          onClick={handleEditSubmit}
                         >저장</button>
                         <button className="btn btn-ghost btn-sm" onClick={() => setEditingId(null)}>취소</button>
                       </div>
@@ -238,6 +241,7 @@ export default function CommunityDetail() {
                     className={`form-textarea${commentErrors.content ? ' is-error' : ''}`}
                     value={comment.content}
                     onChange={e => setComment(c => ({ ...c, content: e.target.value }))}
+                    onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); handleCommentSubmit(e) } }}
                     placeholder="댓글을 입력해주세요"
                     rows={3}
                     style={{ minHeight: 80 }}
