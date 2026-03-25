@@ -755,7 +755,7 @@ button { cursor: pointer; font-family: inherit; }
 .comment-author-label { font-size: 13px; color: var(--text-3); display: flex; align-items: center; gap: 6px; padding: 6px 0; }
 .locked-field { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: var(--text-1); background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; }
 .comment-date     { font-size: 12px; color: var(--text-3); }
-.comment-body     { font-size: 14px; line-height: 1.65; }
+.comment-body     { font-size: 14px; line-height: 1.65; white-space: pre-wrap; }
 .comment-form     { border-top: 1px solid var(--border-2); padding: 18px 22px; }
 .comment-inputs   { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
 .comment-form-errors { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
