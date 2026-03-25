@@ -59,6 +59,9 @@ export default function Navbar() {
           {links.map(l => (
             <Link key={l.to} to={l.to} className="nav-link">{l.label}</Link>
           ))}
+          {!isAdmin && user?.role === 'ADMIN' && (
+            <Link to="/admin" className="nav-link" style={{ color: 'var(--accent)' }}>Admin</Link>
+          )}
         </div>
 
         <div className="navbar-auth" ref={dropdownRef}>
@@ -107,6 +110,9 @@ export default function Navbar() {
         {links.map(l => (
           <Link key={l.to} to={l.to} className="nav-link" onClick={() => setMobileOpen(false)}>{l.label}</Link>
         ))}
+        {!isAdmin && user?.role === 'ADMIN' && (
+          <Link to="/admin" className="nav-link" style={{ color: 'var(--accent)' }} onClick={() => setMobileOpen(false)}>Admin</Link>
+        )}
         <div style={{ borderTop: '1px solid var(--border)', marginTop: 14, paddingTop: 14 }}>
           {user ? (
             <>
