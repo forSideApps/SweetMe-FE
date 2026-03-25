@@ -421,14 +421,14 @@ export default function ReviewDetail() {
             </div>
           )}
 
-          <div className="comment-form">
+          {!isAdmin && <div className="comment-form">
             <form onSubmit={handleCommentSubmit}>
               <div className="comment-inputs">
-                {user ? (
+                {user && !isAdmin ? (
                   <div className="comment-author-label">
                     <span className="comment-member-badge">●</span> {user.username}으로 작성됩니다
                   </div>
-                ) : (
+                ) : !user ? (
                   <div className="form-group">
                     <input
                       className={`form-input${commentErrors.authorName ? ' is-error' : ''}`}
@@ -438,7 +438,7 @@ export default function ReviewDetail() {
                     />
                     {commentErrors.authorName && <span className="form-err">{commentErrors.authorName}</span>}
                   </div>
-                )}
+                ) : null}
                 <div className="form-group">
                   <textarea
                     className={`form-textarea${commentErrors.content ? ' is-error' : ''}`}
@@ -458,7 +458,7 @@ export default function ReviewDetail() {
                 </button>
               </div>
             </form>
-          </div>
+          </div>}
         </div>
       </div>
 

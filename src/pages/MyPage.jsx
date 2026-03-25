@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { getMe, updateProfile, getMyRooms, getMyReviews, getMyPosts, getMyApplications, getMyExchanges } from '../api/auth'
+import { getMe, updateProfile, getMyRooms, getMyReviews, getMyPosts, getMyExchanges } from '../api/auth'
 import { acceptExchange, rejectExchange, cancelExchange, deleteReview } from '../api/review'
 import { deletePost } from '../api/community'
 import { deleteRoom } from '../api/rooms'
@@ -29,7 +29,6 @@ const ALGO_GRADES = [
 const TABS = [
   { key: 'profile', label: '프로필' },
   { key: 'rooms', label: '개설한 스터디' },
-  { key: 'applications', label: '신청한 스터디' },
   { key: 'reviews', label: '포폴·이력서' },
   { key: 'exchanges', label: '서로보기' },
   { key: 'posts', label: '커뮤니티' },
@@ -45,7 +44,6 @@ export default function MyPage() {
   const [form, setForm] = useState({ jobRole: '', careerLevel: '', algoGrade: '' })
 
   const [rooms, setRooms] = useState(null)
-  const [applications, setApplications] = useState(null)
   const [reviews, setReviews] = useState(null)
   const [exchanges, setExchanges] = useState(null)
   const [exchangeFilter, setExchangeFilter] = useState('ALL')
@@ -69,7 +67,6 @@ export default function MyPage() {
   useEffect(() => {
     if (!user) return
     if (tab === 'rooms' && rooms === null) getMyRooms().then(setRooms).catch(() => setRooms([]))
-    if (tab === 'applications' && applications === null) getMyApplications().then(setApplications).catch(() => setApplications([]))
     if (tab === 'reviews' && reviews === null) getMyReviews().then(setReviews).catch(() => setReviews([]))
     if (tab === 'exchanges' && exchanges === null) getMyExchanges().then(setExchanges).catch(() => setExchanges([]))
     if (tab === 'posts' && posts === null) getMyPosts().then(setPosts).catch(() => setPosts([]))
@@ -257,41 +254,6 @@ export default function MyPage() {
                     승인 {r.approvedCount}/{r.maxMembers}명 · 대기 {r.pendingCount}명
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 신청한 스터디 탭 */}
-      {tab === 'applications' && (
-        <div>
-          {applications === null ? (
-            <p className="text-muted">로딩 중...</p>
-          ) : applications.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">🙋</div>
-              <h3>신청한 스터디가 없습니다</h3>
-              <Link to="/study" className="btn btn-accent" style={{ marginTop: 12 }}>스터디 둘러보기</Link>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {applications.map(a => (
-                <Link key={a.id} to={`/study/${a.roomId}`} style={{ textDecoration: 'none' }}>
-                  <div className="room-card" style={{ cursor: 'pointer' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div>
-                        <div className="room-title">{a.roomTitle}</div>
-                        <div className="room-meta" style={{ marginTop: 4 }}>
-                          {a.themeName} · {formatDate(a.createdAt)}
-                        </div>
-                      </div>
-                      <span className={`app-status-badge ${a.status}`} style={{ fontSize: 12 }}>
-                        {a.statusDisplay}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
               ))}
             </div>
           )}

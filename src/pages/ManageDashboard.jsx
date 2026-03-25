@@ -1,16 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { getManageApplications, approveApplication, rejectApplication, closeRoom, updateRoom, reopenRoom } from '../api/rooms'
+import { getManageApplications, closeRoom, updateRoom, reopenRoom } from '../api/rooms'
 import Alert from '../components/Alert'
 import { JOB_ROLES } from '../constants/jobRoles'
-import { formatDate } from '../utils/date'
-
-const JOB_ROLE_LABELS = Object.fromEntries(JOB_ROLES.map(r => [r.value, r.label]))
-
-const ALGO_GRADE_LABELS = {
-  UNRATED: '언레이팅', BRONZE: '브론즈', SILVER: '실버', GOLD: '골드',
-  PLATINUM: '플래티넘', DIAMOND: '다이아몬드', RUBY: '루비', MASTER: '마스터',
-}
 
 export default function ManageDashboard() {
   const { roomId } = useParams()
@@ -73,28 +65,6 @@ export default function ManageDashboard() {
     }
   }
 
-  async function handleApprove(appId) {
-    if (!window.confirm('신청을 승인하시겠습니까?')) return
-    try {
-      await approveApplication(appId, roomId, password)
-      setAlert({ type: 'success', message: '신청을 승인했습니다.' })
-      fetchData()
-    } catch {
-      setAlert({ type: 'error', message: '승인에 실패했습니다.' })
-    }
-  }
-
-  async function handleReject(appId) {
-    if (!window.confirm('신청을 거절하시겠습니까?')) return
-    try {
-      await rejectApplication(appId, roomId, password)
-      setAlert({ type: 'success', message: '신청을 거절했습니다.' })
-      fetchData()
-    } catch {
-      setAlert({ type: 'error', message: '거절에 실패했습니다.' })
-    }
-  }
-
   async function handleClose() {
     if (!window.confirm('스터디 모집을 마감하시겠습니까?')) return
     try {
@@ -119,10 +89,7 @@ export default function ManageDashboard() {
 
   if (loading) return <div className="container"><p className="text-muted" style={{ padding: '40px 0' }}>로딩 중...</p></div>
 
-  const applications = data?.applications || []
   const room = data?.room || {}
-  const pendingCount = applications.filter(a => a.status === 'PENDING').length
-  const approvedCount = applications.filter(a => a.status === 'APPROVED').length
 
   return (
     <div className="container">
@@ -134,7 +101,7 @@ export default function ManageDashboard() {
           <span>/</span>
           <span>관리</span>
         </div>
-        <h1>신청자 관리</h1>
+        <h1>스터디 관리</h1>
         <p>{room.title}</p>
       </div>
 
@@ -147,20 +114,12 @@ export default function ManageDashboard() {
       <div className="section-sm">
         <div className="manage-grid">
           <div className="mstat">
-            <span className="mstat-num">{applications.length}</span>
-            <div className="mstat-label">전체 신청</div>
-          </div>
-          <div className="mstat">
-            <span className="mstat-num">{pendingCount}</span>
-            <div className="mstat-label">대기중</div>
-          </div>
-          <div className="mstat">
-            <span className="mstat-num">{approvedCount}</span>
-            <div className="mstat-label">승인됨</div>
-          </div>
-          <div className="mstat">
             <span className="mstat-num">{room.maxMembers || '-'}</span>
             <div className="mstat-label">최대 인원</div>
+          </div>
+          <div className="mstat">
+            <span className="mstat-num">{room.status === 'OPEN' ? '모집중' : '마감'}</span>
+            <div className="mstat-label">모집 상태</div>
           </div>
 
           <div className="manage-back">
@@ -239,7 +198,7 @@ export default function ManageDashboard() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">지원 요건</label>
+                  <label className="form-label">참가 요건</label>
                   <input
                     className="form-input"
                     value={editForm.requirements}
@@ -255,73 +214,6 @@ export default function ManageDashboard() {
                 <button type="button" className="btn btn-ghost" onClick={() => setEditOpen(false)}>취소</button>
               </div>
             </form>
-          </div>
-        )}
-
-        {applications.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">📋</div>
-            <h3>아직 신청자가 없습니다</h3>
-            <p>스터디 신청자가 생기면 여기서 관리할 수 있습니다.</p>
-          </div>
-        ) : (
-          <div className="applications-list">
-            {applications.map(app => (
-              <div
-                key={app.id}
-                className={`app-card${app.status === 'APPROVED' ? ' approved' : app.status === 'REJECTED' ? ' rejected' : ''}`}
-              >
-                <div className="app-header">
-                  <div>
-                    <div className="app-name">{app.applicantName}</div>
-                    <div className="app-tags">
-                      <span className="tag tag-role">{JOB_ROLE_LABELS[app.jobRole] || app.jobRole}</span>
-                      {app.algoGrade && (
-                        <span className="tag tag-algo">{ALGO_GRADE_LABELS[app.algoGrade] || app.algoGrade}</span>
-                      )}
-                      {app.interviewCount != null && (
-                        <span className="tag tag-exp">경험 {app.interviewCount}회</span>
-                      )}
-                    </div>
-                    <span className="app-date">{formatDate(app.createdAt)}</span>
-                  </div>
-                  <span className={`app-status-badge ${app.status}`}>
-                    {app.status === 'PENDING' ? '대기' : app.status === 'APPROVED' ? '승인' : '거절'}
-                  </span>
-                </div>
-
-                {app.introduction && (
-                  <div className="app-intro">{app.introduction}</div>
-                )}
-
-                {app.contactInfo && (
-                  <div className="app-contact">
-                    <span className="contact-label">연락처:</span>
-                    {app.contactInfo}
-                  </div>
-                )}
-
-                {app.status === 'PENDING' && (
-                  <div className="app-actions">
-                    <button className="btn btn-approve" onClick={() => handleApprove(app.id)}>승인</button>
-                    <button className="btn btn-reject" onClick={() => handleReject(app.id)}>거절</button>
-                  </div>
-                )}
-
-                {app.status === 'APPROVED' && (
-                  <div className="app-approved-info">
-                    <span className="approved-msg">✓ 승인됨</span>
-                    {room.kakaoLink ? (
-                      <span className="kakao-hint">
-                        <a href={room.kakaoLink} target="_blank" rel="noopener noreferrer">오픈채팅 링크</a>를 공유했습니다
-                      </span>
-                    ) : (
-                      <span className="kakao-hint warn">오픈채팅 링크가 없습니다</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
           </div>
         )}
       </div>

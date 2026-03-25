@@ -162,7 +162,8 @@ export default function CommunityDetail() {
                 <div key={c.id} className="comment-item">
                   <div className="comment-header">
                     <span className="comment-author">
-                      {c.memberUsername ? (
+                      {c.memberUsername === 'admin' && <span style={{ marginRight: 3 }}>👑</span>}
+                      {c.memberUsername && c.memberUsername !== 'admin' ? (
                         <span className={user && c.memberUsername === user.username ? 'comment-member-badge--blink' : 'comment-member-badge'}>●</span>
                       ) : null}
                       {c.authorName}
