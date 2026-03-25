@@ -95,7 +95,7 @@ export default function RoomDetail() {
                     href={room.kakaoLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn btn-accent btn-lg w-full"
+                    className="btn btn-accent"
                   >
                     카카오톡 오픈채팅 참여하기
                   </a>
