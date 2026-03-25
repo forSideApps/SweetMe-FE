@@ -38,7 +38,6 @@ export default function ManageDashboard() {
     setEditForm({
       title: room.title || '',
       description: room.description || '',
-      maxMembers: room.maxMembers || 4,
       kakaoLink: room.kakaoLink || '',
       requirements: room.requirements || '',
       jobRole: room.jobRole || '',
@@ -52,7 +51,6 @@ export default function ManageDashboard() {
     try {
       await updateRoom(roomId, password, {
         ...editForm,
-        maxMembers: Number(editForm.maxMembers),
         jobRole: editForm.jobRole || null,
       })
       setAlert({ type: 'success', message: '방 정보가 수정되었습니다.' })
@@ -114,10 +112,6 @@ export default function ManageDashboard() {
       <div className="section-sm">
         <div className="manage-grid">
           <div className="mstat">
-            <span className="mstat-num">{room.maxMembers || '-'}</span>
-            <div className="mstat-label">최대 인원</div>
-          </div>
-          <div className="mstat">
             <span className="mstat-num">{room.status === 'OPEN' ? '모집중' : '마감'}</span>
             <div className="mstat-label">모집 상태</div>
           </div>
@@ -162,17 +156,6 @@ export default function ManageDashboard() {
                     onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
                     rows={3}
                     style={{ minHeight: 80 }}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label req">최대 인원</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    min={2} max={20}
-                    value={editForm.maxMembers}
-                    onChange={e => setEditForm(f => ({ ...f, maxMembers: e.target.value }))}
-                    required
                   />
                 </div>
                 <div className="form-group">

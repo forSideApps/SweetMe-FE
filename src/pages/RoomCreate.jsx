@@ -24,7 +24,6 @@ export default function RoomCreate() {
   const [form, setForm] = useState({
     title: '',
     description: '',
-    maxMembers: 4,
     creatorNickname: '',
     password: '',
     kakaoLink: '',
@@ -50,7 +49,6 @@ export default function RoomCreate() {
   function validate() {
     const errs = {}
     if (!form.title.trim()) errs.title = '스터디명을 입력해주세요.'
-    if (!form.maxMembers || form.maxMembers < 2 || form.maxMembers > 10) errs.maxMembers = '최대 인원은 2~10명이어야 합니다.'
     if (!form.jobRole) errs.jobRole = '직군을 선택해주세요.'
     if (!form.kakaoLink.trim()) errs.kakaoLink = '카카오 오픈채팅 링크를 입력해주세요.'
     if (!user && !form.creatorNickname.trim()) errs.creatorNickname = '방장 닉네임을 입력해주세요.'
@@ -68,7 +66,7 @@ export default function RoomCreate() {
       const body = {
         title: form.title,
         description: form.description,
-        maxMembers: Number(form.maxMembers),
+        maxMembers: 99,
         creatorNickname: form.creatorNickname,
         password: form.password,
         jobRole: form.jobRole || null,
@@ -182,19 +180,6 @@ export default function RoomCreate() {
                   placeholder="스터디에 대한 소개를 작성해주세요"
                   rows={4}
                 />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label req">최대 인원</label>
-                <input
-                  type="number"
-                  className={`form-input${errors.maxMembers ? ' is-error' : ''}`}
-                  min={2}
-                  max={10}
-                  value={form.maxMembers}
-                  onChange={e => setForm(f => ({ ...f, maxMembers: e.target.value }))}
-                />
-                {errors.maxMembers && <span className="form-err">{errors.maxMembers}</span>}
               </div>
 
               <div className="form-group">

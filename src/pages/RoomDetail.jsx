@@ -126,10 +126,6 @@ export default function RoomDetail() {
                 <span className="info-key">상태</span>
                 <span className="info-val">{room.status === 'OPEN' ? '모집중' : '마감'}</span>
               </div>
-              <div className="info-row">
-                <span className="info-key">최대 인원</span>
-                <span className="info-val">{room.maxMembers}명</span>
-              </div>
               {room.schedule && (
                 <div className="info-row">
                   <span className="info-key">일정</span>
