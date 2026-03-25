@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import client from './api/client'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import { useTheme } from './hooks/useTheme'
@@ -23,6 +25,11 @@ import MyPage from './pages/MyPage'
 
 function AppInner() {
   const { theme, toggleTheme } = useTheme()
+
+  useEffect(() => {
+    client.post('/visitors/ping').catch(() => {})
+  }, [])
+
   return (
     <>
       <Navbar />
