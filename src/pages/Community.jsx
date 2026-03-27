@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { getPosts } from '../api/community'
 import { formatDate } from '../utils/date'
 import Pagination from '../components/Pagination'
 import EmptyState from '../components/EmptyState'
+import { useDebounce } from '../hooks/useDebounce'
 
 const CATEGORIES = [
   { value: '', label: '전체' },
@@ -39,7 +40,7 @@ export default function Community() {
   const [posts, setPosts] = useState([])
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
-  const debounceRef = useRef(null)
+  const debounce = useDebounce(400)
 
   const category = searchParams.get('category') || ''
   const keyword = searchParams.get('keyword') || ''
@@ -57,8 +58,6 @@ export default function Community() {
       .finally(() => setLoading(false))
   }, [category, keyword, page])
 
-  useEffect(() => () => clearTimeout(debounceRef.current), [])
-
   function handleCategoryChange(c) {
     setSearchParams(prev => {
       const next = new URLSearchParams(prev)
@@ -72,16 +71,13 @@ export default function Community() {
   function handleInputChange(e) {
     const val = e.target.value
     setInputValue(val)
-    clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      setSearchParams(prev => {
-        const next = new URLSearchParams(prev)
-        if (val) next.set('keyword', val)
-        else next.delete('keyword')
-        next.delete('page')
-        return next
-      }, { replace: true })
-    }, 400)
+    debounce(() => setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      if (val) next.set('keyword', val)
+      else next.delete('keyword')
+      next.delete('page')
+      return next
+    }, { replace: true }))
   }
 
   function handlePageChange(newPage) {

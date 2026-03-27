@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { getAllRooms, getRoomsByTheme } from '../api/rooms'
 import { getThemes } from '../api/themes'
@@ -7,6 +7,7 @@ import ThemeLogo from '../components/ThemeLogo'
 import StatusBadge from '../components/StatusBadge'
 import Pagination from '../components/Pagination'
 import EmptyState from '../components/EmptyState'
+import FilterTab from '../components/FilterTab'
 import { formatDate } from '../utils/date'
 
 export default function RoomBrowse() {
@@ -20,9 +21,6 @@ export default function RoomBrowse() {
   const [page, setPage] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
-
-  const debounceRef = useRef(null)
-  useEffect(() => () => clearTimeout(debounceRef.current), [])
 
   useEffect(() => {
     getThemes().then(setThemes).catch(() => {})
@@ -78,9 +76,9 @@ export default function RoomBrowse() {
       {/* 상태 필터 + 회사 선택 */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <div className="filter-tabs">
-          <button className={`filter-tab${status === '' ? ' active' : ''}`} onClick={() => handleStatus('')}>전체</button>
-          <button className={`filter-tab${status === 'OPEN' ? ' active' : ''}`} onClick={() => handleStatus('OPEN')}>모집중</button>
-          <button className={`filter-tab${status === 'CLOSED' ? ' active' : ''}`} onClick={() => handleStatus('CLOSED')}>마감</button>
+          <FilterTab value="" activeValue={status} onClick={handleStatus}>전체</FilterTab>
+          <FilterTab value="OPEN" activeValue={status} onClick={handleStatus}>모집중</FilterTab>
+          <FilterTab value="CLOSED" activeValue={status} onClick={handleStatus}>마감</FilterTab>
         </div>
         <select
           className="form-input"
@@ -98,13 +96,9 @@ export default function RoomBrowse() {
       {/* 직군 필터 */}
       <div className="filter-tabs" style={{ flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
         {JOB_ROLE_FILTER.map(r => (
-          <button
-            key={r.value}
-            className={`filter-tab${jobRole === r.value ? ' active' : ''}`}
-            onClick={() => handleJobRole(r.value)}
-          >
+          <FilterTab key={r.value} value={r.value} activeValue={jobRole} onClick={handleJobRole}>
             {r.label}
-          </button>
+          </FilterTab>
         ))}
       </div>
 

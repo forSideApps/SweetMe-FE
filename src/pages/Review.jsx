@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { getReviews } from '../api/review'
+import { useDebounce } from '../hooks/useDebounce'
 import { getMe } from '../api/auth'
 import { JOB_ROLES } from '../constants/jobRoles'
 import { formatDate } from '../utils/date'
@@ -31,8 +32,8 @@ export default function Review() {
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
   const [filterOpen, setFilterOpen] = useState(false)
-  const debounceRef = useRef(null)
   const filterRef = useRef(null)
+  const debounce = useDebounce(400)
   const [isLoggedIn, setIsLoggedIn] = useState(null)
   const [popupClosed, setPopupClosed] = useState(false)  // 이번 세션만 닫기
   const [neverShow, setNeverShow] = useState(() => localStorage.getItem(STORAGE_KEY) === 'true')  // 영구 숨김
@@ -67,8 +68,6 @@ export default function Review() {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [filterOpen])
-
-  useEffect(() => () => clearTimeout(debounceRef.current), [])
 
   const load = useCallback((params) => {
     setLoading(true)
@@ -107,10 +106,7 @@ export default function Review() {
   function handleInputChange(e) {
     const val = e.target.value
     setInputValue(val)
-    clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      updateParam('keyword', val)
-    }, 400)
+    debounce(() => updateParam('keyword', val))
   }
 
   const activeCount = [status, type, careerLevel, jobCategory].filter(Boolean).length
