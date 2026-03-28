@@ -1199,3 +1199,68 @@ footer {
 .schedule-form-grid .form-group.full-width { grid-column: 1 / -1; }
 @media (max-width: 600px) { .schedule-form-grid { grid-template-columns: 1fr; } }
 
+/* ── Schedule Accordion (Company List) ───── */
+.sca-list { display: flex; flex-direction: column; gap: 8px; }
+.sca-item { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.sca-btn {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; background: var(--bg-2);
+  border: none; cursor: pointer; text-align: left;
+  transition: background 0.15s;
+}
+.sca-btn:hover { background: var(--bg-3); }
+.sca-btn.open { background: var(--accent-light); border-bottom: 1px solid var(--border); }
+.sca-company-name { font-size: 15px; font-weight: 700; color: var(--text); }
+.sca-meta { display: flex; align-items: center; gap: 10px; }
+.sca-count { font-size: 12px; color: var(--text-3); white-space: nowrap; }
+.sca-arrow {
+  width: 18px; height: 18px; color: var(--text-3);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.sca-arrow.open { transform: rotate(180deg); }
+
+/* ── Schedule Matrix Table ────────────────── */
+.smt-wrap { overflow-x: auto; padding: 0; }
+.smt-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 13px;
+}
+.smt-th {
+  padding: 10px 14px; text-align: left;
+  background: var(--bg-3); color: var(--text-2);
+  font-size: 12px; font-weight: 700; letter-spacing: 0.03em;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+.smt-year-th { width: 72px; color: var(--text-3); }
+.smt-td {
+  padding: 12px 14px; vertical-align: top;
+  border-bottom: 1px solid var(--border-2);
+}
+.smt-row:last-child .smt-td { border-bottom: none; }
+.smt-year-td {
+  font-size: 14px; font-weight: 700; color: var(--accent);
+  white-space: nowrap; background: var(--bg-2);
+  vertical-align: middle;
+}
+.smt-data-td { background: var(--bg); }
+.smt-entry {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 8px 10px; margin-bottom: 6px;
+  background: var(--bg-2); border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.smt-entry:last-child { margin-bottom: 0; }
+.smt-entry:hover { border-color: var(--accent); background: var(--accent-light); }
+.smt-entry-stage { font-size: 11px; font-weight: 700; color: var(--accent); }
+.smt-entry-date { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; }
+.smt-entry-hire { font-size: 11px; color: var(--text-3); }
+.smt-empty { color: var(--text-3); font-size: 13px; }
+@media (max-width: 600px) {
+  .smt-th, .smt-td { padding: 8px 10px; }
+  .smt-table { font-size: 12px; }
+}
+

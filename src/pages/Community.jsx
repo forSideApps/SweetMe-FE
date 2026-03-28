@@ -14,6 +14,8 @@ const CATEGORIES = [
   { value: 'COMPANY_SCHEDULE', label: '채용 일정 정보' },
 ]
 
+const STAGE_COLS = ['서류', '코테', '면접']
+
 function extractCompany(post) {
   const match = post.content?.match(/🏢 기업명: (.+)/)
   return match ? match[1].trim() : post.title.split(' ')[0]
@@ -26,13 +28,77 @@ function extractDate(post) {
   const match = post.content?.match(/📅 결과 공개: (.+)/)
   return match ? match[1].trim() : ''
 }
-function extractStageClass(post) {
-  const stage = extractStage(post)
-  if (stage.includes('서류')) return 'stage-doc'
-  if (stage.includes('코딩')) return 'stage-code'
-  if (stage.includes('면접')) return 'stage-interview'
-  if (stage.includes('합격')) return 'stage-pass'
-  return 'stage-default'
+function extractYear(post) {
+  const match = post.content?.match(/📅 결과 공개: (\d+)년/)
+  if (match) return parseInt(match[1])
+  return new Date(post.createdAt).getFullYear()
+}
+function extractHireType(post) {
+  const match = post.content?.match(/📋 채용 유형: (.+)/)
+  return match ? match[1].trim() : ''
+}
+function getStageCol(stage) {
+  if (!stage) return null
+  if (stage === '서류') return '서류'
+  if (stage === '코딩테스트') return '코테'
+  return '면접'
+}
+
+function buildMatrixData(posts) {
+  const data = {}
+  for (const post of posts) {
+    const company = extractCompany(post)
+    const year = extractYear(post)
+    const stage = extractStage(post)
+    const col = getStageCol(stage)
+    if (!col) continue
+    if (!data[company]) data[company] = {}
+    if (!data[company][year]) data[company][year] = { 서류: [], 코테: [], 면접: [] }
+    data[company][year][col].push(post)
+  }
+  return data
+}
+
+function ScheduleMatrix({ yearData }) {
+  const years = Object.keys(yearData).map(Number).sort((a, b) => b - a)
+  return (
+    <div className="smt-wrap">
+      <table className="smt-table">
+        <thead>
+          <tr>
+            <th className="smt-th smt-year-th">연도</th>
+            {STAGE_COLS.map(col => (
+              <th key={col} className="smt-th">{col}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {years.map(year => (
+            <tr key={year} className="smt-row">
+              <td className="smt-td smt-year-td">{year}</td>
+              {STAGE_COLS.map(col => (
+                <td key={col} className="smt-td smt-data-td">
+                  {yearData[year][col].length > 0 ? (
+                    yearData[year][col].map(post => (
+                      <Link key={post.id} to={`/community/${post.id}`} className="smt-entry">
+                        <span className="smt-entry-stage">{extractStage(post)}</span>
+                        <span className="smt-entry-date">{extractDate(post)}</span>
+                        {extractHireType(post) && (
+                          <span className="smt-entry-hire">{extractHireType(post)}</span>
+                        )}
+                      </Link>
+                    ))
+                  ) : (
+                    <span className="smt-empty">-</span>
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
 }
 
 export default function Community() {
@@ -40,6 +106,7 @@ export default function Community() {
   const [posts, setPosts] = useState([])
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [openCompany, setOpenCompany] = useState(null)
   const debounce = useDebounce(400)
 
   const category = searchParams.get('category') || ''
@@ -47,9 +114,13 @@ export default function Community() {
   const page = parseInt(searchParams.get('page') || '0', 10)
   const [inputValue, setInputValue] = useState(keyword)
 
+  const isSchedule = category === 'COMPANY_SCHEDULE'
+
   useEffect(() => {
     setLoading(true)
-    getPosts(category, keyword, page)
+    setOpenCompany(null)
+    const size = isSchedule ? 500 : undefined
+    getPosts(category, keyword, page, size)
       .then(data => {
         setPosts(data.content || data)
         setTotalPages(data.totalPages || 1)
@@ -88,6 +159,9 @@ export default function Community() {
       return next
     }, { replace: true })
   }
+
+  const matrixData = isSchedule ? buildMatrixData(posts) : {}
+  const companies = Object.keys(matrixData).sort()
 
   return (
     <div className="container">
@@ -133,27 +207,37 @@ export default function Community() {
           <p className="text-muted">로딩 중...</p>
         ) : posts.length === 0 ? (
           <EmptyState
-            icon={category === 'COMPANY_SCHEDULE' ? '📅' : '✍️'}
+            icon={isSchedule ? '📅' : '✍️'}
             title="게시글이 없습니다"
-            description={category === 'COMPANY_SCHEDULE' ? '서류·코테·면접 발표 일정을 공유해보세요!' : '첫 번째 글을 작성해보세요!'}
+            description={isSchedule ? '서류·코테·면접 발표 일정을 공유해보세요!' : '첫 번째 글을 작성해보세요!'}
             actionLabel={category !== 'NOTICE' ? '글쓰기' : undefined}
             actionTo={category !== 'NOTICE' ? (category ? `/community/new?prefillCategory=${category}` : '/community/new') : undefined}
           />
-        ) : category === 'COMPANY_SCHEDULE' ? (
-          <div className="schedule-grid">
-            {posts.map(post => (
-              <Link key={post.id} to={`/community/${post.id}`} className="schedule-card">
-                <div className="schedule-card-header">
-                  <span className="schedule-company">{extractCompany(post)}</span>
-                  <span className={`schedule-stage-badge ${extractStageClass(post)}`}>{extractStage(post)}</span>
+        ) : isSchedule ? (
+          <div className="sca-list">
+            {companies.map(company => {
+              const yearData = matrixData[company]
+              const totalCount = Object.values(yearData)
+                .reduce((sum, yr) => sum + Object.values(yr).flat().length, 0)
+              const isOpen = openCompany === company
+              return (
+                <div key={company} className="sca-item">
+                  <button
+                    className={`sca-btn${isOpen ? ' open' : ''}`}
+                    onClick={() => setOpenCompany(isOpen ? null : company)}
+                  >
+                    <span className="sca-company-name">{company}</span>
+                    <span className="sca-meta">
+                      <span className="sca-count">{totalCount}건</span>
+                      <svg className={`sca-arrow${isOpen ? ' open' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="6 9 12 15 18 9"/>
+                      </svg>
+                    </span>
+                  </button>
+                  {isOpen && <ScheduleMatrix yearData={yearData} />}
                 </div>
-                <div className="schedule-date">{extractDate(post)}</div>
-                <div className="schedule-footer">
-                  <span>{post.authorName}</span>
-                  <span>{formatDate(post.createdAt)}</span>
-                </div>
-              </Link>
-            ))}
+              )
+            })}
           </div>
         ) : (
           <div className="post-list">
@@ -178,7 +262,9 @@ export default function Community() {
           </div>
         )}
 
-        <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
+        {!isSchedule && (
+          <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
+        )}
       </div>
     </div>
   )
