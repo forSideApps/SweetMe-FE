@@ -10,10 +10,11 @@ const ADMIN_LINKS = [
 ]
 
 const USER_LINKS = [
-  { to: '/',         label: '홈' },
-  { to: '/study',    label: '스터디' },
-  { to: '/reviews',  label: '포폴 · 이력서' },
-  { to: '/community',label: '커뮤니티' },
+  { to: '/',          label: '홈' },
+  { to: '/study',     label: '스터디' },
+  { to: '/schedule',  label: '채용 일정' },
+  { to: '/reviews',   label: '포폴 · 이력서' },
+  { to: '/community', label: '커뮤니티' },
 ]
 
 export default function Navbar() {

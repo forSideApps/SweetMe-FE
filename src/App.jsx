@@ -22,6 +22,7 @@ import ReviewDetail from './pages/ReviewDetail'
 import ReviewEdit from './pages/ReviewEdit'
 import Admin from './pages/Admin'
 import MyPage from './pages/MyPage'
+import Schedule from './pages/Schedule'
 
 function AppInner() {
   const { theme, toggleTheme } = useTheme()
@@ -42,6 +43,7 @@ function AppInner() {
           <Route path="/study/:roomId/manage/dashboard" element={<ManageDashboard />} />
           <Route path="/study/:roomId/manage" element={<ManageLogin />} />
           <Route path="/study/:roomId" element={<RoomDetail />} />
+          <Route path="/schedule" element={<Schedule />} />
           <Route path="/community" element={<Community />} />
           <Route path="/community/new" element={<CommunityCreate />} />
           <Route path="/community/:postId" element={<CommunityDetail />} />

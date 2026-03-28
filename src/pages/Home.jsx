@@ -4,9 +4,29 @@ import _Marquee from 'react-fast-marquee'
 const Marquee = _Marquee.default ?? _Marquee
 import { getThemes } from '../api/themes'
 import { getRecentRooms, getRoomsByTheme } from '../api/rooms'
+import { getSchedules } from '../api/schedule'
 import ThemeLogo from '../components/ThemeLogo'
 import StatusBadge from '../components/StatusBadge'
 import { formatDate } from '../utils/date'
+
+function getDday(announceDate) {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const target = new Date(announceDate)
+  target.setHours(0, 0, 0, 0)
+  const diff = Math.round((target - today) / 86400000)
+  if (diff === 0) return { label: 'D-Day', cls: 'dday-today' }
+  if (diff > 0) return { label: `D-${diff}`, cls: diff <= 3 ? 'dday-soon' : 'dday-future' }
+  return { label: `D+${Math.abs(diff)}`, cls: 'dday-past' }
+}
+
+function getStageBadgeCls(stage) {
+  if (stage.includes('서류')) return 'stage-doc'
+  if (stage.includes('코딩')) return 'stage-code'
+  if (stage.includes('면접')) return 'stage-interview'
+  if (stage.includes('합격')) return 'stage-pass'
+  return 'stage-default'
+}
 
 function RoomCard({ room }) {
   return (
@@ -45,12 +65,18 @@ export default function Home() {
   const [themeRooms, setThemeRooms] = useState([])
   const [themeLoading, setThemeLoading] = useState(false)
   const [showRecent, setShowRecent] = useState(true)
+  const [upcomingSchedules, setUpcomingSchedules] = useState([])
 
   useEffect(() => {
-    Promise.all([getThemes(), getRecentRooms(6)])
-      .then(([t, r]) => {
+    Promise.all([getThemes(), getRecentRooms(6), getSchedules(true)])
+      .then(([t, r, s]) => {
         setThemes(t)
         setRooms(r)
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        setUpcomingSchedules(
+          s.filter(x => new Date(x.announceDate) >= today).slice(0, 5)
+        )
       })
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -151,6 +177,36 @@ export default function Home() {
           ) : null}
         </div>
       </section>
+
+      {upcomingSchedules.length > 0 && (
+        <section className="section" style={{ paddingTop: 0 }}>
+          <div className="container">
+            <div className="section-title-row">
+              <div>
+                <div className="section-title">이번 주 채용 발표</div>
+                <div className="section-sub">곧 결과가 발표되는 채용 일정이에요.</div>
+              </div>
+              <Link to="/schedule" className="btn btn-ghost btn-sm">전체 보기 →</Link>
+            </div>
+            <div className="home-sched-list">
+              {upcomingSchedules.map(sched => {
+                const dday = getDday(sched.announceDate)
+                const d = new Date(sched.announceDate)
+                const wds = ['일', '월', '화', '수', '목', '금', '토']
+                const dateLabel = `${d.getMonth() + 1}/${d.getDate()}(${wds[d.getDay()]})`
+                return (
+                  <Link key={sched.id} to="/schedule" className="home-sched-item">
+                    <span className={`sched-dday ${dday.cls}`}>{dday.label}</span>
+                    <span className="home-sched-company">{sched.company}</span>
+                    <span className={`schedule-stage-badge ${getStageBadgeCls(sched.stage)}`}>{sched.stage}</span>
+                    <span className="home-sched-date">{dateLabel}</span>
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+      )}
     </>
   )
 }
