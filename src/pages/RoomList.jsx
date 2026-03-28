@@ -139,9 +139,6 @@ export default function RoomList() {
                 )}
                 <div className="room-footer">
                   <span>👤 {room.creatorNickname}</span>
-                  <span>👥 {room.approvedCount ?? 0}/{room.maxMembers ?? '?'}명
-                    {room.pendingCount > 0 && ` (대기 ${room.pendingCount})`}
-                  </span>
                   <span>📅 {formatDate(room.createdAt)}</span>
                 </div>
               </Link>

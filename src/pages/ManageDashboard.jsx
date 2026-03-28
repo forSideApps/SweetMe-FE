@@ -39,7 +39,6 @@ export default function ManageDashboard() {
       title: room.title || '',
       description: room.description || '',
       kakaoLink: room.kakaoLink || '',
-      requirements: room.requirements || '',
       jobRole: room.jobRole || '',
     })
     setEditOpen(true)
@@ -179,15 +178,6 @@ export default function ManageDashboard() {
                       <option key={r.value} value={r.value}>{r.label}</option>
                     ))}
                   </select>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">참가 요건</label>
-                  <input
-                    className="form-input"
-                    value={editForm.requirements}
-                    onChange={e => setEditForm(f => ({ ...f, requirements: e.target.value }))}
-                    placeholder="예: 주 2회 참여 가능한 분"
-                  />
                 </div>
               </div>
               <div className="edit-room-actions">

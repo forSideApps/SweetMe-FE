@@ -250,9 +250,6 @@ export default function MyPage() {
                       >삭제</button>
                     </div>
                   </div>
-                  <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 6 }}>
-                    승인 {r.approvedCount}/{r.maxMembers}명 · 대기 {r.pendingCount}명
-                  </div>
                 </div>
               ))}
             </div>

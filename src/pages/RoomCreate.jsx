@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { getThemes } from '../api/themes'
 import { createRoom } from '../api/rooms'
@@ -20,6 +20,7 @@ export default function RoomCreate() {
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
   const [showEventPopup, setShowEventPopup] = useState(true)
+  const descRef = useRef(null)
 
   const [form, setForm] = useState({
     title: '',
@@ -27,8 +28,6 @@ export default function RoomCreate() {
     creatorNickname: '',
     password: '',
     kakaoLink: '',
-    schedule: '',
-    requirements: '',
     jobRole: '',
   })
 
@@ -45,6 +44,12 @@ export default function RoomCreate() {
       if (data.jobRole) setForm(f => ({ ...f, jobRole: data.jobRole }))
     }).catch(() => {})
   }, [initialThemeId])
+
+  function handleDescChange(e) {
+    setForm(f => ({ ...f, description: e.target.value }))
+    e.target.style.height = 'auto'
+    e.target.style.height = e.target.scrollHeight + 'px'
+  }
 
   function validate() {
     const errs = {}
@@ -66,13 +71,10 @@ export default function RoomCreate() {
       const body = {
         title: form.title,
         description: form.description,
-        maxMembers: 99,
         creatorNickname: form.creatorNickname,
         password: form.password,
         jobRole: form.jobRole || null,
         kakaoLink: form.kakaoLink,
-        schedule: form.schedule || null,
-        requirements: form.requirements || null,
       }
       const result = await createRoom(selectedTheme.id, body)
       navigate(`/study/${result.id}`)
@@ -174,11 +176,13 @@ export default function RoomCreate() {
               <div className="form-group">
                 <label className="form-label">스터디 소개</label>
                 <textarea
+                  ref={descRef}
                   className="form-textarea"
                   value={form.description}
-                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                  onChange={handleDescChange}
                   placeholder="스터디에 대한 소개를 작성해주세요"
-                  rows={4}
+                  rows={1}
+                  style={{ resize: 'none', overflow: 'hidden', minHeight: '42px' }}
                 />
               </div>
 
@@ -244,32 +248,6 @@ export default function RoomCreate() {
                   </div>
                 </>
               )}
-            </div>
-          </div>
-
-          <div className="form-section">
-            <div className="form-section-label">추가 정보 (선택)</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div className="form-group">
-                <label className="form-label">일정</label>
-                <input
-                  className="form-input"
-                  value={form.schedule}
-                  onChange={e => setForm(f => ({ ...f, schedule: e.target.value }))}
-                  placeholder="예: 매주 토요일 오후 2시"
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">참가 요건</label>
-                <textarea
-                  className="form-textarea"
-                  value={form.requirements}
-                  onChange={e => setForm(f => ({ ...f, requirements: e.target.value }))}
-                  placeholder="참가 요건이나 우대 사항을 적어주세요"
-                  rows={3}
-                />
-              </div>
             </div>
           </div>
 

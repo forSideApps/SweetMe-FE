@@ -76,13 +76,6 @@ export default function RoomDetail() {
             <div className="card-body">{room.description}</div>
           </div>
 
-          {room.requirements && (
-            <div className="card">
-              <div className="card-title">참가 요건</div>
-              <div className="card-body">{room.requirements}</div>
-            </div>
-          )}
-
           {room.status === 'OPEN' ? (
             <div className="card">
               <div className="card-title">스터디 참여하기</div>
@@ -126,12 +119,6 @@ export default function RoomDetail() {
                 <span className="info-key">상태</span>
                 <span className="info-val">{room.status === 'OPEN' ? '모집중' : '마감'}</span>
               </div>
-              {room.schedule && (
-                <div className="info-row">
-                  <span className="info-key">일정</span>
-                  <span className="info-val">{room.schedule}</span>
-                </div>
-              )}
               <div className="info-row">
                 <span className="info-key">개설일</span>
                 <span className="info-val">{formatDate(room.createdAt)}</span>
