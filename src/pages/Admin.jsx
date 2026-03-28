@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { getThemes } from '../api/themes'
 import { getReviews, deleteReview, markReviewDone, markReviewPending } from '../api/review'
-import { getPosts, createNotice, deletePost as deleteCommunityPost } from '../api/community'
+import { deletePost as deleteCommunityPost } from '../api/community'
 import { getMe } from '../api/auth'
 import client from '../api/client'
 import ThemeLogo from '../components/ThemeLogo'
@@ -11,7 +11,6 @@ const TABS = [
   { key: 'visitors', path: '/admin/visitors', label: '방문자 통계' },
   { key: 'company', path: '/admin/company', label: '회사 관리' },
   { key: 'review', path: '/admin/review', label: '포폴 · 이력서 검토' },
-  { key: 'notice', path: '/admin/notice', label: '공지사항 관리' },
 ]
 
 export default function Admin() {
@@ -49,7 +48,6 @@ export default function Admin() {
       {activeTab === 'visitors' && <VisitorTab onUnauthorized={() => navigate('/login')} />}
       {activeTab === 'company'  && <CompanyTab setMsg={setMsg} />}
       {activeTab === 'review'   && <ReviewTab setMsg={setMsg} />}
-      {activeTab === 'notice'   && <NoticeTab setMsg={setMsg} />}
     </div>
   )
 }
@@ -508,113 +506,3 @@ function ReviewTab({ setMsg }) {
   )
 }
 
-/* ─── 공지사항 관리 탭 ─── */
-function NoticeTab({ setMsg }) {
-  const [notices, setNotices] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [form, setForm] = useState({ title: '', content: '' })
-  const [submitting, setSubmitting] = useState(false)
-
-  useEffect(() => { load() }, [])
-
-  function load() {
-    setLoading(true)
-    getPosts('NOTICE', '', 0)
-      .then(data => setNotices(data.content || data))
-      .catch(() => setNotices([]))
-      .finally(() => setLoading(false))
-  }
-
-  async function handleCreate(e) {
-    e.preventDefault()
-    if (!form.title.trim() || !form.content.trim()) {
-      setMsg({ type: 'error', text: '제목과 내용을 입력해주세요.' })
-      return
-    }
-    setSubmitting(true)
-    try {
-      await createNotice({ title: form.title.trim(), content: form.content.trim(), authorName: '운영자' })
-      setForm({ title: '', content: '' })
-      setMsg({ type: 'success', text: '공지사항이 등록되었습니다.' })
-      load()
-    } catch {
-      setMsg({ type: 'error', text: '등록 실패' })
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  async function handleDelete(id) {
-    if (!window.confirm('공지사항을 삭제하시겠습니까?')) return
-    try {
-      await deleteCommunityPost(id)
-      setNotices(prev => prev.filter(n => n.id !== id))
-      setMsg({ type: 'success', text: '삭제되었습니다.' })
-    } catch {
-      setMsg({ type: 'error', text: '삭제 실패' })
-    }
-  }
-
-  return (
-    <>
-      <div className="form-card" style={{ marginBottom: 32 }}>
-        <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 20 }}>공지사항 등록</div>
-        <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div className="form-group">
-            <label className="form-label req">제목</label>
-            <input
-              className="form-input"
-              placeholder="공지사항 제목"
-              value={form.title}
-              onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label req">내용</label>
-            <textarea
-              className="form-textarea"
-              placeholder="공지 내용을 입력해주세요"
-              value={form.content}
-              onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
-              rows={5}
-            />
-          </div>
-          <div className="form-actions">
-            <button type="submit" className="btn btn-accent" disabled={submitting}>
-              {submitting ? '등록 중...' : '+ 공지 등록'}
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>
-        등록된 공지사항 ({notices.length}건)
-      </div>
-      {loading ? (
-        <p className="text-muted">로딩 중...</p>
-      ) : notices.length === 0 ? (
-        <p className="text-muted">등록된 공지사항이 없습니다.</p>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {notices.map(n => (
-            <div key={n.id} style={{
-              background: 'var(--bg)', border: '1.5px solid var(--border)',
-              borderRadius: 'var(--radius)', padding: '14px 18px',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12
-            }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.title}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>{n.createdAt?.slice(0, 10)}</div>
-              </div>
-              <button
-                className="btn btn-sm"
-                style={{ fontSize: 12, padding: '3px 10px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 6, cursor: 'pointer', flexShrink: 0 }}
-                onClick={() => handleDelete(n.id)}
-              >삭제</button>
-            </div>
-          ))}
-        </div>
-      )}
-    </>
-  )
-}

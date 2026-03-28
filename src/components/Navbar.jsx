@@ -6,7 +6,6 @@ const ADMIN_LINKS = [
   { to: '/admin/visitors', label: '방문자 통계' },
   { to: '/admin/company',  label: '회사 관리' },
   { to: '/admin/review',   label: '포폴 · 이력서 검토' },
-  { to: '/admin/notice',  label: '공지사항 관리' },
 ]
 
 const USER_LINKS = [

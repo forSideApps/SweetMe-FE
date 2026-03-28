@@ -16,6 +16,7 @@ import Register from './pages/Register'
 import Community from './pages/Community'
 import CommunityCreate from './pages/CommunityCreate'
 import CommunityDetail from './pages/CommunityDetail'
+import CommunityEdit from './pages/CommunityEdit'
 import Review from './pages/Review'
 import ReviewCreate from './pages/ReviewCreate'
 import ReviewDetail from './pages/ReviewDetail'
@@ -44,6 +45,7 @@ function AppInner() {
           <Route path="/study/:roomId" element={<RoomDetail />} />
           <Route path="/community" element={<Community />} />
           <Route path="/community/new" element={<CommunityCreate />} />
+          <Route path="/community/:postId/edit" element={<CommunityEdit />} />
           <Route path="/community/:postId" element={<CommunityDetail />} />
           <Route path="/reviews" element={<Review />} />
           <Route path="/reviews/new" element={<ReviewCreate />} />
@@ -57,7 +59,7 @@ function AppInner() {
           <Route path="/admin/visitors" element={<Admin />} />
           <Route path="/admin/company" element={<Admin />} />
           <Route path="/admin/review" element={<Admin />} />
-          <Route path="/admin/notice" element={<Admin />} />
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

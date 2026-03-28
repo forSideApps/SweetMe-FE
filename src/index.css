@@ -1192,6 +1192,110 @@ footer {
 .schedule-date { font-size: 14px; color: var(--accent); font-weight: 500; margin-bottom: 8px; }
 .schedule-footer { display: flex; gap: 12px; font-size: 12px; color: var(--text-3); }
 
+/* ── Schedule DateTime Card ──────────────── */
+.sdt-card {
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  overflow: hidden; background: var(--bg-2);
+  display: flex; align-items: stretch;
+  transition: border-color 0.15s;
+}
+.sdt-card:focus-within { border-color: var(--accent); }
+.sdt-card.is-error { border-color: #f87171; }
+.sdt-section { padding: 16px 18px; flex: 1; display: flex; flex-direction: column; align-items: center; }
+.sdt-hdivider { width: 1px; background: var(--border); flex-shrink: 0; }
+@media (max-width: 560px) {
+  .sdt-card { flex-direction: column; }
+  .sdt-hdivider { width: 100%; height: 1px; }
+}
+.sdt-quick-row {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.sdt-quick-btn {
+  padding: 5px 12px; border-radius: 20px;
+  border: 1.5px solid var(--border); background: var(--bg);
+  color: var(--text-2); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.sdt-quick-btn:hover { border-color: var(--accent); color: var(--accent); }
+.sdt-quick-btn.active {
+  background: var(--accent); border-color: var(--accent);
+  color: var(--accent-fg);
+}
+.sdt-seg-row {
+  display: flex; align-items: flex-end; gap: 2px;
+}
+.sdt-time-ctrl {
+  display: flex; align-items: center; gap: 10px; margin-top: 4px;
+}
+.sdt-time-display {
+  font-size: 22px; font-weight: 700; color: var(--text);
+  min-width: 64px; text-align: center; letter-spacing: 0.03em;
+}
+
+/* ── Toss-style DateTime Picker ──────────── */
+.toss-dt-wrap {
+  display: flex; align-items: stretch;
+  background: var(--bg-2); border: 1.5px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  transition: border-color 0.15s;
+}
+.toss-dt-wrap:focus-within { border-color: var(--accent); }
+.toss-dt-wrap.is-error { border-color: #f87171; }
+.toss-dt-date {
+  display: flex; align-items: flex-end; gap: 2px;
+  padding: 18px 20px 14px;
+  flex: 1;
+}
+.toss-dt-seg {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.toss-dt-input {
+  border: none; border-bottom: 2px solid var(--border);
+  outline: none; background: transparent;
+  color: var(--text); font-size: 22px; font-weight: 700;
+  text-align: center; padding: 0 2px 4px;
+  transition: border-color 0.15s;
+  -moz-appearance: textfield;
+}
+.toss-dt-input:focus { border-bottom-color: var(--accent); }
+.toss-dt-input::placeholder { color: var(--border); font-weight: 400; }
+.toss-dt-year { width: 72px; }
+.toss-dt-md   { width: 40px; }
+.toss-dt-unit {
+  font-size: 11px; font-weight: 600;
+  color: var(--text-3); letter-spacing: 0.02em;
+}
+.toss-dt-dot {
+  font-size: 20px; font-weight: 700; color: var(--text-3);
+  padding-bottom: 20px; flex-shrink: 0;
+}
+.toss-dt-vdivider {
+  width: 1px; background: var(--border);
+  margin: 12px 0; flex-shrink: 0;
+}
+.toss-dt-time {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 4px;
+  padding: 14px 20px;
+}
+.toss-dt-time-input {
+  border: none; border-bottom: 2px solid var(--border);
+  outline: none; background: transparent;
+  color: var(--text); font-size: 18px; font-weight: 700;
+  text-align: center; padding: 0 2px 4px;
+  transition: border-color 0.15s;
+  width: 80px;
+}
+.toss-dt-time-input:focus { border-bottom-color: var(--accent); }
+.toss-dt-time-input::-webkit-calendar-picker-indicator {
+  display: none;
+}
+@media (max-width: 480px) {
+  .toss-dt-wrap { flex-direction: column; }
+  .toss-dt-vdivider { width: 100%; height: 1px; margin: 0 12px; }
+  .toss-dt-time { flex-direction: row; gap: 10px; padding: 12px 20px; }
+}
+
 /* ── Schedule Form ───────────────────────── */
 .schedule-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .schedule-form-grid .form-group { display: flex; flex-direction: column; gap: 6px; }
@@ -1224,7 +1328,7 @@ footer {
 .smt-wrap { overflow-x: auto; padding: 0; }
 .smt-table {
   width: 100%; border-collapse: collapse;
-  font-size: 13px;
+  font-size: 13px; table-layout: fixed;
 }
 .smt-th {
   padding: 10px 14px; text-align: left;
@@ -1256,8 +1360,24 @@ footer {
 .smt-entry:last-child { margin-bottom: 0; }
 .smt-entry:hover { border-color: var(--accent); background: var(--accent-light); }
 .smt-entry-stage { font-size: 11px; font-weight: 700; color: var(--accent); }
-.smt-entry-date { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; }
-.smt-entry-hire { font-size: 11px; color: var(--text-3); }
+.smt-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
+.smt-chip {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 3px 9px; border-radius: 20px;
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+.smt-chip-date {
+  background: var(--accent-light);
+  color: var(--accent);
+  border: 1px solid var(--accent-mid);
+}
+.smt-chip-time {
+  background: rgba(52, 211, 153, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.25);
+}
+.smt-entry-hire { font-size: 11px; color: var(--text-3); margin-top: 2px; }
 .smt-empty { color: var(--text-3); font-size: 13px; }
 @media (max-width: 600px) {
   .smt-th, .smt-td { padding: 8px 10px; }

@@ -20,7 +20,7 @@ const CATEGORY_LABELS = {
   SUGGESTION: '건의 기능 요청',
   FREE: '자유게시판',
   NOTICE: '공지사항',
-  COMPANY_SCHEDULE: '채용 일정 정보',
+  COMPANY_SCHEDULE: '채용 발표일',
 }
 
 export default function CommunityDetail() {
@@ -35,6 +35,8 @@ export default function CommunityDetail() {
   const [comment, setComment] = useState({ authorName: '', content: '' })
   const [commentErrors, setCommentErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
+  const [adminComment, setAdminComment] = useState('')
+  const [adminSubmitting, setAdminSubmitting] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [editContent, setEditContent] = useState('')
   const [editError, setEditError] = useState('')
@@ -94,6 +96,23 @@ export default function CommunityDetail() {
     }
   }
 
+  async function handleAdminCommentSubmit(e) {
+    e.preventDefault()
+    if (!adminComment.trim()) return
+    setAdminSubmitting(true)
+    try {
+      await addComment(postId, { authorName: 'admin', content: adminComment })
+      setAdminComment('')
+      setAlert({ type: 'success', message: '운영자 댓글이 작성되었습니다.' })
+      fetchPost()
+    } catch (err) {
+      const msg = err?.response?.data?.message || '댓글 작성에 실패했습니다.'
+      setAlert({ type: 'error', message: msg })
+    } finally {
+      setAdminSubmitting(false)
+    }
+  }
+
   if (loading) return <div className="container-sm"><p className="text-muted" style={{ padding: '40px 0' }}>로딩 중...</p></div>
   if (!post) return <div className="container-sm"><p className="text-muted" style={{ padding: '40px 0' }}>게시글을 찾을 수 없습니다.</p></div>
 
@@ -127,22 +146,30 @@ export default function CommunityDetail() {
                 </span>
                 <div className="post-detail-title">{post.title}</div>
                 <div className="post-detail-meta">
-                  <span>{post.authorName}</span>
+                  <span>{post.memberUsername === 'admin' && <span style={{ marginRight: 3 }}>👑</span>}{post.authorName}</span>
                   {post.viewCount != null && <span>조회 {post.viewCount}</span>}
                   <span>{formatDateTime(post.createdAt)}</span>
                 </div>
               </div>
-              {(isAdmin || (user && post.memberUsername && post.memberUsername === user.username)) && (
-                <button
-                  className="btn btn-sm"
-                  style={{ background: '#ef4444', color: '#fff', flexShrink: 0 }}
-                  onClick={async () => {
-                    if (!confirm('이 게시글을 삭제하시겠습니까?')) return
-                    await deletePost(postId)
-                    navigate('/community', { replace: true })
-                  }}
-                >삭제</button>
-              )}
+              <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                {isAdmin && post.category === 'COMPANY_SCHEDULE' && (
+                  <button
+                    className="btn btn-sm btn-ghost"
+                    onClick={() => navigate(`/community/${postId}/edit`)}
+                  >수정</button>
+                )}
+                {(isAdmin || (user && post.memberUsername && post.memberUsername === user.username)) && (
+                  <button
+                    className="btn btn-sm"
+                    style={{ background: '#ef4444', color: '#fff' }}
+                    onClick={async () => {
+                      if (!confirm('이 게시글을 삭제하시겠습니까?')) return
+                      await deletePost(postId)
+                      navigate('/community', { replace: true })
+                    }}
+                  >삭제</button>
+                )}
+              </div>
             </div>
           </div>
           <div className="post-detail-body" style={{ whiteSpace: 'pre-wrap' }}>{renderWithLinks(post.content)}</div>
@@ -219,7 +246,27 @@ export default function CommunityDetail() {
             </div>
           )}
 
-          <div className="comment-form">
+          {isAdmin && (
+            <div style={{ marginBottom: 20, padding: '16px', background: 'var(--bg-2)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>👑 운영자 댓글 남기기</div>
+              <form onSubmit={handleAdminCommentSubmit}>
+                <textarea
+                  className="form-textarea"
+                  value={adminComment}
+                  onChange={e => setAdminComment(e.target.value)}
+                  onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); handleAdminCommentSubmit(e) } }}
+                  placeholder="운영자로 댓글을 남겨보세요"
+                  rows={3}
+                  style={{ minHeight: 80, marginBottom: 8 }}
+                />
+                <button type="submit" className="btn btn-accent btn-sm" disabled={adminSubmitting}>
+                  {adminSubmitting ? '작성 중...' : '운영자 댓글 작성'}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {!isAdmin && <div className="comment-form">
             <form onSubmit={handleCommentSubmit}>
               <div className="comment-inputs">
                 {user ? (
@@ -256,7 +303,7 @@ export default function CommunityDetail() {
                 </button>
               </div>
             </form>
-          </div>
+          </div>}
         </div>
       </div>
     </div>

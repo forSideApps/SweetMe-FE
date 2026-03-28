@@ -22,6 +22,10 @@ export function incrementPostView(postId) {
   return client.post(`/community/${postId}/view`)
 }
 
+export function updatePost(id, data) {
+  return client.put(`/community/${id}`, data).then(r => r.data)
+}
+
 export function deletePost(id) {
   return client.delete(`/community/${id}`)
 }

@@ -133,7 +133,7 @@ export default function ReviewDetail() {
 
   async function handleDeleteSubmit(e) {
     e.preventDefault()
-    if (!deleteIsAdmin && !deleteIsMine && !deletePw.trim()) { setDeleteError('비밀번호를 입력해주세요.'); return }
+    if (!isAdmin && !deleteIsAdmin && !deleteIsMine && !deletePw.trim()) { setDeleteError('비밀번호를 입력해주세요.'); return }
     try {
       await deleteReviewComment(id, deleteId, deletePw || undefined)
       setDeleteId(null)
@@ -284,6 +284,13 @@ export default function ReviewDetail() {
                   style={{ color: 'var(--accent)', fontSize: 14, wordBreak: 'break-all' }}>
                   {revealedLink}
                 </a>
+              ) : isAdmin ? (
+                <button className="btn btn-accent btn-sm" disabled={linkLoading} onClick={() => {
+                  setLinkLoading(true)
+                  getReviewLink(id).then(d => setRevealedLink(d.link)).catch(() => setLinkPwError('링크를 불러오지 못했습니다.')).finally(() => setLinkLoading(false))
+                }}>
+                  {linkLoading ? '확인 중...' : '🔓 링크 확인 (관리자)'}
+                </button>
               ) : (
                 <>
                   <div style={{

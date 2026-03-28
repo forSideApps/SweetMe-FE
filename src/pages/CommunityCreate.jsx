@@ -1,19 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { createPost } from '../api/community'
 import { getMe } from '../api/auth'
+import { getThemes } from '../api/themes'
 import Alert from '../components/Alert'
 import LockedField from '../components/LockedField'
+import ThemeLogo from '../components/ThemeLogo'
 
 const CATEGORIES = [
   { value: 'FREE', label: '자유게시판' },
   { value: 'SUGGESTION', label: '건의 기능 요청' },
-  { value: 'COMPANY_SCHEDULE', label: '채용 일정 정보' },
+  { value: 'COMPANY_SCHEDULE', label: '채용 발표일' },
 ]
 
 const HIRE_TYPES = ['신입공채', '경력공채', '인턴']
-const STAGES = ['서류', '코딩테스트', '1차 면접', '2차 면접', '최종 면접', '처우협의', '최종합격', '불합격']
-
+const STAGES = ['서류', '코딩테스트', '1차 면접', '최종 면접']
 const WEEK_DAYS = ['일', '월', '화', '수', '목', '금', '토']
 
 function buildScheduleTitle(schedule) {
@@ -47,6 +48,11 @@ export default function CommunityCreate() {
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
   const [user, setUser] = useState(null)
+  const [themes, setThemes] = useState([])
+  const [selectedTheme, setSelectedTheme] = useState(null) // null | theme object | { custom: true }
+  const [customCompany, setCustomCompany] = useState('')
+  const monthRef = useRef(null)
+  const dayRef = useRef(null)
 
   const prefillTitle = searchParams.get('prefillTitle') || ''
   const prefillContent = searchParams.get('prefillContent') || ''
@@ -59,12 +65,13 @@ export default function CommunityCreate() {
     authorName: '',
   })
 
+  const _now = new Date()
   const [schedule, setSchedule] = useState({
     company: '',
     hireType: HIRE_TYPES[0],
     stage: STAGES[0],
-    date: '',
-    time: '',
+    date: _now.toISOString().slice(0, 10),
+    time: `${String(_now.getHours()).padStart(2, '0')}:00`,
     memo: '',
   })
 
@@ -73,9 +80,28 @@ export default function CommunityCreate() {
       setUser(data)
       setForm(f => ({ ...f, authorName: data.username }))
     }).catch(() => {})
+    getThemes().then(setThemes).catch(() => {})
   }, [])
 
   const isSchedule = form.category === 'COMPANY_SCHEDULE'
+  const companyChosen = isSchedule && schedule.company.trim()
+
+  function selectTheme(theme) {
+    setSelectedTheme(theme)
+    setSchedule(s => ({ ...s, company: theme.name }))
+    setErrors(e => ({ ...e, company: undefined }))
+  }
+
+  function selectCustom() {
+    setSelectedTheme({ custom: true })
+    setSchedule(s => ({ ...s, company: '' }))
+  }
+
+  function resetCompany() {
+    setSelectedTheme(null)
+    setCustomCompany('')
+    setSchedule(s => ({ ...s, company: '' }))
+  }
 
   function validate() {
     const errs = {}
@@ -111,6 +137,102 @@ export default function CommunityCreate() {
     }
   }
 
+  // ── 기업 선택 화면 (채용 발표일 + 기업 미선택) ──
+  if (isSchedule && !companyChosen && !selectedTheme?.custom) {
+    return (
+      <div className="container-sm">
+        <div className="page-header">
+          <div className="breadcrumb">
+            <Link to="/">홈</Link>
+            <span>/</span>
+            <Link to="/community">커뮤니티</Link>
+            <span>/</span>
+            <span>글쓰기</span>
+          </div>
+          <h1>기업 선택</h1>
+          <p>어떤 기업의 채용 발표일을 공유하시겠어요?</p>
+        </div>
+
+        <div className="section-sm">
+          <div className="room-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            {themes.map(t => (
+              <button
+                key={t.id}
+                className="room-card"
+                style={{ textAlign: 'left', border: '1.5px solid var(--border)', cursor: 'pointer', background: 'var(--bg)' }}
+                onClick={() => selectTheme(t)}
+              >
+                <div style={{ marginBottom: 8 }}>
+                  <ThemeLogo logoUrl={t.logoUrl} slug={t.slug} size={32} />
+                </div>
+                <div className="room-title">{t.name}</div>
+              </button>
+            ))}
+            <button
+              className="room-card"
+              style={{ textAlign: 'left', border: '1.5px dashed var(--border)', cursor: 'pointer', background: 'var(--bg)' }}
+              onClick={selectCustom}
+            >
+              <div style={{ marginBottom: 8, fontSize: 28 }}>✏️</div>
+              <div className="room-title">직접 입력</div>
+              <div className="room-desc">목록에 없는 기업</div>
+            </button>
+          </div>
+          <div style={{ marginTop: 16 }}>
+            <button
+              className="btn btn-ghost btn-sm"
+              type="button"
+              onClick={() => setForm(f => ({ ...f, category: 'FREE' }))}
+            >← 카테고리 변경</button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── 직접 입력 화면 ──
+  if (isSchedule && selectedTheme?.custom && !schedule.company.trim()) {
+    return (
+      <div className="container-sm">
+        <div className="page-header">
+          <div className="breadcrumb">
+            <Link to="/">홈</Link><span>/</span>
+            <Link to="/community">커뮤니티</Link><span>/</span>
+            <span>글쓰기</span>
+          </div>
+          <h1>기업명 입력</h1>
+        </div>
+        <div className="section-sm">
+          <div className="form-card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="form-group">
+              <label className="form-label req">기업명</label>
+              <input
+                className={`form-input${errors.company ? ' is-error' : ''}`}
+                value={customCompany}
+                onChange={e => setCustomCompany(e.target.value)}
+                placeholder="예: 현대자동차"
+                autoFocus
+              />
+              {errors.company && <span className="form-err">{errors.company}</span>}
+            </div>
+            <div className="form-actions">
+              <button
+                className="btn btn-accent"
+                type="button"
+                onClick={() => {
+                  if (!customCompany.trim()) { setErrors(e => ({ ...e, company: '기업명을 입력해주세요.' })); return }
+                  setSchedule(s => ({ ...s, company: customCompany.trim() }))
+                }}
+              >다음</button>
+              <button className="btn btn-ghost" type="button" onClick={resetCompany}>← 기업 선택으로</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── 폼 화면 ──
   return (
     <div className="container-sm">
       <div className="page-header">
@@ -121,7 +243,20 @@ export default function CommunityCreate() {
           <span>/</span>
           <span>글쓰기</span>
         </div>
-        <h1>글쓰기</h1>
+        {isSchedule && (
+          <div className="page-company">
+            {selectedTheme && !selectedTheme.custom
+              ? <ThemeLogo logoUrl={selectedTheme.logoUrl} slug={selectedTheme.slug} size={48} />
+              : <span style={{ fontSize: 40 }}>✏️</span>
+            }
+          </div>
+        )}
+        <h1>{isSchedule ? `${schedule.company} 채용 발표일 등록` : '글쓰기'}</h1>
+        {isSchedule && (
+          <button className="btn btn-ghost btn-sm" type="button" onClick={resetCompany} style={{ marginTop: 8 }}>
+            기업 변경
+          </button>
+        )}
       </div>
 
       {alert && (
@@ -138,9 +273,12 @@ export default function CommunityCreate() {
               <select
                 className={`form-select${errors.category ? ' is-error' : ''}`}
                 value={form.category}
-                onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                onChange={e => {
+                  setForm(f => ({ ...f, category: e.target.value }))
+                  resetCompany()
+                }}
               >
-                {CATEGORIES.map(c => (
+                {CATEGORIES.filter(c => c.value !== 'COMPANY_SCHEDULE' || (user?.role === 'ADMIN')).map(c => (
                   <option key={c.value} value={c.value}>{c.label}</option>
                 ))}
               </select>
@@ -149,17 +287,6 @@ export default function CommunityCreate() {
 
             {isSchedule ? (
               <div className="schedule-form-grid">
-                <div className="form-group">
-                  <label className="form-label req">기업명</label>
-                  <input
-                    className={`form-input${errors.company ? ' is-error' : ''}`}
-                    value={schedule.company}
-                    onChange={e => setSchedule(s => ({ ...s, company: e.target.value }))}
-                    placeholder="예: 삼성전자"
-                  />
-                  {errors.company && <span className="form-err">{errors.company}</span>}
-                </div>
-
                 <div className="form-group">
                   <label className="form-label req">채용 유형</label>
                   <select
@@ -182,25 +309,106 @@ export default function CommunityCreate() {
                   </select>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label req">결과 공개 날짜</label>
-                  <input
-                    type="date"
-                    className={`form-input${errors.date ? ' is-error' : ''}`}
-                    value={schedule.date}
-                    onChange={e => setSchedule(s => ({ ...s, date: e.target.value }))}
-                  />
-                  {errors.date && <span className="form-err">{errors.date}</span>}
-                </div>
+                <div className="form-group full-width">
+                  <label className="form-label req">발표 일시</label>
+                  <div className={`sdt-card${errors.date ? ' is-error' : ''}`}>
 
-                <div className="form-group">
-                  <label className="form-label">결과 공개 시간</label>
-                  <input
-                    type="time"
-                    className="form-input"
-                    value={schedule.time}
-                    onChange={e => setSchedule(s => ({ ...s, time: e.target.value }))}
-                  />
+                    {/* ── 날짜 영역 ── */}
+                    <div className="sdt-section">
+                      <div className="sdt-seg-row" style={{ justifyContent: 'center' }}>
+                        <div className="toss-dt-seg">
+                          <input
+                            type="text" inputMode="numeric"
+                            className="toss-dt-input toss-dt-year"
+                            placeholder="2026" maxLength={4}
+                            value={schedule.date ? schedule.date.split('-')[0] : ''}
+                            onChange={e => {
+                              const val = e.target.value.replace(/\D/g, '').slice(0, 4)
+                              const parts = (schedule.date || '--').split('-')
+                              parts[0] = val
+                              setSchedule(s => ({ ...s, date: parts.join('-') }))
+                              if (val.length === 4) monthRef.current?.focus()
+                            }}
+                          />
+                          <span className="toss-dt-unit">년</span>
+                        </div>
+                        <span className="toss-dt-dot">.</span>
+                        <div className="toss-dt-seg">
+                          <input
+                            ref={monthRef}
+                            type="text" inputMode="numeric"
+                            className="toss-dt-input toss-dt-md"
+                            placeholder="01" maxLength={2}
+                            value={schedule.date ? schedule.date.split('-')[1] : ''}
+                            onChange={e => {
+                              const val = e.target.value.replace(/\D/g, '').slice(0, 2)
+                              const parts = (schedule.date || '--').split('-')
+                              parts[1] = val
+                              setSchedule(s => ({ ...s, date: parts.join('-') }))
+                              if (val.length === 2) dayRef.current?.focus()
+                            }}
+                          />
+                          <span className="toss-dt-unit">월</span>
+                        </div>
+                        <span className="toss-dt-dot">.</span>
+                        <div className="toss-dt-seg">
+                          <input
+                            ref={dayRef}
+                            type="text" inputMode="numeric"
+                            className="toss-dt-input toss-dt-md"
+                            placeholder="01" maxLength={2}
+                            value={schedule.date ? schedule.date.split('-')[2] : ''}
+                            onChange={e => {
+                              const val = e.target.value.replace(/\D/g, '').slice(0, 2)
+                              const parts = (schedule.date || '--').split('-')
+                              parts[2] = val
+                              setSchedule(s => ({ ...s, date: parts.join('-') }))
+                            }}
+                          />
+                          <span className="toss-dt-unit">일</span>
+                        </div>
+                      </div>
+                      <div className="sdt-quick-row" style={{ marginTop: 12, marginBottom: 0, justifyContent: 'center' }}>
+                        <button type="button" className="sdt-quick-btn" onClick={() => {
+                          const d = new Date(schedule.date)
+                          d.setDate(d.getDate() - 1)
+                          setSchedule(s => ({ ...s, date: d.toISOString().slice(0, 10) }))
+                        }}>−1일</button>
+                        <button type="button" className="sdt-quick-btn" onClick={() => {
+                          const d = new Date(schedule.date)
+                          d.setDate(d.getDate() + 1)
+                          setSchedule(s => ({ ...s, date: d.toISOString().slice(0, 10) }))
+                        }}>+1일</button>
+                      </div>
+                    </div>
+
+                    <div className="sdt-hdivider" />
+
+                    {/* ── 시간 영역 ── */}
+                    <div className="sdt-section">
+                      {(() => {
+                        const hour = schedule.time ? parseInt(schedule.time.split(':')[0], 10) : null
+                        function shiftHour(delta) {
+                          const cur = hour ?? new Date().getHours()
+                          const next = Math.min(23, Math.max(0, cur + delta))
+                          setSchedule(s => ({ ...s, time: `${String(next).padStart(2, '0')}:00` }))
+                        }
+                        return (
+                          <>
+                            <div className="sdt-time-display" style={{ marginBottom: 12, textAlign: 'center' }}>
+                              {hour !== null ? `${String(hour).padStart(2, '0')}:00` : '--:--'}
+                            </div>
+                            <div className="sdt-quick-row" style={{ marginBottom: 0, justifyContent: 'center' }}>
+                              <button type="button" className="sdt-quick-btn" onClick={() => shiftHour(-1)}>−1시간</button>
+                              <button type="button" className="sdt-quick-btn" onClick={() => shiftHour(1)}>+1시간</button>
+                            </div>
+                          </>
+                        )
+                      })()}
+                    </div>
+
+                  </div>
+                  {errors.date && <span className="form-err">{errors.date}</span>}
                 </div>
 
                 <div className="form-group full-width">
@@ -245,7 +453,9 @@ export default function CommunityCreate() {
             <div className="form-group">
               <label className="form-label req">작성자명</label>
               {user ? (
-                <LockedField value={user.username} />
+                user.role === 'ADMIN'
+                  ? <LockedField value="👑 운영자" />
+                  : <LockedField value={user.username} />
               ) : (
                 <>
                   <input

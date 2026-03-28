@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { getPosts } from '../api/community'
+import { getMe } from '../api/auth'
 import { formatDate } from '../utils/date'
 import Pagination from '../components/Pagination'
 import EmptyState from '../components/EmptyState'
@@ -11,7 +12,7 @@ const CATEGORIES = [
   { value: 'NOTICE', label: '공지사항' },
   { value: 'FREE', label: '자유게시판' },
   { value: 'SUGGESTION', label: '건의 기능 요청' },
-  { value: 'COMPANY_SCHEDULE', label: '채용 일정 정보' },
+  { value: 'COMPANY_SCHEDULE', label: '채용 발표일' },
 ]
 
 const STAGE_COLS = ['서류', '코테', '면접']
@@ -42,6 +43,18 @@ function getStageCol(stage) {
   if (stage === '서류') return '서류'
   if (stage === '코딩테스트') return '코테'
   return '면접'
+}
+
+function parseScheduleDate(dateStr) {
+  // "2026년 5월 4일 (월) 15:00"
+  if (!dateStr) return { date: null, time: null }
+  const m = dateStr.match(/(\d+)년\s*(\d+)월\s*(\d+)일\s*\(([^)]+)\)(?:\s*(\d{1,2}:\d{2}))?/)
+  if (!m) return { date: dateStr, time: null }
+  const [, year, month, day, weekday, time] = m
+  return {
+    date: `${year}.${String(month).padStart(2, '0')}.${String(day).padStart(2, '0')} (${weekday})`,
+    time: time || null,
+  }
 }
 
 function buildMatrixData(posts) {
@@ -79,15 +92,20 @@ function ScheduleMatrix({ yearData }) {
               {STAGE_COLS.map(col => (
                 <td key={col} className="smt-td smt-data-td">
                   {yearData[year][col].length > 0 ? (
-                    yearData[year][col].map(post => (
-                      <Link key={post.id} to={`/community/${post.id}`} className="smt-entry">
-                        <span className="smt-entry-stage">{extractStage(post)}</span>
-                        <span className="smt-entry-date">{extractDate(post)}</span>
-                        {extractHireType(post) && (
-                          <span className="smt-entry-hire">{extractHireType(post)}</span>
-                        )}
-                      </Link>
-                    ))
+                    yearData[year][col].map(post => {
+                      const { date, time } = parseScheduleDate(extractDate(post))
+                      const hireType = extractHireType(post)
+                      return (
+                        <Link key={post.id} to={`/community/${post.id}`} className="smt-entry">
+                          <span className="smt-entry-stage">{extractStage(post)}</span>
+                          <div className="smt-chips">
+                            {date && <span className="smt-chip smt-chip-date">📅 {date}</span>}
+                            {time && <span className="smt-chip smt-chip-time">🕐 {time}</span>}
+                          </div>
+                          {hireType && <span className="smt-entry-hire">{hireType}</span>}
+                        </Link>
+                      )
+                    })
                   ) : (
                     <span className="smt-empty">-</span>
                   )}
@@ -107,7 +125,12 @@ export default function Community() {
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
   const [openCompany, setOpenCompany] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const debounce = useDebounce(400)
+
+  useEffect(() => {
+    getMe().then(data => { if (data.role === 'ADMIN') setIsAdmin(true) }).catch(() => {})
+  }, [])
 
   const category = searchParams.get('category') || ''
   const keyword = searchParams.get('keyword') || ''
@@ -170,9 +193,15 @@ export default function Community() {
           <h1 className="community-title">커뮤니티</h1>
           <p className="community-desc">스터디원들과 정보를 나눠보세요.</p>
         </div>
-        {category !== 'NOTICE' && (
+        {(category !== 'NOTICE' && category !== 'COMPANY_SCHEDULE') && (
           <Link
             to={category ? `/community/new?prefillCategory=${category}` : '/community/new'}
+            className="btn btn-accent"
+          >글쓰기</Link>
+        )}
+        {(category === 'NOTICE' || category === 'COMPANY_SCHEDULE') && isAdmin && (
+          <Link
+            to={`/community/new?prefillCategory=${category}`}
             className="btn btn-accent"
           >글쓰기</Link>
         )}
@@ -210,8 +239,8 @@ export default function Community() {
             icon={isSchedule ? '📅' : '✍️'}
             title="게시글이 없습니다"
             description={isSchedule ? '서류·코테·면접 발표 일정을 공유해보세요!' : '첫 번째 글을 작성해보세요!'}
-            actionLabel={category !== 'NOTICE' ? '글쓰기' : undefined}
-            actionTo={category !== 'NOTICE' ? (category ? `/community/new?prefillCategory=${category}` : '/community/new') : undefined}
+            actionLabel={(category !== 'NOTICE' && category !== 'COMPANY_SCHEDULE') || isAdmin ? '글쓰기' : undefined}
+            actionTo={(category !== 'NOTICE' && category !== 'COMPANY_SCHEDULE') || isAdmin ? (category ? `/community/new?prefillCategory=${category}` : '/community/new') : undefined}
           />
         ) : isSchedule ? (
           <div className="sca-list">
@@ -253,7 +282,7 @@ export default function Community() {
                   )}
                 </div>
                 <div className="post-row-right">
-                  <span className="post-author">{post.authorName}</span>
+                  <span className="post-author">{post.memberUsername === 'admin' && <span style={{ marginRight: 3 }}>👑</span>}{post.authorName}</span>
                   {post.viewCount != null && <span>조회 {post.viewCount}</span>}
                   <span>{formatDate(post.createdAt)}</span>
                 </div>
