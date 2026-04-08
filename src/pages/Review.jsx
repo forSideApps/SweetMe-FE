@@ -108,23 +108,6 @@ export default function Review() {
 
   return (
     <div className="container">
-      {isLoggedIn === false && !popupClosed && !neverShow && (
-        <div className="modal-overlay" onClick={closePopup}>
-          <div className="guest-popup" onClick={e => e.stopPropagation()}>
-            <div className="guest-popup-header">
-              <span className="guest-popup-icon">📄</span>
-            </div>
-            <div className="guest-popup-body">
-              <div className="guest-popup-title">포폴·이력서<br/>혼자 보기엔 아깝잖아요</div>
-              <div className="guest-popup-desc">로그인하고 서로 리뷰하며 함께 성장해요.</div>
-              <div className="guest-popup-actions">
-                <Link to="/login" className="btn btn-accent">로그인하기</Link>
-                <button className="guest-popup-hide" onClick={hideBanner}>다시 보지 않기</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
       <div className="community-header">
         <div>
           <h1 className="community-title">포폴 · 이력서 검토</h1>
