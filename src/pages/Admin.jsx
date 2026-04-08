@@ -55,12 +55,19 @@ export default function Admin() {
 /* ─── 방문자 통계 탭 ─── */
 function VisitorTab({ onUnauthorized }) {
   const [stats, setStats] = useState({ today: null, total: null })
+  const [daily, setDaily] = useState([])
   const [error, setError] = useState(null)
 
   function load() {
     setError(null)
-    client.get('/admin/visitors')
-      .then(r => setStats(r.data))
+    Promise.all([
+      client.get('/admin/visitors'),
+      client.get('/admin/visitors/daily'),
+    ])
+      .then(([statsRes, dailyRes]) => {
+        setStats(statsRes.data)
+        setDaily(dailyRes.data)
+      })
       .catch(err => {
         if (err?.response?.status === 401) { onUnauthorized(); return }
         setError('통계를 불러오지 못했습니다.')
@@ -69,6 +76,9 @@ function VisitorTab({ onUnauthorized }) {
 
   useEffect(() => { load() }, [])
 
+  const maxCount = Math.max(...daily.map(r => r.count), 1)
+  const reversed = [...daily].reverse()
+
   return (
     <>
       <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -76,7 +86,7 @@ function VisitorTab({ onUnauthorized }) {
         <button className="btn btn-ghost btn-sm" onClick={load} style={{ fontSize: 12 }}>새로고침</button>
       </div>
       {error && <p className="text-muted" style={{ marginBottom: 12 }}>{error}</p>}
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 24 }}>
         <div style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', padding: '28px 24px', textAlign: 'center', flex: 1 }}>
           <div style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 12 }}>오늘 방문자</div>
           <div style={{ fontSize: 40, fontWeight: 800, color: 'var(--accent)' }}>{stats.today ?? '—'}</div>
@@ -86,6 +96,28 @@ function VisitorTab({ onUnauthorized }) {
           <div style={{ fontSize: 40, fontWeight: 800, color: 'var(--accent)' }}>{stats.total ?? '—'}</div>
         </div>
       </div>
+
+      {daily.length > 0 && (
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10, color: 'var(--text-2)' }}>최근 14일 일별 방문자</div>
+          <div style={{ border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+            {reversed.map((row, i) => (
+              <div key={row.date} style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '8px 14px',
+                background: i % 2 === 0 ? 'var(--bg)' : 'var(--bg-2)',
+                borderBottom: i < reversed.length - 1 ? '1px solid var(--border)' : 'none',
+              }}>
+                <span style={{ fontSize: 13, color: 'var(--text-3)', width: 96, flexShrink: 0 }}>{row.date}</span>
+                <div style={{ flex: 1, height: 6, background: 'var(--border)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ width: `${(row.count / maxCount) * 100}%`, height: '100%', background: 'var(--accent)', borderRadius: 3, transition: 'width 0.3s' }} />
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 600, width: 36, textAlign: 'right', flexShrink: 0 }}>{row.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </>
   )
 }

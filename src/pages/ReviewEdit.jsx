@@ -44,7 +44,7 @@ export default function ReviewEdit() {
         navigate(`/reviews/${id}`, { replace: true, state: { errorMsg: '검토가 완료된 글은 수정할 수 없습니다.' } })
         return
       }
-      if (userData && data.memberUsername && data.memberUsername === userData.username) {
+      if ((userData && data.memberUsername && data.memberUsername === userData.username) || userData?.role === 'ADMIN') {
         setReview(data)
         setForm({
           type: data.type,
