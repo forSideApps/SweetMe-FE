@@ -251,10 +251,10 @@ export default function ReviewDetail() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                {(isAdmin || (user && review.memberUsername && review.memberUsername === user.username)) && (
+                {(isAdmin || (user && review.memberUsername && review.memberUsername === user.username) || !review.memberUsername) && (
                   <Link to={`/reviews/${review.id}/edit`} className="btn btn-outline btn-sm">수정하기</Link>
                 )}
-                {(isAdmin || (user && review.memberUsername && review.memberUsername === user.username)) && (
+                {(isAdmin || (user && review.memberUsername && review.memberUsername === user.username) || !review.memberUsername) && (
                   <button
                     className="btn btn-sm"
                     style={{ background: '#ef4444', color: '#fff' }}
