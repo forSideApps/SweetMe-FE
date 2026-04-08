@@ -152,7 +152,7 @@ export default function CommunityDetail() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                {isAdmin && post.category === 'COMPANY_SCHEDULE' && (
+                {(isAdmin || (user && post.memberUsername === user.username) || !post.memberUsername) && (
                   <button
                     className="btn btn-sm btn-ghost"
                     onClick={() => navigate(`/community/${postId}/edit`)}

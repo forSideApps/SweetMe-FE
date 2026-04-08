@@ -430,32 +430,6 @@ function ReviewTab({ setMsg }) {
               {s.label}
             </button>
           ))}
-          <button
-            className="btn btn-sm"
-            style={{ fontSize: 12, padding: '3px 10px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 6, cursor: 'pointer' }}
-            onClick={async () => {
-              if (!window.confirm('커뮤니티 게시글을 전체 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return
-              try {
-                await client.delete('/community/all')
-                setMsg({ type: 'success', text: '커뮤니티 게시글이 전체 삭제되었습니다.' })
-              } catch {
-                setMsg({ type: 'error', text: '커뮤니티 전체 삭제에 실패했습니다.' })
-              }
-            }}
-          >커뮤니티 전체 삭제</button>
-          <button
-            className="btn btn-sm"
-            style={{ fontSize: 12, padding: '3px 10px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 6, cursor: 'pointer' }}
-            onClick={async () => {
-              if (!window.confirm('스터디를 전체 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return
-              try {
-                await client.delete('/rooms/all')
-                setMsg({ type: 'success', text: '스터디가 전체 삭제되었습니다.' })
-              } catch {
-                setMsg({ type: 'error', text: '스터디 전체 삭제에 실패했습니다.' })
-              }
-            }}
-          >스터디 전체 삭제</button>
         </div>
       </div>
 
@@ -468,22 +442,22 @@ function ReviewTab({ setMsg }) {
           {filtered.map(r => (
             <div key={r.id} style={{
               background: 'var(--bg)', border: '1.5px solid var(--border)',
-              borderRadius: 'var(--radius)', padding: '14px 18px'
+              borderRadius: 'var(--radius)', padding: '12px 16px'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                <Link to={`/reviews/${r.id}`} style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1, textDecoration: 'none', color: 'inherit' }}>
-                  <span className={`post-cat-badge ${r.type}`}>{r.typeDisplayName}</span>
-                  <span className={`post-cat-badge ${r.status}`}>{r.statusDisplayName}</span>
-                  <span style={{ fontSize: 13, color: 'var(--text-3)', whiteSpace: 'nowrap' }}>
-                    [{r.careerLevelDisplayName}·{r.jobCategoryDisplayName}]
-                  </span>
-                  <span style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {r.title}
-                  </span>
-                </Link>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                  <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{r.authorName}</span>
-                  <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{r.createdAt?.slice(0, 10)}</span>
+              <Link to={`/reviews/${r.id}`} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, textDecoration: 'none', color: 'inherit', marginBottom: 8 }}>
+                <span className={`post-cat-badge ${r.type}`}>{r.typeDisplayName}</span>
+                <span className={`post-cat-badge ${r.status}`}>{r.statusDisplayName}</span>
+                <span style={{ fontSize: 12, color: 'var(--text-3)' }}>
+                  [{r.careerLevelDisplayName}·{r.jobCategoryDisplayName}]
+                </span>
+                <span style={{ fontWeight: 600, fontSize: 14, flex: '1 1 120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {r.title}
+                </span>
+              </Link>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{r.authorName}</span>
+                <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{r.createdAt?.slice(0, 10)}</span>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
                   <button
                     className="btn btn-outline btn-sm"
                     style={{ fontSize: 12 }}

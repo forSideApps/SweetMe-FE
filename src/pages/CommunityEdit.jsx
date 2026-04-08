@@ -60,13 +60,18 @@ export default function CommunityEdit() {
   const [themes, setThemes] = useState([])
   const [selectedTheme, setSelectedTheme] = useState(null)
   const [schedule, setSchedule] = useState(null)
+  const [generalPost, setGeneralPost] = useState(null)
   const monthRef = useRef(null)
   const dayRef = useRef(null)
 
   useEffect(() => {
     getPost(postId).then(post => {
-      const parsed = parseContent(post.content)
-      setSchedule(parsed)
+      if (post.category === 'COMPANY_SCHEDULE') {
+        const parsed = parseContent(post.content)
+        setSchedule(parsed)
+      } else {
+        setGeneralPost({ title: post.title, content: post.content })
+      }
     }).catch(() => navigate(-1))
     getThemes().then(ts => setThemes(ts)).catch(() => {})
   }, [postId])
@@ -97,7 +102,73 @@ export default function CommunityEdit() {
     }
   }
 
-  if (!schedule) return <div className="container-sm"><p className="text-muted" style={{ padding: '40px 0' }}>로딩 중...</p></div>
+  if (!schedule && !generalPost) return <div className="container-sm"><p className="text-muted" style={{ padding: '40px 0' }}>로딩 중...</p></div>
+
+  if (generalPost !== null) {
+    async function handleGeneralSubmit(e) {
+      e.preventDefault()
+      if (!generalPost.title.trim()) { setAlert({ type: 'error', message: '제목을 입력해주세요.' }); return }
+      if (!generalPost.content.trim()) { setAlert({ type: 'error', message: '내용을 입력해주세요.' }); return }
+      setSubmitting(true)
+      try {
+        await updatePost(postId, { title: generalPost.title, content: generalPost.content })
+        navigate(`/community/${postId}`)
+      } catch (err) {
+        const msg = err?.response?.data?.message || '수정에 실패했습니다.'
+        setAlert({ type: 'error', message: msg })
+      } finally {
+        setSubmitting(false)
+      }
+    }
+    return (
+      <div className="container-sm">
+        <div className="page-header">
+          <div className="breadcrumb">
+            <Link to="/">홈</Link><span>/</span>
+            <Link to="/community">커뮤니티</Link><span>/</span>
+            <span>수정</span>
+          </div>
+          <h1>글 수정</h1>
+        </div>
+        {alert && (
+          <div className="alerts-container" style={{ marginTop: 16 }}>
+            <Alert type={alert.type} message={alert.message} onClose={() => setAlert(null)} />
+          </div>
+        )}
+        <div className="section-sm">
+          <form className="form-card" onSubmit={handleGeneralSubmit}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div className="form-group">
+                <label className="form-label req">제목</label>
+                <input
+                  className="form-input"
+                  value={generalPost.title}
+                  onChange={e => setGeneralPost(p => ({ ...p, title: e.target.value }))}
+                  placeholder="제목을 입력해주세요"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label req">내용</label>
+                <textarea
+                  className="form-textarea"
+                  value={generalPost.content}
+                  onChange={e => setGeneralPost(p => ({ ...p, content: e.target.value }))}
+                  rows={10}
+                  style={{ minHeight: 200 }}
+                />
+              </div>
+              <div className="form-actions">
+                <button type="submit" className="btn btn-accent btn-lg" disabled={submitting}>
+                  {submitting ? '수정 중...' : '수정 완료'}
+                </button>
+                <button type="button" className="btn btn-ghost" onClick={() => navigate(-1)}>취소</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    )
+  }
 
   const hour = schedule.time ? parseInt(schedule.time.split(':')[0], 10) : null
 
