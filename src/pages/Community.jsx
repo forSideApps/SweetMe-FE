@@ -6,14 +6,9 @@ import { formatDate } from '../utils/date'
 import Pagination from '../components/Pagination'
 import EmptyState from '../components/EmptyState'
 import { useDebounce } from '../hooks/useDebounce'
+import { COMMUNITY_CATEGORIES } from '../constants/community'
 
-const CATEGORIES = [
-  { value: '', label: '전체' },
-  { value: 'NOTICE', label: '공지사항' },
-  { value: 'FREE', label: '자유게시판' },
-  { value: 'SUGGESTION', label: '건의 기능 요청' },
-  { value: 'COMPANY_SCHEDULE', label: '채용 발표일' },
-]
+const CATEGORIES = [{ value: '', label: '전체' }, ...COMMUNITY_CATEGORIES]
 
 const STAGE_COLS = ['서류', '코테', '면접']
 

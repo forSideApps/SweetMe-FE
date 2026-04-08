@@ -5,26 +5,11 @@ import { acceptExchange, rejectExchange, cancelExchange, deleteReview } from '..
 import { deletePost } from '../api/community'
 import { deleteRoom } from '../api/rooms'
 import { JOB_ROLES } from '../constants/jobRoles'
+import { REVIEW_CAREER_LEVELS } from '../constants/review'
+import { ALGO_GRADES } from '../constants/algo'
 import Alert from '../components/Alert'
 import StatusBadge from '../components/StatusBadge'
 import { formatDate } from '../utils/date'
-
-const CAREER_LEVELS = [
-  { value: 'JUNIOR', label: '신입' },
-  { value: 'EXPERIENCED', label: '경력' },
-]
-
-const ALGO_GRADES = [
-  { value: '', label: '선택 안 함' },
-  { value: 'UNRATED', label: '언레이팅' },
-  { value: 'BRONZE', label: '브론즈' },
-  { value: 'SILVER', label: '실버' },
-  { value: 'GOLD', label: '골드' },
-  { value: 'PLATINUM', label: '플래티넘' },
-  { value: 'DIAMOND', label: '다이아몬드' },
-  { value: 'RUBY', label: '루비' },
-  { value: 'MASTER', label: '마스터' },
-]
 
 const TABS = [
   { key: 'profile', label: '프로필' },
@@ -180,7 +165,7 @@ export default function MyPage() {
                     className={`review-chip${form.careerLevel === '' ? ' active' : ''}`}
                     onClick={() => setForm(f => ({ ...f, careerLevel: '' }))}
                   >선택 안 함</button>
-                  {CAREER_LEVELS.map(c => (
+                  {REVIEW_CAREER_LEVELS.map(c => (
                     <button
                       key={c.value}
                       type="button"

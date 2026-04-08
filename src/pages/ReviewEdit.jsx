@@ -4,15 +4,7 @@ import { getReview, verifyReviewPassword, updateReview, getReviewLink } from '..
 import { getMe } from '../api/auth'
 import Alert from '../components/Alert'
 import { JOB_ROLES } from '../constants/jobRoles'
-
-const TYPES = [
-  { value: 'PORTFOLIO', label: '포트폴리오' },
-  { value: 'RESUME', label: '이력서' },
-]
-const CAREER_LEVELS = [
-  { value: 'JUNIOR', label: '신입' },
-  { value: 'EXPERIENCED', label: '경력' },
-]
+import { REVIEW_TYPES, REVIEW_CAREER_LEVELS } from '../constants/review'
 
 const SESSION_KEY = (id) => `review_${id}_password`
 
@@ -200,7 +192,7 @@ export default function ReviewEdit() {
                 value={form.type}
                 onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
               >
-                {TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                {REVIEW_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
             </div>
 
@@ -212,7 +204,7 @@ export default function ReviewEdit() {
                   value={form.careerLevel}
                   onChange={e => setForm(f => ({ ...f, careerLevel: e.target.value }))}
                 >
-                  {CAREER_LEVELS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                  {REVIEW_CAREER_LEVELS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
               </div>
               <div className="form-group">

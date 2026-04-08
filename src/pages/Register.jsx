@@ -2,18 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { register } from '../api/auth'
 import { JOB_ROLES } from '../constants/jobRoles'
-
-const ALGO_GRADES = [
-  { value: '', label: '선택 안 함' },
-  { value: 'UNRATED', label: '언레이팅' },
-  { value: 'BRONZE', label: '브론즈' },
-  { value: 'SILVER', label: '실버' },
-  { value: 'GOLD', label: '골드' },
-  { value: 'PLATINUM', label: '플래티넘' },
-  { value: 'DIAMOND', label: '다이아몬드' },
-  { value: 'RUBY', label: '루비' },
-  { value: 'MASTER', label: '마스터' },
-]
+import { ALGO_GRADES } from '../constants/algo'
 
 export default function Register() {
   const navigate = useNavigate()

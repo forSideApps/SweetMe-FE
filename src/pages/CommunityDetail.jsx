@@ -4,6 +4,11 @@ import { getPost, addComment, updateComment, deleteComment, incrementPostView, d
 import { getMe } from '../api/auth'
 import Alert from '../components/Alert'
 import { formatDateTime } from '../utils/date'
+import { COMMUNITY_CATEGORIES } from '../constants/community'
+
+const CATEGORY_LABELS = Object.fromEntries(
+  [{ value: 'REGIONAL', label: '지역 정보' }, ...COMMUNITY_CATEGORIES].map(c => [c.value, c.label])
+)
 
 function renderWithLinks(text) {
   if (!text) return null
@@ -13,14 +18,6 @@ function renderWithLinks(text) {
       ? <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline', wordBreak: 'break-all' }}>{part}</a>
       : part
   )
-}
-
-const CATEGORY_LABELS = {
-  REGIONAL: '지역 정보',
-  SUGGESTION: '건의 기능 요청',
-  FREE: '자유게시판',
-  NOTICE: '공지사항',
-  COMPANY_SCHEDULE: '채용 발표일',
 }
 
 export default function CommunityDetail() {

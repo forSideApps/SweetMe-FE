@@ -4,25 +4,14 @@ import { getReviews } from '../api/review'
 import { useDebounce } from '../hooks/useDebounce'
 import { getMe } from '../api/auth'
 import { JOB_ROLES } from '../constants/jobRoles'
+import { REVIEW_TYPES, REVIEW_CAREER_LEVELS, REVIEW_STATUSES } from '../constants/review'
 import { formatDate } from '../utils/date'
 import Pagination from '../components/Pagination'
 import EmptyState from '../components/EmptyState'
 
-const TYPES = [
-  { value: '', label: '전체' },
-  { value: 'PORTFOLIO', label: '포트폴리오' },
-  { value: 'RESUME', label: '이력서' },
-]
-const STATUSES = [
-  { value: '', label: '전체' },
-  { value: 'PENDING', label: '검토전' },
-  { value: 'DONE', label: '완료' },
-]
-const CAREER_LEVELS = [
-  { value: '', label: '전체' },
-  { value: 'JUNIOR', label: '신입' },
-  { value: 'EXPERIENCED', label: '경력' },
-]
+const TYPES = [{ value: '', label: '전체' }, ...REVIEW_TYPES]
+const STATUSES = [{ value: '', label: '전체' }, ...REVIEW_STATUSES]
+const CAREER_LEVELS = [{ value: '', label: '전체' }, ...REVIEW_CAREER_LEVELS]
 
 const STORAGE_KEY = 'review_guest_banner_hidden'
 

@@ -6,40 +6,10 @@ import { getThemes } from '../api/themes'
 import Alert from '../components/Alert'
 import LockedField from '../components/LockedField'
 import ThemeLogo from '../components/ThemeLogo'
+import { COMMUNITY_CATEGORIES, HIRE_TYPES, STAGES } from '../constants/community'
+import { buildScheduleTitle, buildScheduleContent } from '../utils/schedule'
 
-const CATEGORIES = [
-  { value: 'FREE', label: '자유게시판' },
-  { value: 'SUGGESTION', label: '건의 기능 요청' },
-  { value: 'COMPANY_SCHEDULE', label: '채용 발표일' },
-]
-
-const HIRE_TYPES = ['신입공채', '경력공채', '인턴']
-const STAGES = ['서류', '코딩테스트', '1차 면접', '최종 면접']
-const WEEK_DAYS = ['일', '월', '화', '수', '목', '금', '토']
-
-function buildScheduleTitle(schedule) {
-  return `${schedule.company} ${schedule.hireType} ${schedule.stage}`
-}
-
-function buildScheduleContent(schedule) {
-  let dateStr = ''
-  if (schedule.date) {
-    const d = new Date(schedule.date + (schedule.time ? `T${schedule.time}` : ''))
-    const y = d.getFullYear()
-    const mo = d.getMonth() + 1
-    const day = d.getDate()
-    const wd = WEEK_DAYS[d.getDay()]
-    const timeStr = schedule.time ? ` ${schedule.time.slice(0, 5)}` : ''
-    dateStr = `${y}년 ${mo}월 ${day}일 (${wd})${timeStr}`
-  }
-  return [
-    `📅 결과 공개: ${dateStr}`,
-    `🏢 기업명: ${schedule.company}`,
-    `📋 채용 유형: ${schedule.hireType}`,
-    `🎯 전형 단계: ${schedule.stage}`,
-    schedule.memo ? `📝 메모: ${schedule.memo}` : null,
-  ].filter(Boolean).join('\n')
-}
+const CATEGORIES = COMMUNITY_CATEGORIES.filter(c => c.value !== 'NOTICE')
 
 export default function CommunityCreate() {
   const navigate = useNavigate()
