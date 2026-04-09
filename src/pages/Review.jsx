@@ -204,6 +204,7 @@ export default function Review() {
                   {r.commentCount > 0 && (
                     <span className="post-comment-count">[{r.commentCount}]</span>
                   )}
+                  <span className="post-author-mobile">{r.authorName}</span>
                 </div>
                 <div className="post-row-right">
                   <span className="post-author">{r.authorName}</span>

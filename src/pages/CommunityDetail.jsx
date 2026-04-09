@@ -236,7 +236,7 @@ export default function CommunityDetail() {
                       </div>
                     </div>
                   ) : (
-                    <div className="comment-body">{c.content}</div>
+                    <div className="comment-body">{renderWithLinks(c.content)}</div>
                   )}
                 </div>
               ))}

@@ -719,6 +719,7 @@ button { cursor: pointer; font-family: inherit; }
 .post-title { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .post-comment-count { font-size: 12px; color: var(--accent); font-weight: 600; }
 .post-author { font-weight: 500; color: var(--text-2); }
+.post-author-mobile { display: none; font-size: 12px; font-weight: 500; color: var(--text-2); }
 .post-cat-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 50px; white-space: nowrap; flex-shrink: 0; }
 .post-cat-badge.SUGGESTION { background: var(--amber-bg); color: var(--amber); }
 .post-cat-badge.FREE       { background: var(--accent-light); color: var(--accent); }
@@ -1053,6 +1054,7 @@ footer {
   .review-chip-group { gap: 5px; }
   .post-row-right { display: none; }
   .post-row-left { flex-wrap: wrap; gap: 6px; }
+  .post-author-mobile { display: inline; }
 
   /* Detail layout */
   .detail-layout { margin-top: 16px; gap: 16px; }
