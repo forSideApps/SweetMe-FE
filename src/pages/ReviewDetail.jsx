@@ -4,21 +4,8 @@ import { getReview, incrementReviewView, addReviewComment, updateReviewComment, 
 import { getMe, getMyReviews } from '../api/auth'
 import Alert from '../components/Alert'
 import { formatDateTime } from '../utils/date'
-
-function autoResize(e) {
-  e.target.style.height = 'auto'
-  e.target.style.height = e.target.scrollHeight + 'px'
-}
-
-function renderWithLinks(text) {
-  if (!text) return null
-  const parts = text.split(/(https?:\/\/[^\s]+)/)
-  return parts.map((part, i) =>
-    i % 2 === 1
-      ? <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline', wordBreak: 'break-all' }}>{part}</a>
-      : part
-  )
-}
+import { renderWithLinks } from '../utils/text.jsx'
+import { autoResize } from '../utils/dom'
 
 const STATUS_STYLE = {
   PENDING: { background: 'var(--amber-bg)', color: 'var(--amber)' },

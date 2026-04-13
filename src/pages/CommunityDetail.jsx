@@ -4,21 +4,13 @@ import { getPost, addComment, updateComment, deleteComment, incrementPostView, d
 import { getMe } from '../api/auth'
 import Alert from '../components/Alert'
 import { formatDateTime } from '../utils/date'
+import { renderWithLinks } from '../utils/text.jsx'
+import { autoResize } from '../utils/dom'
 import { COMMUNITY_CATEGORIES } from '../constants/community'
 
 const CATEGORY_LABELS = Object.fromEntries(
   [{ value: 'REGIONAL', label: '지역 정보' }, ...COMMUNITY_CATEGORIES].map(c => [c.value, c.label])
 )
-
-function renderWithLinks(text) {
-  if (!text) return null
-  const parts = text.split(/(https?:\/\/[^\s]+)/)
-  return parts.map((part, i) =>
-    i % 2 === 1
-      ? <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline', wordBreak: 'break-all' }}>{part}</a>
-      : part
-  )
-}
 
 export default function CommunityDetail() {
   const { postId } = useParams()
@@ -34,6 +26,7 @@ export default function CommunityDetail() {
   const [submitting, setSubmitting] = useState(false)
   const [adminComment, setAdminComment] = useState('')
   const [adminSubmitting, setAdminSubmitting] = useState(false)
+  const [showAdminForm, setShowAdminForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [editContent, setEditContent] = useState('')
   const [editError, setEditError] = useState('')
@@ -86,8 +79,7 @@ export default function CommunityDetail() {
       setAlert({ type: 'success', message: '댓글이 작성되었습니다.' })
       fetchPost()
     } catch (err) {
-      const msg = err?.response?.data?.message || '댓글 작성에 실패했습니다.'
-      setAlert({ type: 'error', message: msg })
+      setAlert({ type: 'error', message: err?.response?.data?.message || '댓글 작성에 실패했습니다.' })
     } finally {
       setSubmitting(false)
     }
@@ -98,13 +90,13 @@ export default function CommunityDetail() {
     if (!adminComment.trim()) return
     setAdminSubmitting(true)
     try {
-      await addComment(postId, { authorName: 'admin', content: adminComment })
+      await addComment(postId, { authorName: '운영자', content: adminComment })
       setAdminComment('')
+      setShowAdminForm(false)
       setAlert({ type: 'success', message: '운영자 댓글이 작성되었습니다.' })
       fetchPost()
     } catch (err) {
-      const msg = err?.response?.data?.message || '댓글 작성에 실패했습니다.'
-      setAlert({ type: 'error', message: msg })
+      setAlert({ type: 'error', message: err?.response?.data?.message || '댓글 작성에 실패했습니다.' })
     } finally {
       setAdminSubmitting(false)
     }
@@ -150,10 +142,7 @@ export default function CommunityDetail() {
               </div>
               <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                 {(isAdmin || (user && post.memberUsername === user.username) || !post.memberUsername) && (
-                  <button
-                    className="btn btn-sm btn-ghost"
-                    onClick={() => navigate(`/community/${postId}/edit`)}
-                  >수정</button>
+                  <button className="btn btn-sm btn-ghost" onClick={() => navigate(`/community/${postId}/edit`)}>수정</button>
                 )}
                 {(isAdmin || (user && post.memberUsername && post.memberUsername === user.username)) && (
                   <button
@@ -187,9 +176,9 @@ export default function CommunityDetail() {
                   <div className="comment-header">
                     <span className="comment-author">
                       {c.memberUsername === 'admin' && <span style={{ marginRight: 3 }}>👑</span>}
-                      {c.memberUsername && c.memberUsername !== 'admin' ? (
+                      {c.memberUsername && c.memberUsername !== 'admin' && (
                         <span className={user && c.memberUsername === user.username ? 'comment-member-badge--blink' : 'comment-member-badge'}>●</span>
-                      ) : null}
+                      )}
                       {c.authorName}
                     </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -221,17 +210,14 @@ export default function CommunityDetail() {
                       <textarea
                         className="form-textarea"
                         value={editContent}
-                        onChange={e => setEditContent(e.target.value)}
+                        onChange={e => { setEditContent(e.target.value); autoResize(e) }}
                         onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); handleEditSubmit() } }}
-                        rows={3}
-                        style={{ minHeight: 70, width: '100%' }}
+                        rows={1}
+                        style={{ minHeight: 40, width: '100%', resize: 'none', overflow: 'hidden' }}
                       />
                       {editError && <span className="form-err">{editError}</span>}
                       <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
-                        <button
-                          className="btn btn-accent btn-sm"
-                          onClick={handleEditSubmit}
-                        >저장</button>
+                        <button className="btn btn-accent btn-sm" onClick={handleEditSubmit}>저장</button>
                         <button className="btn btn-ghost btn-sm" onClick={() => setEditingId(null)}>취소</button>
                       </div>
                     </div>
@@ -244,63 +230,77 @@ export default function CommunityDetail() {
           )}
 
           {isAdmin && (
-            <div style={{ marginBottom: 20, padding: '16px', background: 'var(--bg-2)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)' }}>
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>👑 운영자 댓글 남기기</div>
-              <form onSubmit={handleAdminCommentSubmit}>
-                <textarea
-                  className="form-textarea"
-                  value={adminComment}
-                  onChange={e => setAdminComment(e.target.value)}
-                  onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); handleAdminCommentSubmit(e) } }}
-                  placeholder="운영자로 댓글을 남겨보세요"
-                  rows={3}
-                  style={{ minHeight: 80, marginBottom: 8 }}
-                />
-                <button type="submit" className="btn btn-accent btn-sm" disabled={adminSubmitting}>
-                  {adminSubmitting ? '작성 중...' : '운영자 댓글 작성'}
+            <div style={{ marginBottom: 20 }}>
+              {showAdminForm ? (
+                <div style={{ padding: '16px', background: 'var(--bg-2)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)' }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>👑 운영자 댓글 남기기</div>
+                  <form onSubmit={handleAdminCommentSubmit}>
+                    <textarea
+                      className="form-textarea"
+                      value={adminComment}
+                      onChange={e => { setAdminComment(e.target.value); autoResize(e) }}
+                      onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); handleAdminCommentSubmit(e) } }}
+                      placeholder="운영자로 댓글을 남겨보세요"
+                      rows={1}
+                      style={{ minHeight: 40, marginBottom: 8, resize: 'none', overflow: 'hidden' }}
+                      autoFocus
+                    />
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button type="submit" className="btn btn-accent btn-sm" disabled={adminSubmitting}>
+                        {adminSubmitting ? '작성 중...' : '운영자 댓글 작성'}
+                      </button>
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setShowAdminForm(false); setAdminComment('') }}>취소</button>
+                    </div>
+                  </form>
+                </div>
+              ) : (
+                <button className="btn btn-outline btn-sm" onClick={() => setShowAdminForm(true)}>
+                  👑 운영자 댓글 작성
                 </button>
-              </form>
+              )}
             </div>
           )}
 
-          {!isAdmin && <div className="comment-form">
-            <form onSubmit={handleCommentSubmit}>
-              <div className="comment-inputs">
-                {user ? (
-                  <div className="comment-author-label">
-                    <span className="comment-member-badge">●</span> {user.username}으로 작성됩니다
-                  </div>
-                ) : (
+          {!isAdmin && (
+            <div className="comment-form">
+              <form onSubmit={handleCommentSubmit}>
+                <div className="comment-inputs">
+                  {user ? (
+                    <div className="comment-author-label">
+                      <span className="comment-member-badge">●</span> {user.username}으로 작성됩니다
+                    </div>
+                  ) : (
+                    <div className="form-group">
+                      <input
+                        className={`form-input${commentErrors.author ? ' is-error' : ''}`}
+                        value={comment.authorName}
+                        onChange={e => setComment(c => ({ ...c, authorName: e.target.value }))}
+                        placeholder="작성자명"
+                      />
+                      {commentErrors.author && <span className="form-err">{commentErrors.author}</span>}
+                    </div>
+                  )}
                   <div className="form-group">
-                    <input
-                      className={`form-input${commentErrors.author ? ' is-error' : ''}`}
-                      value={comment.authorName}
-                      onChange={e => setComment(c => ({ ...c, authorName: e.target.value }))}
-                      placeholder="작성자명"
+                    <textarea
+                      className={`form-textarea${commentErrors.content ? ' is-error' : ''}`}
+                      value={comment.content}
+                      onChange={e => { setComment(c => ({ ...c, content: e.target.value })); autoResize(e) }}
+                      onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); handleCommentSubmit(e) } }}
+                      placeholder="댓글을 입력해주세요"
+                      rows={1}
+                      style={{ minHeight: 40, resize: 'none', overflow: 'hidden' }}
                     />
-                    {commentErrors.author && <span className="form-err">{commentErrors.author}</span>}
+                    {commentErrors.content && <span className="form-err">{commentErrors.content}</span>}
                   </div>
-                )}
-                <div className="form-group">
-                  <textarea
-                    className={`form-textarea${commentErrors.content ? ' is-error' : ''}`}
-                    value={comment.content}
-                    onChange={e => setComment(c => ({ ...c, content: e.target.value }))}
-                    onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); handleCommentSubmit(e) } }}
-                    placeholder="댓글을 입력해주세요"
-                    rows={3}
-                    style={{ minHeight: 80 }}
-                  />
-                  {commentErrors.content && <span className="form-err">{commentErrors.content}</span>}
                 </div>
-              </div>
-              <div className="comment-submit">
-                <button type="submit" className="btn btn-accent" disabled={submitting}>
-                  {submitting ? '작성 중...' : '댓글 작성'}
-                </button>
-              </div>
-            </form>
-          </div>}
+                <div className="comment-submit">
+                  <button type="submit" className="btn btn-accent" disabled={submitting}>
+                    {submitting ? '작성 중...' : '댓글 작성'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
         </div>
       </div>
     </div>
