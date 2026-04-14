@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { getManageApplications, closeRoom, updateRoom, reopenRoom } from '../api/rooms'
 import Alert from '../components/Alert'
+import { autoResize } from '../utils/dom'
 import { JOB_ROLES } from '../constants/jobRoles'
 
 export default function ManageDashboard() {
@@ -152,9 +153,9 @@ export default function ManageDashboard() {
                   <textarea
                     className="form-textarea"
                     value={editForm.description}
-                    onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
-                    rows={3}
-                    style={{ minHeight: 80 }}
+                    onChange={e => { setEditForm(f => ({ ...f, description: e.target.value })); autoResize(e) }}
+                    rows={1}
+                    style={{ minHeight: 40, resize: 'none', overflow: 'hidden' }}
                   />
                 </div>
                 <div className="form-group">

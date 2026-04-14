@@ -4,6 +4,7 @@ import { createPost } from '../api/community'
 import { getMe } from '../api/auth'
 import { getThemes } from '../api/themes'
 import Alert from '../components/Alert'
+import { autoResize } from '../utils/dom'
 import LockedField from '../components/LockedField'
 import ThemeLogo from '../components/ThemeLogo'
 import { COMMUNITY_CATEGORIES, HIRE_TYPES, STAGES } from '../constants/community'
@@ -386,9 +387,10 @@ export default function CommunityCreate() {
                   <textarea
                     className="form-textarea"
                     value={schedule.memo}
-                    onChange={e => setSchedule(s => ({ ...s, memo: e.target.value }))}
+                    onChange={e => { setSchedule(s => ({ ...s, memo: e.target.value })); autoResize(e) }}
                     placeholder="추가 메모를 입력해주세요"
-                    rows={3}
+                    rows={1}
+                    style={{ minHeight: 40, resize: 'none', overflow: 'hidden' }}
                   />
                 </div>
               </div>
@@ -410,10 +412,10 @@ export default function CommunityCreate() {
                   <textarea
                     className={`form-textarea${errors.content ? ' is-error' : ''}`}
                     value={form.content}
-                    onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
+                    onChange={e => { setForm(f => ({ ...f, content: e.target.value })); autoResize(e) }}
                     placeholder="내용을 입력해주세요"
-                    rows={8}
-                    style={{ minHeight: 200 }}
+                    rows={1}
+                    style={{ minHeight: 40, resize: 'none', overflow: 'hidden' }}
                   />
                   {errors.content && <span className="form-err">{errors.content}</span>}
                 </div>

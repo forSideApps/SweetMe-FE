@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import { getReview, verifyReviewPassword, updateReview, getReviewLink } from '../api/review'
 import { getMe } from '../api/auth'
 import Alert from '../components/Alert'
+import { autoResize } from '../utils/dom'
 import { JOB_ROLES } from '../constants/jobRoles'
 import { REVIEW_TYPES, REVIEW_CAREER_LEVELS } from '../constants/review'
 
@@ -234,9 +235,9 @@ export default function ReviewEdit() {
               <textarea
                 className={`form-textarea${errors.content ? ' is-error' : ''}`}
                 value={form.content}
-                onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
-                rows={10}
-                style={{ minHeight: 240 }}
+                onChange={e => { setForm(f => ({ ...f, content: e.target.value })); autoResize(e) }}
+                rows={1}
+                style={{ minHeight: 40, resize: 'none', overflow: 'hidden' }}
               />
               {errors.content && <span className="form-err">{errors.content}</span>}
             </div>

@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getPost, updatePost } from '../api/community'
 import { getThemes } from '../api/themes'
 import Alert from '../components/Alert'
+import { autoResize } from '../utils/dom'
 import ThemeLogo from '../components/ThemeLogo'
 import { HIRE_TYPES, STAGES } from '../constants/community'
 import { buildScheduleTitle, buildScheduleContent, parseScheduleContent } from '../utils/schedule'
@@ -107,9 +108,9 @@ export default function CommunityEdit() {
                 <textarea
                   className="form-textarea"
                   value={generalPost.content}
-                  onChange={e => setGeneralPost(p => ({ ...p, content: e.target.value }))}
-                  rows={10}
-                  style={{ minHeight: 200 }}
+                  onChange={e => { setGeneralPost(p => ({ ...p, content: e.target.value })); autoResize(e) }}
+                  rows={1}
+                  style={{ minHeight: 40, resize: 'none', overflow: 'hidden' }}
                 />
               </div>
               <div className="form-actions">
@@ -245,9 +246,11 @@ export default function CommunityEdit() {
               <div className="form-group full-width">
                 <label className="form-label">메모 (선택)</label>
                 <textarea className="form-textarea" value={schedule.memo}
-                  onChange={e => setSchedule(s => ({ ...s, memo: e.target.value }))}
+                  onChange={e => { setSchedule(s => ({ ...s, memo: e.target.value })); autoResize(e) }}
                   onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); handleSubmit(e) } }}
-                  placeholder="추가 메모를 입력해주세요" rows={3} />
+                  placeholder="추가 메모를 입력해주세요"
+                  rows={1}
+                  style={{ minHeight: 40, resize: 'none', overflow: 'hidden' }} />
               </div>
             </div>
 

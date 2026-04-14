@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { createReview } from '../api/review'
 import { getMe } from '../api/auth'
 import Alert from '../components/Alert'
+import { autoResize } from '../utils/dom'
 import LockedField from '../components/LockedField'
 import { JOB_ROLES } from '../constants/jobRoles'
 import { REVIEW_TYPES, REVIEW_CAREER_LEVELS } from '../constants/review'
@@ -137,10 +138,10 @@ export default function ReviewCreate() {
               <textarea
                 className={`form-textarea${errors.content ? ' is-error' : ''}`}
                 value={form.content}
-                onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
+                onChange={e => { setForm(f => ({ ...f, content: e.target.value })); autoResize(e) }}
                 placeholder={`포트폴리오/이력서에서 피드백을 받고 싶은 내용을 자유롭게 작성해주세요.\n\n▪ 경력직이라면\n- 근무 산업군 키워드 나열 (예: SI, SM, 서비스, 금융, 스타트업 등)\n- 진행한 프로젝트 키워드 나열 (예: 물류 시스템 고도화, 결제 API 연동, ERP 개발 등)\n\n▪ 신입이라면\n- 주요 프로젝트 키워드 나열 (예: 팀 프로젝트 - 쇼핑몰 백엔드, 개인 프로젝트 - 일정 관리 앱 등)\n- 사용 기술 스택 (예: Java, Spring Boot, React, MySQL 등)\n\n▪ 피드백 원하는 부분\n- 구체적으로 궁금한 점 또는 개선이 필요한 부분을 적어주세요.`}
-                rows={10}
-                style={{ minHeight: 240 }}
+                rows={1}
+                style={{ minHeight: 40, resize: 'none', overflow: 'hidden' }}
               />
               {errors.content && <span className="form-err">{errors.content}</span>}
             </div>

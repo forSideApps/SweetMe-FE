@@ -4,6 +4,7 @@ import { getThemes } from '../api/themes'
 import { createRoom } from '../api/rooms'
 import { getMe } from '../api/auth'
 import Alert from '../components/Alert'
+import { autoResize } from '../utils/dom'
 import LockedField from '../components/LockedField'
 import ThemeLogo from '../components/ThemeLogo'
 import { JOB_ROLES } from '../constants/jobRoles'
@@ -47,8 +48,7 @@ export default function RoomCreate() {
 
   function handleDescChange(e) {
     setForm(f => ({ ...f, description: e.target.value }))
-    e.target.style.height = 'auto'
-    e.target.style.height = e.target.scrollHeight + 'px'
+    autoResize(e)
   }
 
   function validate() {
