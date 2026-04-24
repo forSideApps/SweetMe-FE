@@ -27,7 +27,6 @@ export default function ReviewDetail() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [adminComment, setAdminComment] = useState('')
   const [adminSubmitting, setAdminSubmitting] = useState(false)
-  const [showAdminForm, setShowAdminForm] = useState(false)
   const [linkPw, setLinkPw] = useState('')
   const [linkPwError, setLinkPwError] = useState('')
   const [revealedLink, setRevealedLink] = useState(null)
@@ -97,7 +96,6 @@ export default function ReviewDetail() {
     try {
       await addReviewComment(id, { authorName: '운영자', content: adminComment })
       setAdminComment('')
-      setShowAdminForm(false)
       setAlert({ type: 'success', message: '운영자 댓글이 작성되었습니다.' })
       fetchReview()
     } catch {
@@ -414,33 +412,25 @@ export default function ReviewDetail() {
 
           {isAdmin && (
             <div style={{ marginBottom: 20 }}>
-              {showAdminForm ? (
-                <div style={{ padding: '16px', background: 'var(--bg-2)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)' }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>👑 운영자 댓글 남기기</div>
-                  <form onSubmit={handleAdminCommentSubmit}>
-                    <textarea
-                      className="form-textarea"
-                      value={adminComment}
-                      onChange={e => { setAdminComment(e.target.value); autoResize(e) }}
-                      onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); handleAdminCommentSubmit(e) } }}
-                      placeholder="운영자로 댓글을 남겨보세요"
-                      rows={1}
-                      style={{ minHeight: 40, marginBottom: 8, resize: 'none', overflow: 'hidden' }}
-                      autoFocus
-                    />
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button type="submit" className="btn btn-accent btn-sm" disabled={adminSubmitting}>
-                        {adminSubmitting ? '작성 중...' : '운영자 댓글 작성'}
-                      </button>
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setShowAdminForm(false); setAdminComment('') }}>취소</button>
-                    </div>
-                  </form>
-                </div>
-              ) : (
-                <button className="btn btn-outline btn-sm" onClick={() => setShowAdminForm(true)}>
-                  👑 운영자 댓글 작성
-                </button>
-              )}
+              <div style={{ padding: '16px', background: 'var(--bg-2)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>👑 운영자 댓글 남기기</div>
+                <form onSubmit={handleAdminCommentSubmit}>
+                  <textarea
+                    className="form-textarea"
+                    value={adminComment}
+                    onChange={e => { setAdminComment(e.target.value); autoResize(e) }}
+                    onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); handleAdminCommentSubmit(e) } }}
+                    placeholder="운영자로 댓글을 남겨보세요"
+                    rows={1}
+                    style={{ minHeight: 40, marginBottom: 8, resize: 'none', overflow: 'hidden' }}
+                  />
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button type="submit" className="btn btn-accent btn-sm" disabled={adminSubmitting}>
+                      {adminSubmitting ? '작성 중...' : '운영자 댓글 작성'}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           )}
 
